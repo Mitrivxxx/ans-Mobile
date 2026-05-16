@@ -17,14 +17,14 @@ import {
   type LoginErrorCode,
 } from '../core/scraper/auth/login.errors';
 import { ansColors } from '../theme/ansTheme';
-import LoginCaptchaSection from './login/LoginCaptchaSection';
-import LoginIconInput from './login/LoginIconInput';
-import LoginInfoButton from './login/LoginInfoButton';
+import LoginCaptchaSection from '../features/login/LoginCaptchaSection';
+import LoginIconInput from '../features/login/LoginIconInput';
+import LoginInfoButton from '../features/login/LoginInfoButton';
 import {
   getLoginErrorMessage,
   REQUIRED_FIELD_MESSAGE,
-} from './login/loginErrorDisplay';
-import { loginScreenStyles as styles } from './login/LoginScreen.styles';
+} from '../features/login/loginErrorDisplay';
+import { loginScreenStyles as styles } from '../features/login/LoginScreen.styles';
 
 const ansLogo = require('../../assets/icons/anslogo.png');
 

@@ -1,6 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 
+import { ansColors } from '../../../theme/ansTheme';
+
 type Props = {
   name: string;
   size?: number;
@@ -21,7 +23,7 @@ const ICON_NAMES: Record<
 export default function DashboardIcon({
   name,
   size = 24,
-  color = '#1a1a1a',
+  color = ansColors.charcoal,
 }: Props) {
   const iconName = ICON_NAMES[name];
   if (!iconName) {

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AuthService } from '../../core/scraper/auth/auth.service';
+import { AuthService } from '../../../core/scraper/auth/auth.service';
 import {
   ProfileService,
   type ProfileSummary,
-} from '../../core/scraper/features/profile/profile.service';
+} from '../../../core/scraper/features/profile/profile.service';
 import { DASHBOARD_FEATURES } from '../dashboard.features';
 
 type Navigation = {

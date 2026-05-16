@@ -3,4 +3,5 @@ export interface DashboardFeature {
   title: string;
   description: string;
   route: string;
+  accentColor: string;
 }

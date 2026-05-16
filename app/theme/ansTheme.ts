@@ -9,7 +9,16 @@ export const ansColors = {
   grayLight: '#999999',
   grayBorder: '#E8E6E1',
   background: '#F7F6F3',
+  /** Jasne, ciepłe tło dashboardu (odcień złota). */
+  dashboardBg: '#F3EFE6',
+  /** Tło kafelków funkcji na dashboardzie. */
+  dashboardFeatureBg: '#FCF9F2',
+  dashboardFeatureBorder: '#E8E0D4',
   surface: '#FFFFFF',
   error: '#B71C1C',
   errorBg: '#FFEBEE',
+  dashboardBlue: '#6BA3D6',
+  dashboardBlueMid: '#8BB8E3',
+  dashboardBlueLight: '#B8D9F2',
+  dashboardBluePale: '#E3F0FA',
 } as const;
