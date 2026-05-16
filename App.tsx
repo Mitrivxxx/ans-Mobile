@@ -6,6 +6,9 @@ import { StatusBar } from 'expo-status-bar';
 import LoginScreen from './app/features/LoginScreen';
 import DashboardScreen from './app/dashboard/DashboardScreen';
 import PlanScreen from './app/features/PlanScreen';
+import GradesScreen from './app/features/GradesScreen';
+import AnnouncementsScreen from './app/features/AnnouncementsScreen';
+import ProfileScreen from './app/features/ProfileScreen';
 import { initClient } from './app/core/scraper/client/client';
 
 const Stack = createStackNavigator();
@@ -45,6 +48,18 @@ export default function App() {
           <Stack.Screen 
             name="Plan" 
             component={PlanScreen}
+          />
+          <Stack.Screen 
+            name="Grades" 
+            component={GradesScreen}
+          />
+          <Stack.Screen 
+            name="Announcements" 
+            component={AnnouncementsScreen}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfileScreen}
           />
         </Stack.Navigator>
       </NavigationContainer>
