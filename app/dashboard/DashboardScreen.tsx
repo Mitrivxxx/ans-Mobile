@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import { WdAuthService } from '../core/scraper/auth/wdLogin';
+import { AuthService } from '../core/scraper/auth/auth.service';
 
 type Props = {
   navigation: any;
@@ -17,7 +17,7 @@ export default function DashboardScreen({
   navigation,
 }: Props) {
   const authService = useMemo(
-    () => new WdAuthService(),
+    () => new AuthService(),
     []
   );
 

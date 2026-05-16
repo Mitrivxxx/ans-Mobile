@@ -2,10 +2,12 @@ npx expo start
 
 npx expo start --android
 
+//show devices
 adb devices
 
 npx expo run:android
 
+//start app
 npx expo start
 ------------
 npx expo prebuild

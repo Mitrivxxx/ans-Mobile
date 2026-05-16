@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -15,8 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getCookies } from '../core/scraper/client';
-import { WdAuthService } from '../core/scraper/auth/wdLogin';
+import { getCookies } from '../core/scraper/client/client';
+import { AuthService } from '../core/scraper/auth/auth.service';
 
 function captchaUriWithBuster(url: string, buster: number): string {
   if (!url) return url;
@@ -27,12 +26,11 @@ function captchaUriWithBuster(url: string, buster: number): string {
 export default function LoginScreen({
   navigation,
 }: any) {
-  const authService = useMemo(() => new WdAuthService(), []);
+  const authService = useMemo(() => new AuthService(), []);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [clearingCookies, setClearingCookies] = useState(false);
   const [error, setError] = useState('');
 
   const [captchaContinuationHtml, setCaptchaContinuationHtml] = useState<
@@ -132,27 +130,6 @@ export default function LoginScreen({
     resetCaptchaUi,
   ]);
 
-  const handleClearAllCookies = useCallback(async () => {
-    if (loading || clearingCookies) {
-      return;
-    }
-
-    try {
-      setClearingCookies(true);
-      setError('');
-      await authService.clearAllCookies();
-      resetCaptchaUi();
-      Alert.alert(
-        'Cookies',
-        'Usunięto wszystkie cookies (przeglądarka w aplikacji oraz zapamiętana sesja axios).',
-      );
-    } catch (err: any) {
-      setError(err?.message ?? 'Nie udało się usunąć cookies');
-    } finally {
-      setClearingCookies(false);
-    }
-  }, [authService, loading, clearingCookies, resetCaptchaUi]);
-
   const cookieHeader = getCookies();
 
   return (
@@ -176,7 +153,7 @@ export default function LoginScreen({
               setUsername(t);
               resetCaptchaUi();
             }}
-            editable={!loading && !clearingCookies}
+            editable={!loading}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="default"
@@ -189,7 +166,7 @@ export default function LoginScreen({
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            editable={!loading && !clearingCookies}
+            editable={!loading}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -216,7 +193,7 @@ export default function LoginScreen({
               <TouchableOpacity
                 style={styles.captchaRefresh}
                 onPress={() => setCaptchaBuster((n) => n + 1)}
-                disabled={loading || clearingCookies}
+                disabled={loading}
               >
                 <Text style={styles.captchaRefreshText}>Odśwież CAPTCHA</Text>
               </TouchableOpacity>
@@ -229,7 +206,7 @@ export default function LoginScreen({
                 maxLength={5}
                 autoCapitalize="characters"
                 autoCorrect={false}
-                editable={!loading && !clearingCookies}
+                editable={!loading}
               />
             </View>
           )}
@@ -244,30 +221,12 @@ export default function LoginScreen({
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             activeOpacity={0.8}
-            disabled={loading || clearingCookies}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator />
             ) : (
               <Text style={styles.buttonText}>Zaloguj</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.clearCookiesButton,
-              (loading || clearingCookies) && styles.buttonDisabled,
-            ]}
-            onPress={handleClearAllCookies}
-            activeOpacity={0.8}
-            disabled={loading || clearingCookies}
-          >
-            {clearingCookies ? (
-              <ActivityIndicator color="#555" />
-            ) : (
-              <Text style={styles.clearCookiesButtonText}>
-                Usuń wszystkie cookies
-              </Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -357,21 +316,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
-  },
-  clearCookiesButton: {
-    height: 48,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#bbb',
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  clearCookiesButtonText: {
-    color: '#444',
-    fontSize: 15,
-    fontWeight: '500',
   },
   errorBox: {
     backgroundColor: '#ffebee',

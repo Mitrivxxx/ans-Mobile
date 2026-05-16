@@ -8,8 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import { PlanService } from '../core/scraper/api/plan/plan-service';
-import type { Lesson } from '../core/scraper/api/parser/plan-parser';
+import { PlanService, type Lesson } from '../core/scraper/features/plan/paln.service';
 
 type Props = {
   navigation: any;

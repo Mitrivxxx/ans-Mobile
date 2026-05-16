@@ -3,10 +3,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import LoginScreen from './app/screens/LoginScreen';
-import DashboardScreen from './app/screens/DashboardScreen';
-import PlanScreen from './app/screens/PlanScreen';
-import { initClient } from './app/core/scraper/client';
+import LoginScreen from './app/features/LoginScreen';
+import DashboardScreen from './app/dashboard/DashboardScreen';
+import PlanScreen from './app/features/PlanScreen';
+import { initClient } from './app/core/scraper/client/client';
 
 const Stack = createStackNavigator();
 

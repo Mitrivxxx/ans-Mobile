@@ -1,6 +1,5 @@
-import { initPlanSession, fetchGrid } from './plan-grid';
-import { getPlanPage } from './plan-page';
-import { parsePlan, Lesson } from '../parser/plan-parser';
+import { initPlanSession, fetchGrid } from './plan.grid';
+import { parsePlan, Lesson } from './plan.parse';
 
 export class PlanService {
   async getLessons(): Promise<Lesson[]> {
@@ -29,3 +28,5 @@ export class PlanService {
     }
   }
 }
+
+export type { Lesson };

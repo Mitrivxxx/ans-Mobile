@@ -1,7 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = "https://wd.ans-ns.edu.pl";
+export const WD_BASE_URL = "https://wd.ans-ns.edu.pl";
 
 let cookieJar = "";
 
@@ -81,7 +81,7 @@ function pairsFromSetCookieHeader(setCookie: string | string[]): string[] {
  * Axios client WITHOUT cookie magic (we control everything)
  */
 export const client = axios.create({
-  baseURL: BASE_URL,
+  baseURL: WD_BASE_URL,
   validateStatus: () => true,
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",

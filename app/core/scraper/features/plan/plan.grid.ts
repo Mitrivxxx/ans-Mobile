@@ -1,5 +1,5 @@
 import qs from 'qs';
-import { client } from '../../client';
+import { client } from '../../client/client';
 
 interface GridState {
   customOperationState: string;
