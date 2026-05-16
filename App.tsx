@@ -1,20 +1,53 @@
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import LoginScreen from './app/screens/LoginScreen';
+import DashboardScreen from './app/screens/DashboardScreen';
+import PlanScreen from './app/screens/PlanScreen';
+import { initClient } from './app/core/scraper/client';
+
+const Stack = createStackNavigator();
 
 export default function App() {
+  useEffect(() => {
+    async function bootstrap() {
+      console.log('[APP] Initializing...');
+      
+      try {
+        await initClient();
+        console.log('[APP] Cookie store initialized');
+      } catch (error) {
+        console.error('[APP] Init error:', error);
+      }
+    }
+
+    bootstrap();
+  }, []);
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <SafeAreaProvider>
       <StatusBar style="auto" />
-    </View>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+          />
+          <Stack.Screen 
+            name="Dashboard" 
+            component={DashboardScreen}
+          />
+          <Stack.Screen 
+            name="Plan" 
+            component={PlanScreen}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
