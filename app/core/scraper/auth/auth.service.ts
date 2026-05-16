@@ -16,6 +16,12 @@ import {
 
 import type { LoginResult, LoginWdOptions } from "./auth.types";
 import {
+  LOGIN_REQUEST_TIMEOUT_MS,
+  classifyLoginHttpStatus,
+  classifyLoginThrowable,
+  type LoginErrorCode,
+} from "./login.errors";
+import {
   appendCaptchaFields,
   buildCaptchaRequiredResult,
   isCaptchaRequiredInHtml,
@@ -41,6 +47,30 @@ const LOGIN_URL = `${WD_BASE_URL}/Logowanie`;
 const LOGIN_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/147.0.0.0 Safari/537.36";
 
+function loginFailure(
+  errorCode: LoginErrorCode,
+  extra?: Partial<LoginResult>
+): LoginResult {
+  return { success: false, errorCode, ...extra };
+}
+
+function loginFailureFromHttpStatus(status: number): LoginResult {
+  const errorCode = classifyLoginHttpStatus(status);
+  if (errorCode) return loginFailure(errorCode);
+  return {
+    success: false,
+    error: `Serwer zwrócił kod ${status}`,
+  };
+}
+
+function loginFailureFromThrowable(error: unknown): LoginResult {
+  const errorCode = classifyLoginThrowable(error);
+  if (errorCode) return loginFailure(errorCode);
+  const message =
+    error instanceof Error ? error.message : String(error ?? "Nieznany błąd");
+  return { success: false, error: message };
+}
+
 async function loginWD(
   username: string,
   password: string,
@@ -63,14 +93,12 @@ async function loginWD(
             "User-Agent": LOGIN_USER_AGENT,
           },
           maxRedirects: 5,
+          timeout: LOGIN_REQUEST_TIMEOUT_MS,
         });
 
         if (getRes.status !== 200) {
           console.log("Logowanie się nie powiodło");
-          return {
-            success: false,
-            error: `STEP 1 FAILED: status=${getRes.status}`,
-          };
+          return loginFailureFromHttpStatus(getRes.status);
         }
 
         loginPageHtml =
@@ -79,12 +107,9 @@ async function loginWD(
             : String(getRes.data ?? "");
 
         await syncAxiosCookiesToNative();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.log("Logowanie się nie powiodło");
-        return {
-          success: false,
-          error: `STEP 1 FAILED: ${error.message}`,
-        };
+        return loginFailureFromThrowable(error);
       }
     }
 
@@ -189,17 +214,21 @@ async function loginWD(
             "User-Agent": LOGIN_USER_AGENT,
           },
           maxRedirects: 0,
+          timeout: LOGIN_REQUEST_TIMEOUT_MS,
         }
       );
 
       await syncAxiosCookiesToNative();
       await mergeAuthCookiesFromNativeIfNeeded();
-    } catch (error: any) {
+
+      const postHttpError = classifyLoginHttpStatus(postRes.status);
+      if (postHttpError) {
+        console.log("Logowanie się nie powiodło");
+        return loginFailure(postHttpError);
+      }
+    } catch (error: unknown) {
       console.log("Logowanie się nie powiodło");
-      return {
-        success: false,
-        error: `STEP 5 FAILED: ${error.message}`,
-      };
+      return loginFailureFromThrowable(error);
     }
 
     let authCookies = "";
@@ -228,35 +257,28 @@ async function loginWD(
         typeof postRes.data === "string"
           ? postRes.data
           : String(postRes.data ?? "");
-      const lower = responseText.toLowerCase();
-      let detail = `status=${postRes.status}`;
-      if (postRes.status === 200) {
-        if (lower.includes("hasło") || lower.includes("haslo"))
-          detail += "; strona może zawierać komunikat o błędzie logowania";
-        if (lower.includes("token"))
-          detail += "; możliwy problem z anty-CSRF";
-        if (/<title>[\s\S]*error/i.test(responseText))
-          detail += "; serwer zwrócił stronę Error (np. walidacja anty-CSRF)";
-        if (isLoginFormHtml(responseText))
-          detail += "; nadal formularz logowania (np. złe hasło)";
-      }
-      if (!hasCorrectStatus)
-        detail += "; brak ciasteczka auth lub nadal strona logowania";
 
       console.log("Logowanie się nie powiodło");
 
       if (isCaptchaRequiredInHtml(responseText)) {
         return buildCaptchaRequiredResult(
           responseText,
-          `Logowanie nieudane — ${detail}`
+          "Wymagana weryfikacja CAPTCHA — wpisz kod z obrazka."
         );
       }
 
-      const serverMsg = extractMvcLoginErrorSummary(responseText);
+      if (
+        isLoginFormHtml(responseText) ||
+        postRes.status === 401 ||
+        Boolean(extractMvcLoginErrorSummary(responseText))
+      ) {
+        return loginFailure("invalid_credentials");
+      }
+
       return {
         success: false,
         requiresCaptcha: false,
-        error: serverMsg ?? `Logowanie nieudane — ${detail}`,
+        error: "Nie udało się zalogować. Spróbuj ponownie.",
       };
     }
 
@@ -268,13 +290,9 @@ async function loginWD(
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log("Logowanie się nie powiodło");
-
-    return {
-      success: false,
-      error: error.message,
-    };
+    return loginFailureFromThrowable(error);
   }
 }
 

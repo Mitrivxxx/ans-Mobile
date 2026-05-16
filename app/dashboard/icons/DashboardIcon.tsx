@@ -15,6 +15,7 @@ const ICON_NAMES: Record<
   grades: 'star-outline',
   announcements: 'bell-outline',
   profile: 'account-outline',
+  lecturer: 'account-search-outline',
 };
 
 export default function DashboardIcon({

@@ -9,6 +9,7 @@ import PlanScreen from './app/features/PlanScreen';
 import GradesScreen from './app/features/GradesScreen';
 import AnnouncementsScreen from './app/features/AnnouncementsScreen';
 import ProfileScreen from './app/features/ProfileScreen';
+import FindLecturerScreen from './app/features/FindLecturerScreen';
 import { initClient } from './app/core/scraper/client/client';
 
 const Stack = createStackNavigator();
@@ -30,7 +31,7 @@ export default function App() {
   }, []);
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{
@@ -60,6 +61,10 @@ export default function App() {
           <Stack.Screen 
             name="Profile" 
             component={ProfileScreen}
+          />
+          <Stack.Screen
+            name="FindLecturer"
+            component={FindLecturerScreen}
           />
         </Stack.Navigator>
       </NavigationContainer>

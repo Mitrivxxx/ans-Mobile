@@ -25,4 +25,10 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: 'Dane konta i ustawienia studenta',
     route: 'Profile',
   },
+  {
+    icon: 'lecturer',
+    title: 'Znajdź prowadzącego',
+    description: 'Wyszukaj prowadzącego i jego plan zajęć',
+    route: 'FindLecturer',
+  },
 ];

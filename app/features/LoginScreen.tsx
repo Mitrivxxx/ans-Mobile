@@ -1,37 +1,48 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getCookies } from '../core/scraper/client/client';
 import { AuthService } from '../core/scraper/auth/auth.service';
+import {
+  classifyLoginThrowable,
+  type LoginErrorCode,
+} from '../core/scraper/auth/login.errors';
+import { ansColors } from '../theme/ansTheme';
+import LoginCaptchaSection from './login/LoginCaptchaSection';
+import LoginIconInput from './login/LoginIconInput';
+import LoginInfoButton from './login/LoginInfoButton';
+import {
+  getLoginErrorMessage,
+  REQUIRED_FIELD_MESSAGE,
+} from './login/loginErrorDisplay';
+import { loginScreenStyles as styles } from './login/LoginScreen.styles';
 
-function captchaUriWithBuster(url: string, buster: number): string {
-  if (!url) return url;
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}_cb=${buster}`;
-}
+const ansLogo = require('../../assets/icons/anslogo.png');
 
 export default function LoginScreen({
   navigation,
 }: any) {
   const authService = useMemo(() => new AuthService(), []);
+  const scrollRef = useRef<KeyboardAwareScrollView>(null);
+  const usernameRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const captchaRef = useRef<TextInput>(null);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [usernameFieldError, setUsernameFieldError] = useState('');
+  const [passwordFieldError, setPasswordFieldError] = useState('');
+  const [formError, setFormError] = useState('');
 
   const [captchaContinuationHtml, setCaptchaContinuationHtml] = useState<
     string | null
@@ -39,6 +50,36 @@ export default function LoginScreen({
   const [captchaImageUrl, setCaptchaImageUrl] = useState<string | null>(null);
   const [captchaCode, setCaptchaCode] = useState('');
   const [captchaBuster, setCaptchaBuster] = useState(0);
+
+  const captchaVisible = captchaContinuationHtml !== null;
+
+  useEffect(() => {
+    if (!captchaVisible) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      scrollRef.current?.scrollToEnd(true);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [captchaVisible, captchaImageUrl]);
+
+  const clearFieldErrors = useCallback(() => {
+    setUsernameFieldError('');
+    setPasswordFieldError('');
+  }, []);
+
+  const clearFormError = useCallback(() => {
+    setFormError('');
+  }, []);
+
+  const clearAllErrors = useCallback(() => {
+    clearFieldErrors();
+    clearFormError();
+  }, [clearFieldErrors, clearFormError]);
+
+  const setServerError = useCallback((code: LoginErrorCode) => {
+    setFormError(getLoginErrorMessage(code));
+  }, []);
 
   const resetCaptchaUi = useCallback(() => {
     setCaptchaContinuationHtml(null);
@@ -52,24 +93,34 @@ export default function LoginScreen({
       return;
     }
 
+    clearAllErrors();
+
+    const passwordAttempt = password;
+    setPassword('');
+
+    let hasFieldError = false;
+
     if (!username.trim()) {
-      setError('Wpisz login');
-      return;
+      setUsernameFieldError(REQUIRED_FIELD_MESSAGE);
+      hasFieldError = true;
     }
 
-    if (!password.trim()) {
-      setError('Wpisz hasło');
+    if (!passwordAttempt.trim()) {
+      setPasswordFieldError(REQUIRED_FIELD_MESSAGE);
+      hasFieldError = true;
+    }
+
+    if (hasFieldError) {
       return;
     }
 
     if (captchaContinuationHtml && !captchaCode.trim()) {
-      setError('Wpisz kod z obrazka CAPTCHA');
+      setFormError('Wpisz kod z obrazka CAPTCHA');
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
 
       const loginOptions =
         captchaContinuationHtml !== null
@@ -86,13 +137,14 @@ export default function LoginScreen({
 
       const result = await authService.login(
         username.trim(),
-        password,
+        passwordAttempt,
         loginOptions
       );
 
       console.log('[LOGIN SCREEN] LOGIN RESULT:', {
         success: result.success,
         requiresCaptcha: result.requiresCaptcha,
+        errorCode: result.errorCode,
       });
 
       if (result.requiresCaptcha) {
@@ -101,21 +153,36 @@ export default function LoginScreen({
           setCaptchaImageUrl(result.captchaImageUrl ?? null);
         }
         setCaptchaCode('');
-        setError(result.error ?? 'Wymagana weryfikacja CAPTCHA');
+        setFormError(
+          result.error ?? 'Wymagana weryfikacja CAPTCHA — wpisz kod z obrazka.'
+        );
         return;
       }
 
       if (!result.success) {
-        setError(result.error ?? 'Nie udało się zalogować — sprawdź login i hasło');
+        if (result.errorCode) {
+          setServerError(result.errorCode);
+        } else {
+          setFormError(
+            result.error ?? 'Nie udało się zalogować. Spróbuj ponownie.'
+          );
+        }
         return;
       }
 
       resetCaptchaUi();
       console.log('[LOGIN SCREEN] NAVIGATING TO DASHBOARD');
       navigation.replace('Dashboard');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log('[LOGIN SCREEN] CATCH ERROR', err);
-      setError(err?.message ?? 'Błąd podczas logowania');
+      const code = classifyLoginThrowable(err);
+      if (code) {
+        setServerError(code);
+      } else {
+        setFormError(
+          err instanceof Error ? err.message : 'Błąd podczas logowania'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -128,204 +195,114 @@ export default function LoginScreen({
     captchaContinuationHtml,
     captchaCode,
     resetCaptchaUi,
+    clearAllErrors,
+    setServerError,
   ]);
 
-  const cookieHeader = getCookies();
+  const focusPassword = useCallback(() => {
+    passwordRef.current?.focus();
+  }, []);
+
+  const focusCaptchaOrSubmit = useCallback(() => {
+    if (captchaVisible) {
+      captchaRef.current?.focus();
+    } else {
+      void handleLogin();
+    }
+  }, [captchaVisible, handleLogin]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardAwareScrollView
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.scrollContent,
+          captchaVisible && styles.scrollContentWithCaptcha,
+        ]}
+        enableOnAndroid
+        extraScrollHeight={80}
+        extraHeight={80}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        enableResetScrollToCoords={false}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.title}>WD Login</Text>
+        <View style={styles.header}>
+          <Image source={ansLogo} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.title}>WD-ANS Mobile</Text>
+          <Text style={styles.subtitle}>Uczelnia w zasięgu ręki</Text>
+          <LoginInfoButton />
+        </View>
 
-          <TextInput
-            style={styles.input}
+        <View style={styles.form}>
+          <LoginIconInput
+            ref={usernameRef}
+            icon="account-outline"
             placeholder="Login"
-            placeholderTextColor="#999"
             value={username}
+            fieldError={usernameFieldError}
+            returnKeyType="next"
+            onSubmitEditing={focusPassword}
+            blurOnSubmit={false}
             onChangeText={(t) => {
               setUsername(t);
+              setUsernameFieldError('');
+              clearFormError();
               resetCaptchaUi();
             }}
             editable={!loading}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="default"
           />
 
-          <TextInput
-            style={styles.input}
+          <LoginIconInput
+            ref={passwordRef}
+            icon="lock-outline"
             placeholder="Hasło"
-            placeholderTextColor="#999"
             value={password}
-            onChangeText={setPassword}
+            fieldError={passwordFieldError}
+            returnKeyType={captchaVisible ? 'next' : 'go'}
+            onSubmitEditing={focusCaptchaOrSubmit}
+            blurOnSubmit={captchaVisible}
+            onChangeText={(t) => {
+              setPassword(t);
+              setPasswordFieldError('');
+              clearFormError();
+            }}
             secureTextEntry
             editable={!loading}
-            autoCapitalize="none"
-            autoCorrect={false}
           />
 
-          {captchaContinuationHtml !== null && (
-            <View style={styles.captchaBlock}>
-              <Text style={styles.captchaLabel}>CAPTCHA</Text>
-              {captchaImageUrl ? (
-                <Image
-                  style={styles.captchaImage}
-                  source={{
-                    uri: captchaUriWithBuster(captchaImageUrl, captchaBuster),
-                    headers: cookieHeader
-                      ? { Cookie: cookieHeader }
-                      : undefined,
-                  }}
-                  resizeMode="contain"
-                />
-              ) : (
-                <Text style={styles.captchaFallback}>
-                  Brak adresu obrazka — użyj „Odśwież CAPTCHA” po zalogowaniu sesji.
-                </Text>
-              )}
-              <TouchableOpacity
-                style={styles.captchaRefresh}
-                onPress={() => setCaptchaBuster((n) => n + 1)}
-                disabled={loading}
-              >
-                <Text style={styles.captchaRefreshText}>Odśwież CAPTCHA</Text>
-              </TouchableOpacity>
-              <TextInput
-                style={styles.input}
-                placeholder="Kod z obrazka (max 5 znaków)"
-                placeholderTextColor="#999"
-                value={captchaCode}
-                onChangeText={setCaptchaCode}
-                maxLength={5}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                editable={!loading}
-              />
-            </View>
+          {captchaVisible && (
+            <LoginCaptchaSection
+              imageUrl={captchaImageUrl}
+              imageBuster={captchaBuster}
+              code={captchaCode}
+              loading={loading}
+              inputRef={captchaRef}
+              onSubmitEditing={() => void handleLogin()}
+              onCodeChange={(t) => {
+                setCaptchaCode(t);
+                clearFormError();
+              }}
+              onRefreshImage={() => setCaptchaBuster((n) => n + 1)}
+            />
           )}
 
-          {!!error && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
+          {!!formError && <Text style={styles.formError}>{formError}</Text>}
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator />
+              <ActivityIndicator color={ansColors.black} />
             ) : (
-              <Text style={styles.buttonText}>Zaloguj</Text>
+              <Text style={styles.buttonText}>Zaloguj się</Text>
             )}
           </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  keyboard: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 32,
-    color: '#111',
-    textAlign: 'center',
-  },
-  input: {
-    height: 56,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#111',
-  },
-  captchaBlock: {
-    marginBottom: 8,
-  },
-  captchaLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  captchaImage: {
-    width: 200,
-    height: 70,
-    alignSelf: 'center',
-    marginBottom: 8,
-    backgroundColor: '#eee',
-    borderRadius: 8,
-  },
-  captchaFallback: {
-    fontSize: 13,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  captchaRefresh: {
-    alignSelf: 'center',
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  captchaRefreshText: {
-    color: '#007AFF',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  button: {
-    height: 56,
-    borderRadius: 10,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  errorBox: {
-    backgroundColor: '#ffebee',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#c62828',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-});
