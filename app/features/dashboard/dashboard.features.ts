@@ -10,7 +10,7 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
   },
   {
     icon: 'grades',
-    title: 'Oceny',
+    title: 'Przedmioty i oceny',
     description: 'Wyniki i średnie z przedmiotów',
     route: 'Grades',
     accentColor: '#3CB8A0',
@@ -31,7 +31,7 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
   },
   {
     icon: 'lecturer',
-    title: 'Prowadzący',
+    title: 'Znajdź prowadzącego',
     description: 'Wyszukaj prowadzącego i jego plan zajęć',
     route: 'FindLecturer',
     accentColor: '#E8A838',

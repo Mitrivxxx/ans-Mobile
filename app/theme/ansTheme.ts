@@ -8,12 +8,12 @@ export const ansColors = {
   gray: '#666666',
   grayLight: '#999999',
   grayBorder: '#E8E6E1',
-  background: '#F7F6F3',
-  /** Jasne, ciepłe tło dashboardu (odcień złota). */
-  dashboardBg: '#F3EFE6',
+  background: '#F2F3F5',
+  /** Neutralne, jasnoszare tło dashboardu. */
+  dashboardBg: '#ECEEF1',
   /** Tło kafelków funkcji na dashboardzie. */
-  dashboardFeatureBg: '#FCF9F2',
-  dashboardFeatureBorder: '#E8E0D4',
+  dashboardFeatureBg: '#F0F2F5',
+  dashboardFeatureBorder: '#DDE2E8',
   surface: '#FFFFFF',
   error: '#B71C1C',
   errorBg: '#FFEBEE',

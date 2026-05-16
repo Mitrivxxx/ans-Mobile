@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  GradesService,
-  type SemesterGrades,
-} from '../core/scraper/features/grades/grades.service';
+import GradesSemesterPanel from '../features/grades/components/GradesSemesterPanel';
+import GradesSubjectCard from '../features/grades/components/GradesSubjectCard';
+import { gradesScreenStyles as styles } from '../features/grades/GradesScreen.styles';
+import { useGrades } from '../features/grades/hooks/useGrades';
+import { useSemesterSwipe } from '../features/grades/hooks/useSemesterSwipe';
+import { gradesColors } from '../features/grades/gradesTheme';
 
 type Props = {
   navigation: {
@@ -19,80 +22,103 @@ type Props = {
 };
 
 export default function GradesScreen({ navigation }: Props) {
-  const gradesService = useMemo(() => new GradesService(), []);
-  const [semesters, setSemesters] = useState<SemesterGrades[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    semesters,
+    currentSemester,
+    loading,
+    error,
+    canGoPrevious,
+    canGoNext,
+    goToPreviousSemester,
+    goToNextSemester,
+    refetch,
+  } = useGrades();
 
-  const fetchGrades = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await gradesService.getGrades();
-      setSemesters(data);
-    } catch (err) {
-      console.error('[GRADES SCREEN]', err);
-      setError('Nie udało się pobrać ocen');
-    } finally {
-      setLoading(false);
-    }
-  }, [gradesService]);
-
-  useEffect(() => {
-    fetchGrades();
-  }, [fetchGrades]);
+  const swipeHandlers = useSemesterSwipe({
+    canGoPrevious,
+    canGoNext,
+    onPrevious: goToPreviousSemester,
+    onNext: goToNextSemester,
+  });
 
   if (loading) {
     return (
-      <View>
-        <ActivityIndicator />
-        <Text>Wczytywanie ocen...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <View style={styles.centerState}>
+          <ActivityIndicator size="large" color={gradesColors.primary} />
+          <Text style={styles.stateText}>Wczytywanie ocen…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View>
-        <Text>{error}</Text>
-        <TouchableOpacity onPress={fetchGrades}>
-          <Text>Spróbuj ponownie</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <View style={styles.centerState}>
+          <Text style={styles.stateText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={refetch}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryText}>Spróbuj ponownie</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text>← Powrót</Text>
-      </TouchableOpacity>
-      <Text>Oceny</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Powrót"
+          >
+            <Text style={styles.backText}>← Powrót</Text>
+          </TouchableOpacity>
+        </View>
 
-      {semesters.length === 0 ? (
-        <Text>Brak danych o ocenach</Text>
-      ) : (
-        semesters.map((semester) => (
-          <View key={semester.semester}>
-            <Text>{semester.semesterLabel}</Text>
-            <Text>Typ: {semester.semesterType}</Text>
-            <Text>Średnia semestru: {semester.semesterAverage}</Text>
+        <Text style={styles.title}>Moje oceny</Text>
 
-            {semester.subjects.map((subject) => (
-              <View key={`${semester.semester}-${subject.subject}`}>
-                <Text>{subject.subject}</Text>
-                <Text>Prowadzący: {subject.teacher}</Text>
-                <Text>Ocena końcowa: {subject.finalGrade}</Text>
-                {subject.partialGrades.length > 0 && (
-                  <Text>
-                    Oceny cząstkowe: {JSON.stringify(subject.partialGrades)}
-                  </Text>
-                )}
-              </View>
-            ))}
+        {semesters.length === 0 || !currentSemester ? (
+          <Text style={styles.emptyText}>Brak danych o ocenach</Text>
+        ) : (
+          <View {...swipeHandlers.panHandlers}>
+            <GradesSemesterPanel
+              semester={currentSemester}
+              canGoPrevious={canGoPrevious}
+              canGoNext={canGoNext}
+              onPrevious={goToPreviousSemester}
+              onNext={goToNextSemester}
+            />
+
+            <View style={styles.subjectList}>
+              {currentSemester.subjects.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  Brak przedmiotów w tym semestrze
+                </Text>
+              ) : (
+                currentSemester.subjects.map((subject) => (
+                  <GradesSubjectCard
+                    key={`${currentSemester.semester}-${subject.subject}`}
+                    subject={subject}
+                  />
+                ))
+              )}
+            </View>
           </View>
-        ))
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

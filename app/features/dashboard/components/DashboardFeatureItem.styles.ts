@@ -21,7 +21,7 @@ export const dashboardFeatureItemStyles = StyleSheet.create({
     backgroundColor: ansColors.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: ansColors.grayBorder,
+    borderColor: ansColors.dashboardFeatureBorder,
     paddingVertical: 20,
     paddingHorizontal: 12,
     shadowColor: ansColors.black,
