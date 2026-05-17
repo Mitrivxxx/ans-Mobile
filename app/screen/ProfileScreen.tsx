@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import ProfileSummaryView from '../components/ProfileSummaryView';
+import ProfileDetailsView from '../components/ProfileDetailsView';
 import {
   ProfileService,
   type CompleteProfileData,
@@ -19,15 +19,6 @@ type Props = {
     goBack: () => void;
   };
 };
-
-function ProfileField({ label, value }: { label: string; value: string }) {
-  return (
-    <View>
-      <Text>{label}</Text>
-      <Text>{value || '—'}</Text>
-    </View>
-  );
-}
 
 export default function ProfileScreen({ navigation }: Props) {
   const profileService = useMemo(() => new ProfileService(), []);
@@ -58,19 +49,19 @@ export default function ProfileScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View>
-        <ActivityIndicator />
-        <Text>Wczytywanie profilu...</Text>
+      <View style={screenStyles.centerState}>
+        <ActivityIndicator color="#C9A227" />
+        <Text style={screenStyles.stateText}>Wczytywanie profilu...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View>
-        <Text>{error}</Text>
-        <TouchableOpacity onPress={fetchProfile}>
-          <Text>Spróbuj ponownie</Text>
+      <View style={screenStyles.centerState}>
+        <Text style={screenStyles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={fetchProfile} style={screenStyles.retryButton}>
+          <Text style={screenStyles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </View>
     );
@@ -78,68 +69,67 @@ export default function ProfileScreen({ navigation }: Props) {
 
   if (!profile) {
     return (
-      <View>
+      <View style={screenStyles.centerState}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text>← Powrót</Text>
+          <Text style={screenStyles.backText}>← Powrót</Text>
         </TouchableOpacity>
-        <Text>Brak danych profilu</Text>
+        <Text style={screenStyles.stateText}>Brak danych profilu</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text>← Powrót</Text>
-      </TouchableOpacity>
-      <Text>Profil</Text>
-
-      <ProfileSummaryView summary={summary} />
-
-      <Text>Konto</Text>
-      <ProfileField label="Imię" value={profile.firstName} />
-      <ProfileField label="Nazwisko" value={profile.lastName} />
-      <ProfileField label="Numer albumu" value={profile.albumNumber} />
-      <ProfileField label="Kierunek" value={profile.major} />
-      <ProfileField label="Login" value={profile.login} />
-      <ProfileField label="Email prywatny" value={profile.privateEmail} />
-      <ProfileField label="Email uczelniany" value={profile.universityEmail} />
-      <ProfileField
-        label="Data ostatniego logowania"
-        value={profile.lastLoginDate}
-      />
-      <ProfileField
-        label="Data ostatniej zmiany hasła"
-        value={profile.lastPasswordChangeDate}
-      />
-
-      <Text>Studia</Text>
-      <ProfileField label="Tok studiów" value={profile.studyTrack} />
-      <ProfileField
-        label="Numer legitymacji"
-        value={profile.legitimationNumber}
-      />
-      <ProfileField label="Status studenta" value={profile.studentStatus} />
-      <ProfileField label="Rok" value={profile.year} />
-      <ProfileField label="Semestr" value={profile.semester} />
-      <ProfileField label="Tryb studiów" value={profile.studyMode} />
-      <ProfileField label="Wydział" value={profile.faculty} />
-      <ProfileField label="Specjalność" value={profile.specialization} />
-      <ProfileField label="Uzyskiwany tytuł" value={profile.title} />
-      <ProfileField
-        label="Semestr akademicki naboru"
-        value={profile.enrollmentSemester}
-      />
-      <ProfileField
-        label="Data rozpoczęcia studiów"
-        value={profile.studiesStartDate}
-      />
-      <ProfileField
-        label="Przewidywana data zakończenia studiów"
-        value={profile.studiesEndDate}
-      />
-      <ProfileField label="Tok indywidualny" value={profile.individualTrack} />
-      <ProfileField label="Numer i data umowy" value={profile.contractNumber} />
+    <ScrollView contentContainerStyle={screenStyles.scrollContent}>
+      <ProfileDetailsView summary={summary} profile={profile} />
     </ScrollView>
   );
 }
+
+const screenStyles = {
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 18,
+    paddingBottom: 36,
+    backgroundColor: '#ECEEF1',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  backText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  centerState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+    backgroundColor: '#ECEEF1',
+  },
+  stateText: {
+    fontSize: 15,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#B71C1C',
+    textAlign: 'center',
+    fontWeight: '700',
+  },
+  retryButton: {
+    marginTop: 4,
+    backgroundColor: '#0D0D0D',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  retryButtonText: {
+    color: '#C9A227',
+    fontWeight: '800',
+    fontSize: 15,
+  },
+} as const;

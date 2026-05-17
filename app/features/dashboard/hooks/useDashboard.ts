@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { AuthService } from '../../../core/scraper/auth/auth.service';
-import {
-  ProfileService,
-  type ProfileSummary,
-} from '../../../core/scraper/features/profile/profile.service';
+import { useStudentProfile } from '../../../context/StudentProfileContext';
 import { DASHBOARD_FEATURES } from '../dashboard.features';
 
 type Navigation = {
@@ -14,41 +11,9 @@ type Navigation = {
 
 export function useDashboard(navigation: Navigation) {
   const authService = useMemo(() => new AuthService(), []);
-  const profileService = useMemo(() => new ProfileService(), []);
-  const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(
-    null
-  );
-  const [profileLoading, setProfileLoading] = useState(true);
+  const { summary: profileSummary, loading: profileLoading, clear } =
+    useStudentProfile();
   const [logoutLoading, setLogoutLoading] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        setProfileLoading(true);
-        // Krótkie opóźnienie po przejściu z ekranu logowania (sesja / layout WD).
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        if (cancelled) {
-          return;
-        }
-        const summary = await profileService.getProfileSummary();
-        if (!cancelled) {
-          setProfileSummary(summary);
-        }
-      } catch (err) {
-        console.error('[DASHBOARD] profile summary', err);
-      } finally {
-        if (!cancelled) {
-          setProfileLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [profileService]);
 
   const onFeaturePress = useCallback(
     (route: string) => {
@@ -67,6 +32,7 @@ export function useDashboard(navigation: Navigation) {
       console.log('[DASHBOARD] LOGOUT START');
       await authService.logout();
       console.log('[DASHBOARD] LOGOUT SUCCESS');
+      clear();
       navigation.replace('Login');
     } catch (err) {
       console.error('[DASHBOARD] LOGOUT ERROR', err);
@@ -77,7 +43,7 @@ export function useDashboard(navigation: Navigation) {
     } finally {
       setLogoutLoading(false);
     }
-  }, [authService, navigation, logoutLoading]);
+  }, [authService, clear, navigation, logoutLoading]);
 
   return {
     features: DASHBOARD_FEATURES,

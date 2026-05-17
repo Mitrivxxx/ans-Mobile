@@ -1,8 +1,14 @@
 import React, { useEffect } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import AppHeader from './app/components/AppHeader';
+import AppSidebar from './app/components/sidebar/AppSidebar';
+import { SidebarProvider } from './app/components/sidebar/SidebarContext';
+import { StudentProfileProvider } from './app/context/StudentProfileContext';
+import { navigationRef } from './app/navigation/navigationRef';
 import LoginScreen from './app/screen/LoginScreen';
 import DashboardScreen from './app/screen/DashboardScreen';
 import PlanScreen from './app/screen/PlanScreen';
@@ -32,41 +38,36 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen 
-            name="Login" 
-            component={LoginScreen}
-          />
-          <Stack.Screen 
-            name="Dashboard" 
-            component={DashboardScreen}
-          />
-          <Stack.Screen 
-            name="Plan" 
-            component={PlanScreen}
-          />
-          <Stack.Screen 
-            name="Grades" 
-            component={GradesScreen}
-          />
-          <Stack.Screen 
-            name="Announcements" 
-            component={AnnouncementsScreen}
-          />
-          <Stack.Screen 
-            name="Profile" 
-            component={ProfileScreen}
-          />
-          <Stack.Screen
-            name="FindLecturer"
-            component={FindLecturerScreen}
-          />
-        </Stack.Navigator>
+      <NavigationContainer ref={navigationRef}>
+        <StudentProfileProvider>
+          <SidebarProvider>
+            <View style={{ flex: 1 }}>
+              <AppHeader />
+              <View style={{ flex: 1 }}>
+                <Stack.Navigator
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Dashboard" component={DashboardScreen} />
+                  <Stack.Screen name="Plan" component={PlanScreen} />
+                  <Stack.Screen name="Grades" component={GradesScreen} />
+                  <Stack.Screen
+                    name="Announcements"
+                    component={AnnouncementsScreen}
+                  />
+                  <Stack.Screen name="Profile" component={ProfileScreen} />
+                  <Stack.Screen
+                    name="FindLecturer"
+                    component={FindLecturerScreen}
+                  />
+                </Stack.Navigator>
+              </View>
+              <AppSidebar />
+            </View>
+          </SidebarProvider>
+        </StudentProfileProvider>
       </NavigationContainer>
     </SafeAreaProvider>
   );

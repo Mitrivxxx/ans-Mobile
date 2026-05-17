@@ -43,7 +43,7 @@ export default function GradesScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
         <View style={styles.centerState}>
           <ActivityIndicator size="large" color={gradesColors.primary} />
           <Text style={styles.stateText}>Wczytywanie ocen…</Text>
@@ -54,7 +54,7 @@ export default function GradesScreen({ navigation }: Props) {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
         <View style={styles.centerState}>
           <Text style={styles.stateText}>{error}</Text>
           <TouchableOpacity
@@ -70,24 +70,12 @@ export default function GradesScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Powrót"
-          >
-            <Text style={styles.backText}>← Powrót</Text>
-          </TouchableOpacity>
-        </View>
-
         <Text style={styles.title}>Moje oceny</Text>
 
         {semesters.length === 0 || !currentSemester ? (

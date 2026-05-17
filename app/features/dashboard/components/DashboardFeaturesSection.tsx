@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import type { DashboardFeature } from '../dashboard.types';
 import DashboardFeatureItem from './DashboardFeatureItem';
@@ -16,7 +16,6 @@ export default function DashboardFeaturesSection({
 }: Props) {
   return (
     <View style={styles.block}>
-      <Text style={styles.title}>Funkcje</Text>
       <View style={styles.list}>
         {features.map((feature) => (
           <DashboardFeatureItem

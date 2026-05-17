@@ -75,11 +75,10 @@ export default function PlanScreen({ navigation }: Props) {
   }
 
   return (
-    <View>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text>← Powrót</Text>
-      </TouchableOpacity>
-      <Text>Plan zajęć</Text>
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 12 }}>
+        Plan zajęć
+      </Text>
 
       {lessons.length === 0 ? (
         <Text>Brak zajęć</Text>

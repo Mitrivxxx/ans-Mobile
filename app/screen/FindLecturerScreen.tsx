@@ -54,11 +54,9 @@ export default function FindLecturerScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text>← Powrót</Text>
-      </TouchableOpacity>
-
-      <Text style={{ fontSize: 20, fontWeight: "600" }}>Znajdź prowadzącego</Text>
+      <Text style={{ fontSize: 22, fontWeight: "800", marginBottom: 4 }}>
+        Znajdź prowadzącego
+      </Text>
 
       <TextInput
         placeholder="Imię"

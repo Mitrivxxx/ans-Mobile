@@ -13,6 +13,7 @@ const ICON_NAMES: Record<
   string,
   React.ComponentProps<typeof MaterialCommunityIcons>['name']
 > = {
+  dashboard: 'view-dashboard-outline',
   plan: 'calendar-month-outline',
   grades: 'star-outline',
   announcements: 'bell-outline',

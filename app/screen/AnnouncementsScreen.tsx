@@ -112,11 +112,10 @@ export default function AnnouncementsScreen({ navigation }: Props) {
   }
 
   return (
-    <View>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text>← Powrót</Text>
-      </TouchableOpacity>
-      <Text>Ogłoszenia</Text>
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 12 }}>
+        Ogłoszenia
+      </Text>
 
       {error ? <Text>{error}</Text> : null}
       {detailsLoading ? <Text>Wczytywanie szczegółów...</Text> : null}
