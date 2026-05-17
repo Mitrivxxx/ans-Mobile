@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -13,6 +14,7 @@ import {
   type Announcement,
   type AnnouncementDetails,
 } from '../core/scraper/features/announcements/announcements.service';
+import { ansColors } from '../theme/ansTheme';
 
 type Props = {
   navigation: {
@@ -71,21 +73,25 @@ export default function AnnouncementsScreen({ navigation }: Props) {
     fetchAnnouncements();
   }, [fetchAnnouncements]);
 
+  const normalizeContent = useCallback((value: string) => {
+    return value.replace(/<br\s*\/?>/gi, '\n');
+  }, []);
+
   if (loading) {
     return (
-      <View>
-        <ActivityIndicator />
-        <Text>Wczytywanie ogłoszeń...</Text>
+      <View style={styles.centerState}>
+        <ActivityIndicator color={ansColors.gold} />
+        <Text style={styles.stateText}>Wczytywanie ogłoszeń...</Text>
       </View>
     );
   }
 
   if (error && announcements.length === 0 && !selected) {
     return (
-      <View>
-        <Text>{error}</Text>
-        <TouchableOpacity onPress={fetchAnnouncements}>
-          <Text>Spróbuj ponownie</Text>
+      <View style={styles.centerState}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={fetchAnnouncements} style={styles.retryButton}>
+          <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </View>
     );
@@ -93,51 +99,241 @@ export default function AnnouncementsScreen({ navigation }: Props) {
 
   if (selected) {
     return (
-      <ScrollView>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.detailsContent}
+        showsVerticalScrollIndicator={false}
+      >
         <TouchableOpacity
           onPress={() => {
             setSelected(null);
             setSelectedId(null);
           }}
+          style={styles.backButton}
+          accessibilityRole="button"
         >
-          <Text>← Lista ogłoszeń</Text>
+          <Text style={styles.backButtonText}>← Lista ogłoszeń</Text>
         </TouchableOpacity>
-        <Text>Szczegóły ogłoszenia</Text>
-        <Text>Nadawca: {selected.authorName}</Text>
-        <Text>Data: {selected.date}</Text>
-        <Text>Treść (HTML):</Text>
-        <Text>{selected.content}</Text>
+
+        <Text style={styles.title}>Szczegóły ogłoszenia</Text>
+
+        <View style={styles.detailsCard}>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Nadawca</Text>
+            <Text style={styles.metaValue} numberOfLines={2}>
+              {selected.authorName || '-'}
+            </Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Data</Text>
+            <Text style={styles.metaValue}>{selected.date || '-'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.contentCard}>
+          <Text style={styles.contentLabel}>Treść ogłoszenia</Text>
+          <Text style={styles.contentText}>
+            {selected.content ? normalizeContent(selected.content) : '-'}
+          </Text>
+        </View>
       </ScrollView>
     );
   }
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 22, fontWeight: '800', marginBottom: 12 }}>
-        Ogłoszenia
-      </Text>
+    <View style={styles.screen}>
+      <FlatList
+        data={announcements}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          error || detailsLoading ? (
+            <View style={styles.listHeader}>
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {detailsLoading ? (
+                <Text style={styles.infoText}>Wczytywanie szczegółów...</Text>
+              ) : null}
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.stateText}>Brak ogłoszeń</Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          const isFetching = detailsLoading && selectedId === item.id;
 
-      {error ? <Text>{error}</Text> : null}
-      {detailsLoading ? <Text>Wczytywanie szczegółów...</Text> : null}
-
-      {announcements.length === 0 ? (
-        <Text>Brak ogłoszeń</Text>
-      ) : (
-        <FlatList
-          data={announcements}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          return (
             <TouchableOpacity
               onPress={() => fetchDetails(item)}
-              disabled={detailsLoading && selectedId === item.id}
+              disabled={isFetching}
+              style={[styles.card, isFetching && styles.cardDisabled]}
+              accessibilityRole="button"
             >
-              <Text>{item.title}</Text>
-              <Text>ID: {item.id}</Text>
-              <Text>URL: {item.url}</Text>
+              <Text style={styles.cardTitle} numberOfLines={2}>
+                {item.title}
+              </Text>
+
+              <Text style={styles.cardAction}>
+                {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
+              </Text>
             </TouchableOpacity>
-          )}
-        />
-      )}
+          );
+        }}
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: ansColors.dashboardBg,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: ansColors.charcoal,
+    marginBottom: 12,
+  },
+  listContent: {
+    paddingBottom: 24,
+    gap: 12,
+  },
+  listHeader: {
+    marginBottom: 12,
+    gap: 6,
+  },
+  centerState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ansColors.dashboardBg,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  stateText: {
+    fontSize: 15,
+    color: ansColors.gray,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: ansColors.error,
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  infoText: {
+    color: ansColors.gray,
+    fontSize: 14,
+  },
+  retryButton: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    backgroundColor: ansColors.charcoal,
+  },
+  retryButtonText: {
+    color: ansColors.surface,
+    fontWeight: '700',
+  },
+  card: {
+    backgroundColor: ansColors.surface,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: ansColors.dashboardFeatureBorder,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+  },
+  cardDisabled: {
+    opacity: 0.7,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: ansColors.charcoal,
+    marginBottom: 10,
+  },
+  cardAction: {
+    marginTop: 12,
+    fontSize: 13,
+    fontWeight: '600',
+    color: ansColors.goldDark,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: 12,
+    marginTop: 6,
+  },
+  metaLabel: {
+    fontSize: 12,
+    color: ansColors.gray,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  metaValue: {
+    flex: 1,
+    fontSize: 13,
+    color: ansColors.charcoal,
+    textAlign: 'right',
+  },
+  emptyState: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: ansColors.surface,
+    borderWidth: 1,
+    borderColor: ansColors.dashboardFeatureBorder,
+    marginBottom: 12,
+  },
+  backButtonText: {
+    color: ansColors.charcoal,
+    fontWeight: '600',
+  },
+  detailsContent: {
+    paddingBottom: 24,
+  },
+  detailsCard: {
+    backgroundColor: ansColors.surface,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: ansColors.dashboardFeatureBorder,
+    marginBottom: 12,
+  },
+  contentCard: {
+    backgroundColor: ansColors.surface,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: ansColors.dashboardFeatureBorder,
+  },
+  contentLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: ansColors.gray,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  contentText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: ansColors.charcoal,
+  },
+});

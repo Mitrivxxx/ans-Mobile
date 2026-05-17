@@ -9,8 +9,15 @@ export const dashboardScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: ansColors.dashboardBg,
   },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   emptyState: {
     flex: 1,
+    minHeight: 120,
     backgroundColor: ansColors.dashboardBg,
   },
 });

@@ -16,7 +16,7 @@ type FieldProps = {
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 };
 
-const AVATAR_SIZE = 108;
+const AVATAR_SIZE = 180;
 
 function fieldValue(value: string): string {
   return value && value.trim() ? value : '—';
@@ -146,7 +146,7 @@ const styles = {
   headerCard: {
     backgroundColor: ansColors.surface,
     borderRadius: 24,
-    padding: 18,
+    padding: 32,
     borderWidth: 1,
     borderColor: ansColors.grayBorder,
     shadowColor: ansColors.black,
@@ -157,7 +157,7 @@ const styles = {
   },
   headerTopRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 26,
     alignItems: 'center',
   },
   avatarWrap: {
@@ -185,18 +185,18 @@ const styles = {
   },
   headerName: {
     color: ansColors.charcoal,
-    fontSize: 24,
+    fontSize: 39,
     fontWeight: '800',
-    lineHeight: 30,
+    lineHeight: 46,
   },
   headerMeta: {
     color: ansColors.gray,
-    fontSize: 14,
-    marginTop: 8,
-    lineHeight: 20,
+    fontSize: 22,
+    marginTop: 13,
+    lineHeight: 30,
   },
   chipRow: {
-    marginTop: 16,
+    marginTop: 26,
     flexDirection: 'row',
     gap: 10,
     flexWrap: 'wrap',
