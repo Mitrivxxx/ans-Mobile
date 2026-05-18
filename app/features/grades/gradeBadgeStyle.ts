@@ -15,6 +15,13 @@ export function getGradeBadgeStyle(grade: string): GradeBadgeStyle {
     };
   }
 
+  if (value < 2) {
+    return {
+      backgroundColor: gradesColors.gradeGrayBg,
+      color: gradesColors.gradeGray,
+    };
+  }
+
   if (value >= 5) {
     return {
       backgroundColor: gradesColors.gradeGreenBg,

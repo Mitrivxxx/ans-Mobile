@@ -14,7 +14,7 @@ import {
   lessonDateKeyFromScraper,
   timeToMinutes,
 } from '../utils/workWeek';
-import DashboardScheduleLessonCard from './DashboardScheduleLessonCard';
+import ScheduleLessonCard from '../../../components/schedule/ScheduleLessonCard';
 import { dashboardSchedulePanelStyles as styles } from './DashboardSchedulePanel.styles';
 
 export default function DashboardSchedulePanel() {
@@ -142,7 +142,7 @@ export default function DashboardSchedulePanel() {
         </View>
       ) : (
         dayLessons.map((lesson, index) => (
-          <DashboardScheduleLessonCard
+          <ScheduleLessonCard
             key={`${lesson.date}-${lesson.from}-${lesson.subject}-${index}`}
             lesson={lesson}
           />

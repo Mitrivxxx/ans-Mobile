@@ -12,7 +12,7 @@ export type DashboardQuickAction = {
 
 export const DASHBOARD_QUICK_ACTIONS: DashboardQuickAction[] = [
   {
-    title: 'Harmonogram',
+    title: 'Plan zajęć',
     image: require('../../../assets/icons/calendar.png'),
     fillColor: HARMONOGRAM_ACCENT_COLOR,
   },

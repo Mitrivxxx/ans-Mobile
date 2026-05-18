@@ -9,8 +9,13 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import ScheduleLessonCard from '../components/schedule/ScheduleLessonCard';
 import { PlanService, type Lesson } from '../core/scraper/features/plan/paln.service';
+import { HARMONOGRAM_ACCENT_COLOR } from '../features/dashboard/dashboard.quickActions';
 import { ansColors } from '../theme/ansTheme';
+
+const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
+const CALENDAR_SELECTED_DAY_BG = '#F5D547';
 
 type Props = {
   navigation: {
@@ -246,8 +251,8 @@ export default function PlanScreen({ navigation }: Props) {
                   <Text
                     style={[
                       styles.dayText,
+                      isToday && !isSelected && styles.dayTextToday,
                       isSelected && styles.dayTextSelected,
-                      isToday && styles.dayTextToday,
                     ]}
                   >
                     {cell.getDate()}
@@ -261,31 +266,18 @@ export default function PlanScreen({ navigation }: Props) {
       </View>
 
       {dayLessons.length === 0 ? (
-        <View style={styles.emptyCard}>
+        <View style={[styles.emptyCard, styles.lessonsSection]}>
           <Text style={styles.emptyText}>Brak zajęć w tym dniu</Text>
         </View>
       ) : (
-        dayLessons.map((lesson, index) => (
-          <View key={`${lesson.date}-${lesson.from}-${index}`} style={styles.lessonCard}>
-            <View style={styles.lessonTimeBlock}>
-              <Text style={styles.lessonTime}>{lesson.from}</Text>
-              <Text style={styles.lessonTimeDivider}>–</Text>
-              <Text style={styles.lessonTime}>{lesson.to}</Text>
-            </View>
-            <Text style={styles.lessonSubject}>{lesson.subject}</Text>
-            <Text style={styles.lessonMeta}>Sala: {lesson.room || '—'}</Text>
-            <Text style={styles.lessonMeta}>Prowadzący: {lesson.teacher || '—'}</Text>
-            {lesson.type ? (
-              <Text style={styles.lessonMeta}>Typ: {lesson.type}</Text>
-            ) : null}
-            {lesson.groups ? (
-              <Text style={styles.lessonMeta}>Grupy: {lesson.groups}</Text>
-            ) : null}
-            {lesson.notes ? (
-              <Text style={styles.lessonNotes}>{lesson.notes}</Text>
-            ) : null}
-          </View>
-        ))
+        <View style={styles.lessonsSection}>
+          {dayLessons.map((lesson, index) => (
+            <ScheduleLessonCard
+              key={`${lesson.date}-${lesson.from}-${lesson.subject}-${index}`}
+              lesson={lesson}
+            />
+          ))}
+        </View>
       )}
     </ScrollView>
   );
@@ -317,6 +309,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
+    marginBottom: 0,
+  },
+  lessonsSection: {
+    marginTop: 24,
   },
   calendarHeader: {
     flexDirection: 'row',
@@ -366,11 +362,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dayCircleSelected: {
-    backgroundColor: ansColors.black,
+    backgroundColor: CALENDAR_SELECTED_DAY_BG,
   },
   dayCircleToday: {
-    borderWidth: 1,
-    borderColor: ansColors.gold,
+    borderWidth: 2.5,
+    borderColor: HARMONOGRAM_ACCENT_COLOR,
   },
   dayText: {
     fontSize: 13,
@@ -378,17 +374,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dayTextSelected: {
-    color: ansColors.surface,
+    color: ansColors.charcoal,
+    fontWeight: '800',
   },
   dayTextToday: {
-    color: ansColors.goldDark,
+    color: HARMONOGRAM_ACCENT_COLOR,
+    fontWeight: '700',
   },
   lessonDot: {
     marginTop: 4,
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: ansColors.gold,
+    backgroundColor: CALENDAR_LESSON_DOT_COLOR,
   },
   lessonsHeader: {
     marginTop: 18,
@@ -407,52 +405,14 @@ const styles = StyleSheet.create({
   emptyCard: {
     backgroundColor: ansColors.surface,
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
     borderWidth: 1,
     borderColor: ansColors.grayBorder,
   },
   emptyText: {
     fontSize: 14,
     color: ansColors.gray,
-  },
-  lessonCard: {
-    backgroundColor: ansColors.surface,
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: ansColors.grayBorder,
-    marginBottom: 12,
-  },
-  lessonTimeBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  lessonTime: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: ansColors.charcoal,
-  },
-  lessonTimeDivider: {
-    marginHorizontal: 6,
-    color: ansColors.gray,
-    fontWeight: '700',
-  },
-  lessonSubject: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: ansColors.charcoal,
-    marginBottom: 6,
-  },
-  lessonMeta: {
-    fontSize: 13,
-    color: ansColors.gray,
-    marginBottom: 2,
-  },
-  lessonNotes: {
-    marginTop: 6,
-    fontSize: 12,
-    color: ansColors.gray,
+    textAlign: 'center',
   },
   centerState: {
     flex: 1,
