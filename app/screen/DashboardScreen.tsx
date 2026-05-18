@@ -3,6 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
+import DashboardAnnouncementsPanel from '../features/dashboard/components/DashboardAnnouncementsPanel';
 import DashboardGradesPanel from '../features/dashboard/components/DashboardGradesPanel';
 import DashboardInfoBanner from '../features/dashboard/components/DashboardInfoBanner';
 import DashboardQuickActions from '../features/dashboard/components/DashboardQuickActions';
@@ -11,6 +12,7 @@ import { dashboardScreenStyles as styles } from '../features/dashboard/Dashboard
 
 const HARMONOGRAM_ACTION_TITLE = 'Plan zajęć';
 const GRADES_ACTION_TITLE = 'Przedmioty i oceny';
+const ANNOUNCEMENTS_ACTION_TITLE = 'Ogłoszenia';
 
 type Props = {
   navigation: Record<string, never>;
@@ -22,6 +24,8 @@ export default function DashboardScreen(_props: Props) {
   );
   const showSchedule = selectedQuickAction === HARMONOGRAM_ACTION_TITLE;
   const showGrades = selectedQuickAction === GRADES_ACTION_TITLE;
+  const showAnnouncements =
+    selectedQuickAction === ANNOUNCEMENTS_ACTION_TITLE;
 
   useFocusEffect(
     useCallback(() => {
@@ -34,6 +38,8 @@ export default function DashboardScreen(_props: Props) {
     activePanel = <DashboardSchedulePanel key="harmonogram-panel" />;
   } else if (showGrades) {
     activePanel = <DashboardGradesPanel key="grades-panel" />;
+  } else if (showAnnouncements) {
+    activePanel = <DashboardAnnouncementsPanel key="announcements-panel" />;
   } else {
     activePanel = <View style={styles.emptyState} />;
   }

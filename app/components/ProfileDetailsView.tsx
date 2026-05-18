@@ -16,7 +16,7 @@ type FieldProps = {
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 };
 
-const AVATAR_SIZE = 180;
+const AVATAR_SIZE = 128;
 
 function fieldValue(value: string): string {
   return value && value.trim() ? value : '—';
@@ -145,8 +145,8 @@ const styles = {
   },
   headerCard: {
     backgroundColor: ansColors.surface,
-    borderRadius: 24,
-    padding: 32,
+    borderRadius: 22,
+    padding: 20,
     borderWidth: 1,
     borderColor: ansColors.grayBorder,
     shadowColor: ansColors.black,
@@ -157,7 +157,7 @@ const styles = {
   },
   headerTopRow: {
     flexDirection: 'row',
-    gap: 26,
+    gap: 16,
     alignItems: 'center',
   },
   avatarWrap: {
@@ -177,7 +177,7 @@ const styles = {
   },
   avatarPlaceholder: {
     color: ansColors.gold,
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
   },
   headerCopy: {
@@ -185,46 +185,46 @@ const styles = {
   },
   headerName: {
     color: ansColors.charcoal,
-    fontSize: 39,
+    fontSize: 26,
     fontWeight: '800',
-    lineHeight: 46,
+    lineHeight: 30,
   },
   headerMeta: {
     color: ansColors.gray,
-    fontSize: 22,
-    marginTop: 13,
-    lineHeight: 30,
+    fontSize: 15,
+    marginTop: 8,
+    lineHeight: 21,
   },
   chipRow: {
-    marginTop: 26,
+    marginTop: 16,
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     flexWrap: 'wrap',
   },
   chip: {
-    minWidth: 96,
+    minWidth: 84,
     flexGrow: 1,
     backgroundColor: ansColors.background,
     borderWidth: 1,
     borderColor: ansColors.grayBorder,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   chipLabel: {
     color: ansColors.gray,
-    fontSize: 12,
+    fontSize: 11,
     marginBottom: 4,
   },
   chipValue: {
     color: ansColors.charcoal,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   sectionCard: {
     backgroundColor: ansColors.surface,
-    borderRadius: 24,
-    padding: 18,
+    borderRadius: 22,
+    padding: 16,
     shadowColor: ansColors.black,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
@@ -234,39 +234,39 @@ const styles = {
     borderColor: ansColors.grayBorder,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: ansColors.charcoal,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   sectionBody: {
-    gap: 10,
+    gap: 8,
   },
   fieldRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: ansColors.background,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: '#ECE9E1',
   },
   fieldIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(201,162,39,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
-    marginTop: 1,
+    marginRight: 8,
+    marginTop: 0,
   },
   fieldTextWrap: {
     flex: 1,
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     color: ansColors.gray,
@@ -274,8 +274,8 @@ const styles = {
     fontWeight: '700',
   },
   fieldValue: {
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 19,
     color: ansColors.charcoal,
     fontWeight: '600',
   },
