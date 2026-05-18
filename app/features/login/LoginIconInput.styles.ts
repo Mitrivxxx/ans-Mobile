@@ -33,4 +33,11 @@ export const loginIconInputStyles = StyleSheet.create({
     color: ansColors.charcoal,
     paddingVertical: 0,
   },
+  rightIconButton: {
+    marginLeft: 12,
+    padding: 4,
+  },
+  rightIconButtonDisabled: {
+    opacity: 0.5,
+  },
 });

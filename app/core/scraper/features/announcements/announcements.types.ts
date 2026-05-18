@@ -8,4 +8,6 @@ export interface Announcement {
   title: string;
   url: string;
   id: string;
+  authorName: string;
+  date: string;
 }

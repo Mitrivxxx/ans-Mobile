@@ -7,6 +7,7 @@ export type DashboardQuickAction = {
   title: string;
   image: ImageSourcePropType;
   fillColor: string;
+  imageScale?: number;
 };
 
 export const DASHBOARD_QUICK_ACTIONS: DashboardQuickAction[] = [
@@ -19,6 +20,7 @@ export const DASHBOARD_QUICK_ACTIONS: DashboardQuickAction[] = [
     title: 'Przedmioty i oceny',
     image: require('../../../assets/icons/school.png'),
     fillColor: '#2EAAA0',
+    imageScale: 1.2,
   },
   {
     title: 'Ogłoszenia',

@@ -52,6 +52,40 @@ export const loginScreenStyles = StyleSheet.create({
   form: {
     width: '100%',
   },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    marginBottom: 12,
+    marginLeft: 6,
+  },
+  rememberRowDisabled: {
+    opacity: 0.6,
+  },
+  rememberOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: ansColors.grayBorder,
+    backgroundColor: ansColors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  rememberOuterActive: {
+    borderColor: ansColors.gold,
+  },
+  rememberInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: ansColors.gold,
+  },
+  rememberText: {
+    fontSize: 14,
+    color: ansColors.gray,
+  },
   button: {
     height: LOGIN_INPUT_HEIGHT,
     borderRadius: LOGIN_INPUT_HEIGHT / 2,

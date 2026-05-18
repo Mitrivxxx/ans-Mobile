@@ -74,7 +74,12 @@ export default function DashboardQuickActionButton({
           <View style={styles.iconWrap}>
             <Image
               source={action.image}
-              style={styles.iconImage}
+              style={[
+                styles.iconImage,
+                action.imageScale
+                  ? { transform: [{ scale: action.imageScale }] }
+                  : null,
+              ]}
               resizeMode="contain"
             />
           </View>

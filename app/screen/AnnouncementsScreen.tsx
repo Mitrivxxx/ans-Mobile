@@ -115,8 +115,6 @@ export default function AnnouncementsScreen({ navigation }: Props) {
           <Text style={styles.backButtonText}>← Lista ogłoszeń</Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>Szczegóły ogłoszenia</Text>
-
         <View style={styles.detailsCard}>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Nadawca</Text>
@@ -131,7 +129,6 @@ export default function AnnouncementsScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.contentCard}>
-          <Text style={styles.contentLabel}>Treść ogłoszenia</Text>
           <Text style={styles.contentText}>
             {selected.content ? normalizeContent(selected.content) : '-'}
           </Text>
@@ -176,6 +173,10 @@ export default function AnnouncementsScreen({ navigation }: Props) {
                 {item.title}
               </Text>
 
+              <Text style={styles.cardAuthor} numberOfLines={1}>
+                {item.authorName}
+              </Text>
+
               <Text style={styles.cardAction}>
                 {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
               </Text>
@@ -193,12 +194,6 @@ const styles = StyleSheet.create({
     backgroundColor: ansColors.dashboardBg,
     paddingHorizontal: 16,
     paddingTop: 12,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: ansColors.charcoal,
-    marginBottom: 12,
   },
   listContent: {
     paddingBottom: 24,
@@ -260,10 +255,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: ansColors.charcoal,
-    marginBottom: 10,
+    marginBottom: 6,
+  },
+  cardAuthor: {
+    fontSize: 13,
+    color: ansColors.gray,
+    marginBottom: 4,
   },
   cardAction: {
-    marginTop: 12,
+    marginTop: 8,
     fontSize: 13,
     fontWeight: '600',
     color: ansColors.goldDark,
@@ -322,14 +322,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: ansColors.dashboardFeatureBorder,
-  },
-  contentLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: ansColors.gray,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
   },
   contentText: {
     fontSize: 14,

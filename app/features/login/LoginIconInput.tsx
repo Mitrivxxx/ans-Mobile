@@ -3,6 +3,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Text,
   TextInput,
+  TouchableOpacity,
   View,
   type TextInputProps,
 } from 'react-native';
@@ -26,6 +27,11 @@ export type LoginIconInputProps = {
   returnKeyType?: TextInputProps['returnKeyType'];
   onSubmitEditing?: TextInputProps['onSubmitEditing'];
   blurOnSubmit?: boolean;
+  rightIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  rightIconColor?: string;
+  rightIconA11yLabel?: string;
+  onRightIconPress?: () => void;
+  rightIconDisabled?: boolean;
 };
 
 const LoginIconInput = forwardRef<TextInput, LoginIconInputProps>(
@@ -46,6 +52,11 @@ const LoginIconInput = forwardRef<TextInput, LoginIconInputProps>(
       returnKeyType,
       onSubmitEditing,
       blurOnSubmit = false,
+      rightIcon,
+      rightIconColor,
+      rightIconA11yLabel,
+      onRightIconPress,
+      rightIconDisabled = false,
     },
     ref
   ) {
@@ -76,6 +87,25 @@ const LoginIconInput = forwardRef<TextInput, LoginIconInputProps>(
             onSubmitEditing={onSubmitEditing}
             blurOnSubmit={blurOnSubmit}
           />
+          {rightIcon ? (
+            <TouchableOpacity
+              style={[
+                styles.rightIconButton,
+                rightIconDisabled && styles.rightIconButtonDisabled,
+              ]}
+              onPress={onRightIconPress}
+              disabled={rightIconDisabled}
+              accessibilityRole="button"
+              accessibilityLabel={rightIconA11yLabel}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons
+                name={rightIcon}
+                size={22}
+                color={rightIconColor ?? ansColors.gray}
+              />
+            </TouchableOpacity>
+          ) : null}
         </View>
         {!!fieldError && <Text style={styles.fieldError}>{fieldError}</Text>}
       </View>

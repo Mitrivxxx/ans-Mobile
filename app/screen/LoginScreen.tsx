@@ -39,6 +39,8 @@ export default function LoginScreen({
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [usernameFieldError, setUsernameFieldError] = useState('');
   const [passwordFieldError, setPasswordFieldError] = useState('');
@@ -267,9 +269,35 @@ export default function LoginScreen({
               setPasswordFieldError('');
               clearFormError();
             }}
-            secureTextEntry
+            secureTextEntry={!passwordVisible}
+            rightIcon={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+            rightIconColor={passwordVisible ? ansColors.gold : ansColors.gray}
+            rightIconA11yLabel={
+              passwordVisible ? 'Ukryj hasło' : 'Pokaż hasło'
+            }
+            onRightIconPress={() => setPasswordVisible((value) => !value)}
+            rightIconDisabled={loading}
             editable={!loading}
           />
+
+          <TouchableOpacity
+            style={[styles.rememberRow, loading && styles.rememberRowDisabled]}
+            onPress={() => setRememberMe((value) => !value)}
+            activeOpacity={0.8}
+            disabled={loading}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: rememberMe, disabled: loading }}
+          >
+            <View
+              style={[
+                styles.rememberOuter,
+                rememberMe && styles.rememberOuterActive,
+              ]}
+            >
+              {rememberMe && <View style={styles.rememberInner} />}
+            </View>
+            <Text style={styles.rememberText}>Zapamiętaj mnie</Text>
+          </TouchableOpacity>
 
           {captchaVisible && (
             <LoginCaptchaSection
