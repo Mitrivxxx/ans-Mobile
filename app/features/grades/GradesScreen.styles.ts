@@ -15,6 +15,7 @@ export const gradesScreenStyles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: GRADES_HORIZONTAL_PADDING,
+    paddingTop: 15,
     paddingBottom: 32,
   },
   header: {

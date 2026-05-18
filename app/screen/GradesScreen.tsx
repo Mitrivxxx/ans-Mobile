@@ -76,8 +76,6 @@ export default function GradesScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Moje oceny</Text>
-
         {semesters.length === 0 || !currentSemester ? (
           <Text style={styles.emptyText}>Brak danych o ocenach</Text>
         ) : (

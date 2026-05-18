@@ -3,12 +3,14 @@ import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
+import DashboardGradesPanel from '../features/dashboard/components/DashboardGradesPanel';
 import DashboardInfoBanner from '../features/dashboard/components/DashboardInfoBanner';
 import DashboardQuickActions from '../features/dashboard/components/DashboardQuickActions';
 import DashboardSchedulePanel from '../features/dashboard/components/DashboardSchedulePanel';
 import { dashboardScreenStyles as styles } from '../features/dashboard/DashboardScreen.styles';
 
 const HARMONOGRAM_ACTION_TITLE = 'Plan zajęć';
+const GRADES_ACTION_TITLE = 'Przedmioty i oceny';
 
 type Props = {
   navigation: Record<string, never>;
@@ -19,12 +21,22 @@ export default function DashboardScreen(_props: Props) {
     null
   );
   const showSchedule = selectedQuickAction === HARMONOGRAM_ACTION_TITLE;
+  const showGrades = selectedQuickAction === GRADES_ACTION_TITLE;
 
   useFocusEffect(
     useCallback(() => {
       setSelectedQuickAction(HARMONOGRAM_ACTION_TITLE);
     }, [])
   );
+
+  let activePanel: React.ReactNode;
+  if (showSchedule) {
+    activePanel = <DashboardSchedulePanel key="harmonogram-panel" />;
+  } else if (showGrades) {
+    activePanel = <DashboardGradesPanel key="grades-panel" />;
+  } else {
+    activePanel = <View style={styles.emptyState} />;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
@@ -38,11 +50,7 @@ export default function DashboardScreen(_props: Props) {
           selectedTitle={selectedQuickAction}
           onSelect={setSelectedQuickAction}
         />
-        {showSchedule ? (
-          <DashboardSchedulePanel key="harmonogram-panel" />
-        ) : (
-          <View style={styles.emptyState} />
-        )}
+        {activePanel}
       </ScrollView>
     </SafeAreaView>
   );
