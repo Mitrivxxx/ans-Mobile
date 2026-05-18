@@ -14,7 +14,7 @@ type Props = {
 export default function ScheduleLessonCard({ lesson }: Props) {
   const typeStyle = resolveLessonTypeStyle(lesson.type, lesson.groups);
   const accentColor = typeStyle?.color ?? ansColors.grayLight;
-  const typeLabel = lesson.type || lesson.groups;
+  const groupLabel = lesson.groups;
 
   return (
     <View style={styles.lessonRow}>
@@ -60,9 +60,11 @@ export default function ScheduleLessonCard({ lesson }: Props) {
             </View>
           ) : null}
 
-          {typeLabel ? (
+          {groupLabel ? (
             <View style={styles.lessonMetaRow}>
-              <Text style={styles.lessonMetaText}>{typeLabel}</Text>
+              <Text style={styles.lessonMetaText} numberOfLines={2}>
+                {groupLabel}
+              </Text>
             </View>
           ) : null}
 
