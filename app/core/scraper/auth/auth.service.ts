@@ -7,11 +7,11 @@ import {
   setSessionCookies,
 } from "../client/client";
 import {
+  flushCookieWrites,
   getCookiesFromManager,
   hasAuthenticationCookie,
   mergeAuthCookiesFromNativeIfNeeded,
   showCookies,
-  syncAxiosCookiesToNative,
 } from "../client/cookies";
 
 import type { LoginResult, LoginWdOptions } from "./auth.types";
@@ -36,6 +36,7 @@ import {
   loginPostLooksSuccessful,
 } from "./login.parser";
 import { logout as performLogout } from "./logout";
+import { markSessionEstablished } from "./sessionLifetime";
 import {
   clearSession,
   getNativeCookieHeader,
@@ -106,7 +107,7 @@ async function loginWD(
             ? getRes.data
             : String(getRes.data ?? "");
 
-        await syncAxiosCookiesToNative();
+        await flushCookieWrites();
       } catch (error: unknown) {
         console.log("Logowanie się nie powiodło");
         return loginFailureFromThrowable(error);
@@ -140,8 +141,8 @@ async function loginWD(
     }
 
     try {
+      await flushCookieWrites();
       const jar = getAxiosCookieHeader();
-      await syncAxiosCookiesToNative();
 
       if (!hasRequiredSessionCookies(jar)) {
         console.log("Logowanie się nie powiodło");
@@ -218,7 +219,7 @@ async function loginWD(
         }
       );
 
-      await syncAxiosCookiesToNative();
+      await flushCookieWrites();
       await mergeAuthCookiesFromNativeIfNeeded();
 
       const postHttpError = classifyLoginHttpStatus(postRes.status);
@@ -283,6 +284,7 @@ async function loginWD(
     }
 
     await setSessionCookies(getAxiosCookieHeader());
+    await markSessionEstablished();
 
     console.log("Udało się zalogować");
     await showCookies("po logowaniu");

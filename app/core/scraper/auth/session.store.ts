@@ -1,19 +1,13 @@
 import CookieManager from "@react-native-cookies/cookies";
-import { Platform } from "react-native";
 
-import { WD_BASE_URL, clearCookies } from "../client/client";
+import { clearCookieStore, WD_BASE_URL } from "../client/cookieStore";
 import { hasAuthenticationCookie } from "../client/cookies";
 
+import { clearSessionEstablished } from "./sessionLifetime";
+
 export async function clearSession(): Promise<void> {
-  await CookieManager.clearAll();
-  await clearCookies();
-  if (Platform.OS === "android") {
-    try {
-      await CookieManager.flush();
-    } catch {
-      /* ignore */
-    }
-  }
+  await clearCookieStore();
+  await clearSessionEstablished();
 }
 
 export async function getNativeCookieHeader(): Promise<string | null> {

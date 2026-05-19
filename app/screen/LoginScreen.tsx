@@ -20,7 +20,7 @@ import { ansColors } from '../theme/ansTheme';
 import LoginCaptchaSection from '../features/login/LoginCaptchaSection';
 import LoginIconInput from '../features/login/LoginIconInput';
 import LoginInfoButton from '../features/login/LoginInfoButton';
-import { useRememberMeAuth } from '../context/RememberMeAuthContext';
+import { useAuthSession } from '../context/AuthSessionContext';
 import { isRememberMeEnabled } from '../core/auth/rememberMe.storage';
 import {
   getLoginErrorMessage,
@@ -32,11 +32,10 @@ import KeyboardDismissView from '../components/KeyboardDismissView';
 
 const ansLogo = require('../../assets/icons/anslogo.png');
 
-export default function LoginScreen({
-  navigation,
-}: any) {
+export default function LoginScreen() {
   const authService = useMemo(() => new AuthService(), []);
-  const { enableRememberMe, disableRememberMe } = useRememberMeAuth();
+  const { enableRememberMe, disableRememberMe, markAuthenticated } =
+    useAuthSession();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -196,8 +195,7 @@ export default function LoginScreen({
       }
 
       resetCaptchaUi();
-      console.log('[LOGIN SCREEN] NAVIGATING TO DASHBOARD');
-      navigation.replace('Dashboard');
+      markAuthenticated();
     } catch (err: unknown) {
       console.log('[LOGIN SCREEN] CATCH ERROR', err);
       const code = classifyLoginThrowable(err);
@@ -216,7 +214,7 @@ export default function LoginScreen({
     password,
     loading,
     authService,
-    navigation,
+    markAuthenticated,
     captchaContinuationHtml,
     captchaCode,
     resetCaptchaUi,

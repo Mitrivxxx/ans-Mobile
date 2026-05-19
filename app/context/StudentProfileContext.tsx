@@ -7,7 +7,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 
+import { useAuthSession } from './AuthSessionContext';
 import {
   ProfileService,
   type ProfileSummary,
@@ -28,18 +30,25 @@ const StudentProfileContext = createContext<StudentProfileContextValue | null>(
   null
 );
 
+function isProfileRoute(routeName: string | undefined): boolean {
+  return Boolean(routeName && routeName !== 'Login');
+}
+
 export function StudentProfileProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const profileService = useMemo(() => new ProfileService(), []);
+  const { authStatus, sessionDegraded } = useAuthSession();
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [routeName, setRouteName] = useState<string | undefined>(
     getCurrentRouteName()
   );
-  const fetchStartedRef = useRef(false);
+  const inFlightRef = useRef(false);
+  const summaryRef = useRef<ProfileSummary | null>(null);
+  summaryRef.current = summary;
 
   useEffect(() => {
     const syncRoute = () => setRouteName(getCurrentRouteName());
@@ -55,59 +64,105 @@ export function StudentProfileProvider({
   const clear = useCallback(() => {
     setSummary(null);
     setLoading(false);
-    fetchStartedRef.current = false;
+    inFlightRef.current = false;
   }, []);
 
-  const refetch = useCallback(async () => {
+  const loadProfile = useCallback(async (): Promise<boolean> => {
+    if (inFlightRef.current) {
+      return false;
+    }
+
+    inFlightRef.current = true;
+    setLoading(true);
+
     try {
-      setLoading(true);
       const data = await profileService.getProfileSummary();
       setSummary(data);
+      return true;
     } catch (err) {
       console.error('[STUDENT PROFILE]', err);
       setSummary(null);
+      return false;
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
   }, [profileService]);
 
+  const refetch = useCallback(async () => {
+    inFlightRef.current = false;
+    await loadProfile();
+  }, [loadProfile]);
+
+  const shouldAutoFetch =
+    authStatus === 'authenticated' &&
+    isProfileRoute(routeName) &&
+    summary === null;
+
   useEffect(() => {
-    if (!routeName || routeName === 'Login') {
+    if (!isProfileRoute(routeName)) {
       clear();
       return;
     }
 
-    if (summary !== null || fetchStartedRef.current) {
+    if (authStatus !== 'authenticated' || summary !== null) {
       return;
     }
 
-    fetchStartedRef.current = true;
     let cancelled = false;
+    let retryTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await profileService.getProfileSummary();
-        if (!cancelled) {
-          setSummary(data);
-        }
-      } catch (err) {
-        console.error('[STUDENT PROFILE]', err);
-        if (!cancelled) {
-          setSummary(null);
-          fetchStartedRef.current = false;
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+    const attempt = async (allowRetry: boolean) => {
+      const ok = await loadProfile();
+      if (
+        ok ||
+        !allowRetry ||
+        cancelled ||
+        summaryRef.current !== null
+      ) {
+        return;
       }
-    })();
+
+      retryTimeout = setTimeout(() => {
+        if (!cancelled && summaryRef.current === null) {
+          void attempt(false);
+        }
+      }, 2500);
+    };
+
+    void attempt(true);
 
     return () => {
       cancelled = true;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
     };
-  }, [clear, profileService, routeName, summary]);
+  }, [
+    authStatus,
+    clear,
+    loadProfile,
+    routeName,
+    sessionDegraded,
+    summary,
+  ]);
+
+  useEffect(() => {
+    if (!shouldAutoFetch) {
+      return;
+    }
+
+    const onAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState !== 'active' || summary !== null) {
+        return;
+      }
+
+      void loadProfile();
+    };
+
+    const subscription = AppState.addEventListener('change', onAppStateChange);
+    return () => subscription.remove();
+  }, [shouldAutoFetch, summary, loadProfile]);
 
   const value = useMemo(
     () => ({

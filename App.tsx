@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -14,9 +14,9 @@ import {
   useAppTheme,
 } from './app/context/AppThemeContext';
 import {
-  RememberMeAuthProvider,
-  useRememberMeAuth,
-} from './app/context/RememberMeAuthContext';
+  AuthSessionProvider,
+  useAuthSession,
+} from './app/context/AuthSessionContext';
 import { ScreenRefreshProvider } from './app/context/ScreenRefreshContext';
 import { StudentProfileProvider } from './app/context/StudentProfileContext';
 import { navigationRef } from './app/navigation/navigationRef';
@@ -37,13 +37,48 @@ import { shouldPersistQuery } from './app/core/queryClient/shouldPersistQuery';
 import { ansColors } from './app/theme/ansTheme';
 import type { RootParamList } from './app/navigation/navigationRef';
 
-const Stack = createStackNavigator<RootParamList>();
+const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
+const AppStack = createStackNavigator<
+  Omit<RootParamList, 'Login'>
+>();
+
+function AuthNavigator() {
+  return (
+    <AuthStack.Navigator
+      initialRouteName="Login"
+      screenOptions={{ headerShown: false }}
+    >
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
+function MainNavigator() {
+  return (
+    <AppStack.Navigator
+      initialRouteName="Dashboard"
+      screenOptions={{ headerShown: false }}
+    >
+      <AppStack.Screen name="Dashboard" component={DashboardScreen} />
+      <AppStack.Screen name="Plan" component={PlanScreen} />
+      <AppStack.Screen name="Grades" component={GradesScreen} />
+      <AppStack.Screen
+        name="Announcements"
+        component={AnnouncementsScreen}
+      />
+      <AppStack.Screen name="Profile" component={ProfileScreen} />
+      <AppStack.Screen name="FindLecturer" component={FindLecturerScreen} />
+      <AppStack.Screen name="LecturerPlan" component={LecturerPlanScreen} />
+      <AppStack.Screen name="Settings" component={SettingsScreen} />
+    </AppStack.Navigator>
+  );
+}
 
 function AppShell() {
   const { isDarkMode, colors } = useAppTheme();
-  const { bootstrapped, rememberMeEnabled } = useRememberMeAuth();
+  const { authStatus } = useAuthSession();
 
-  if (!bootstrapped) {
+  if (authStatus === 'unknown') {
     return (
       <View
         style={{
@@ -58,49 +93,34 @@ function AppShell() {
     );
   }
 
+  if (authStatus === 'unauthenticated') {
+    return (
+      <>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <NavigationContainer ref={navigationRef}>
+          <AuthNavigator />
+        </NavigationContainer>
+      </>
+    );
+  }
+
   return (
     <>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <NavigationContainer ref={navigationRef}>
         <ScreenRefreshProvider>
-        <StudentProfileProvider>
-          <SidebarProvider>
-            <View style={{ flex: 1, backgroundColor: colors.appBackground }}>
-              <AppHeader />
-              <AuthSyncBanner />
-              <View style={{ flex: 1 }}>
-                <Stack.Navigator
-                  initialRouteName={
-                    rememberMeEnabled ? 'Dashboard' : 'Login'
-                  }
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                >
-                  <Stack.Screen name="Login" component={LoginScreen} />
-                  <Stack.Screen name="Dashboard" component={DashboardScreen} />
-                  <Stack.Screen name="Plan" component={PlanScreen} />
-                  <Stack.Screen name="Grades" component={GradesScreen} />
-                  <Stack.Screen
-                    name="Announcements"
-                    component={AnnouncementsScreen}
-                  />
-                  <Stack.Screen name="Profile" component={ProfileScreen} />
-                  <Stack.Screen
-                    name="FindLecturer"
-                    component={FindLecturerScreen}
-                  />
-                  <Stack.Screen
-                    name="LecturerPlan"
-                    component={LecturerPlanScreen}
-                  />
-                  <Stack.Screen name="Settings" component={SettingsScreen} />
-                </Stack.Navigator>
+          <StudentProfileProvider>
+            <SidebarProvider>
+              <View style={{ flex: 1, backgroundColor: colors.appBackground }}>
+                <AppHeader />
+                <AuthSyncBanner />
+                <View style={{ flex: 1 }}>
+                  <MainNavigator />
+                </View>
+                <AppSidebar />
               </View>
-              <AppSidebar />
-            </View>
-          </SidebarProvider>
-        </StudentProfileProvider>
+            </SidebarProvider>
+          </StudentProfileProvider>
         </ScreenRefreshProvider>
       </NavigationContainer>
     </>
@@ -108,6 +128,11 @@ function AppShell() {
 }
 
 export default function App() {
+  const [persistReady, setPersistReady] = useState(false);
+  const onPersistSuccess = useCallback(() => {
+    setPersistReady(true);
+  }, []);
+
   useEffect(() => {
     async function bootstrap() {
       console.log('[APP] Initializing...');
@@ -127,6 +152,7 @@ export default function App() {
   return (
     <PersistQueryClientProvider
       client={queryClient}
+      onSuccess={onPersistSuccess}
       persistOptions={{
         persister: queryPersister,
         maxAge: Number.POSITIVE_INFINITY,
@@ -137,9 +163,9 @@ export default function App() {
     >
       <SafeAreaProvider>
         <AppThemeProvider>
-          <RememberMeAuthProvider>
+          <AuthSessionProvider persistReady={persistReady}>
             <AppShell />
-          </RememberMeAuthProvider>
+          </AuthSessionProvider>
         </AppThemeProvider>
       </SafeAreaProvider>
     </PersistQueryClientProvider>

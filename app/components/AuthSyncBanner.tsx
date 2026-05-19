@@ -2,61 +2,50 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { useRememberMeAuth } from '../context/RememberMeAuthContext';
-import { replaceTo } from '../navigation/navigationRef';
+import { useAuthSession } from '../context/AuthSessionContext';
 import { ansColors } from '../theme/ansTheme';
 
 export default function AuthSyncBanner() {
-  const {
-    rememberMeEnabled,
-    backgroundLoginStatus,
-    backgroundLoginError,
-    dismissBackgroundLoginError,
-  } = useRememberMeAuth();
+  const { sessionDegraded, retrySessionRestore, signOut } = useAuthSession();
 
-  if (
-    !rememberMeEnabled ||
-    backgroundLoginStatus !== 'error' ||
-    !backgroundLoginError
-  ) {
+  if (!sessionDegraded) {
     return null;
   }
-
-  const goToLogin = () => {
-    dismissBackgroundLoginError();
-    replaceTo('Login');
-  };
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.banner}>
         <MaterialCommunityIcons
-          name="alert-circle-outline"
+          name="cloud-off-outline"
           size={20}
           color={ansColors.error}
         />
-        <Text style={styles.errorText}>{backgroundLoginError}</Text>
+        <Text style={styles.errorText}>
+          Sesja WD wygasła lub nie udało się jej odnowić. Wyświetlany jest
+          zapisany plan zajęć — dane mogą być nieaktualne. Zaloguj się, aby
+          odświeżyć.
+        </Text>
       </View>
       <View style={styles.actions}>
         <Pressable
-          onPress={goToLogin}
+          onPress={() => void retrySessionRestore()}
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.actionButton,
             pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.actionPrimary}>Przejdź do logowania</Text>
+          <Text style={styles.actionPrimary}>Spróbuj ponownie</Text>
         </Pressable>
         <Pressable
-          onPress={dismissBackgroundLoginError}
+          onPress={() => void signOut()}
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.actionButton,
             pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.actionSecondary}>Zamknij</Text>
+          <Text style={styles.actionSecondary}>Wyloguj</Text>
         </Pressable>
       </View>
     </View>

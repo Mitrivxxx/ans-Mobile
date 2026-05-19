@@ -1,11 +1,13 @@
 import CookieManager from "@react-native-cookies/cookies";
-import { Platform } from "react-native";
 
 import {
+  flushCookieWrites,
+  getCookieHeaderSync,
+  mergeCookieHeader,
   WD_BASE_URL,
-  getCookies as getAxiosCookieHeader,
-  mergeCookieHeaderIntoJar,
-} from "./client";
+} from "./cookieStore";
+
+export { flushCookieWrites, WD_BASE_URL };
 
 export function hasAuthenticationCookie(cookieHeader: string): boolean {
   return (
@@ -15,38 +17,7 @@ export function hasAuthenticationCookie(cookieHeader: string): boolean {
   );
 }
 
-/** Zapisuje bieżący cookieJar axios do CookieManager (isAuthenticated / fetch poza axios). */
-export async function syncAxiosCookiesToNative(): Promise<void> {
-  const header = getAxiosCookieHeader();
-  if (!header) return;
-
-  for (const part of header.split("; ").filter(Boolean)) {
-    const idx = part.indexOf("=");
-    if (idx === -1) continue;
-    const name = part.slice(0, idx).trim();
-    const value = part.slice(idx + 1).trim();
-    try {
-      await CookieManager.set(WD_BASE_URL, {
-        name,
-        value,
-        path: "/",
-        secure: true,
-      });
-    } catch {
-      /* pojedyncze ciasteczko */
-    }
-  }
-
-  if (Platform.OS === "android") {
-    try {
-      await CookieManager.flush();
-    } catch {
-      /* */
-    }
-  }
-}
-
-/** Wyświetla wszystkie cookies (CookieManager + jar axios). */
+/** Wyświetla wszystkie cookies (CookieManager + jar w pamięci). */
 export async function showCookies(context?: string): Promise<void> {
   const prefix = context ? `[${context}] ` : "";
   try {
@@ -63,12 +34,12 @@ export async function showCookies(context?: string): Promise<void> {
       }
     }
 
-    const axiosJar = getAxiosCookieHeader();
-    console.log(`${prefix}Cookies (axios jar):`);
-    if (!axiosJar) {
+    const jar = getCookieHeaderSync();
+    console.log(`${prefix}Cookies (session jar):`);
+    if (!jar) {
       console.log("  (brak)");
     } else {
-      for (const part of axiosJar.split("; ").filter(Boolean)) {
+      for (const part of jar.split("; ").filter(Boolean)) {
         console.log(`  ${part}`);
       }
     }
@@ -91,11 +62,15 @@ export async function getCookiesFromManager(
   }
 }
 
-/** OkHttp może zapisać .AspNet.Cookies w CookieManager zanim pojawi się w jar axios. */
+/** OkHttp może zapisać .AspNet.Cookies w CookieManager zanim pojawi się w jar. */
 export async function mergeAuthCookiesFromNativeIfNeeded(): Promise<void> {
-  const jar = getAxiosCookieHeader();
+  await flushCookieWrites();
+
+  const jar = getCookieHeaderSync();
   if (hasAuthenticationCookie(jar)) return;
+
   const native = await getCookiesFromManager();
   if (!native || !hasAuthenticationCookie(native)) return;
-  mergeCookieHeaderIntoJar(native);
+
+  await mergeCookieHeader(native);
 }

@@ -1,5 +1,6 @@
 import { parseHTML } from "linkedom";
 
+import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import {
   fetchGradesPage,
   fetchSemesterSubjects,
@@ -295,6 +296,7 @@ export function extractSubjectsFromTable(
 
 export async function parseGrades(): Promise<SemesterGrades[]> {
   const gradesHtml = await fetchGradesPage();
+  assertAuthenticatedHtml(gradesHtml);
   const doc = parseDocument(gradesHtml);
 
   const semesters: SemesterGrades[] = [];

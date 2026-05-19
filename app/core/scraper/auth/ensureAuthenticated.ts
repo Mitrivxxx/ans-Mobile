@@ -1,29 +1,40 @@
-import type { InternalAxiosRequestConfig } from 'axios';
+import type { InternalAxiosRequestConfig } from "axios";
 
 import {
   getSavedCredentials,
   isRememberMeEnabled,
-} from '../../auth/rememberMe.storage';
+} from "../../auth/rememberMe.storage";
 import {
   getCookies as getAxiosCookieHeader,
   client,
   initClient,
   mergeCookieHeaderIntoJar,
-} from '../client/client';
+} from "../client/client";
 import {
   getCookiesFromManager,
   hasAuthenticationCookie,
   mergeAuthCookiesFromNativeIfNeeded,
-} from '../client/cookies';
-import { getLoginResultErrorMessage } from '../../../features/login/loginErrorDisplay';
+} from "../client/cookies";
+import { getLoginResultErrorMessage } from "../../../features/login/loginErrorDisplay";
 
-import { AuthService } from './auth.service';
-import { isSessionAuthenticated } from './session.store';
+import { AuthService } from "./auth.service";
+import { isSessionAuthenticated } from "./session.store";
+import {
+  isSessionPastTtl,
+  markSessionEstablished,
+} from "./sessionLifetime";
+import {
+  probeWdSessionAlive,
+  responseIndicatesSessionExpired,
+  SessionExpiredError,
+} from "./sessionValidation";
+
+export { SessionExpiredError } from "./sessionValidation";
 
 export class NotAuthenticatedError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'NotAuthenticatedError';
+    this.name = "NotAuthenticatedError";
   }
 }
 
@@ -32,27 +43,42 @@ let ensureInFlight: Promise<void> | null = null;
 let loginInFlight: Promise<{ success: boolean; errorMessage?: string }> | null =
   null;
 
+let onSessionLostHandler: (() => void) | null = null;
+
+export function registerSessionLostHandler(handler: () => void): () => void {
+  onSessionLostHandler = handler;
+  return () => {
+    if (onSessionLostHandler === handler) {
+      onSessionLostHandler = null;
+    }
+  };
+}
+
+function notifySessionLost(): void {
+  onSessionLostHandler?.();
+}
+
 function pathFromRequestUrl(url?: string): string {
   if (!url) {
-    return '';
+    return "";
   }
 
-  if (url.startsWith('http')) {
+  if (url.startsWith("http")) {
     try {
       return new URL(url).pathname;
     } catch {
-      return url.split('?')[0] ?? url;
+      return url.split("?")[0] ?? url;
     }
   }
 
-  return url.split('?')[0] ?? url;
+  return url.split("?")[0] ?? url;
 }
 
 export function shouldSkipAuthForRequest(
-  config: Pick<InternalAxiosRequestConfig, 'url'>
+  config: Pick<InternalAxiosRequestConfig, "url">
 ): boolean {
   const path = pathFromRequestUrl(config.url);
-  return path === '/Logowanie' || path.endsWith('/Logowanie');
+  return path === "/Logowanie" || path.endsWith("/Logowanie");
 }
 
 export async function hasScraperSession(): Promise<boolean> {
@@ -66,7 +92,7 @@ export async function hasScraperSession(): Promise<boolean> {
   if (await isSessionAuthenticated()) {
     const native = await getCookiesFromManager();
     if (native) {
-      mergeCookieHeaderIntoJar(native);
+      await mergeCookieHeaderIntoJar(native);
     }
     return true;
   }
@@ -82,7 +108,7 @@ export async function loginWithSavedCredentials(): Promise<{
   if (!credentials) {
     return {
       success: false,
-      errorMessage: 'Brak zapisanych danych logowania.',
+      errorMessage: "Brak zapisanych danych logowania.",
     };
   }
 
@@ -94,6 +120,7 @@ export async function loginWithSavedCredentials(): Promise<{
 
   if (result.success) {
     await mergeAuthCookiesFromNativeIfNeeded();
+    await markSessionEstablished();
     return { success: true };
   }
 
@@ -103,26 +130,33 @@ export async function loginWithSavedCredentials(): Promise<{
   };
 }
 
-async function ensureAuthenticatedInternal(): Promise<void> {
-  if (await hasScraperSession()) {
-    return;
-  }
-
-  const rememberMe = await isRememberMeEnabled();
-
-  if (!rememberMe) {
-    throw new NotAuthenticatedError(
-      'Brak aktywnej sesji. Zaloguj się, aby pobrać dane.'
-    );
-  }
-
+/** Jedna współdzielona próba silent login (remember me). */
+export async function silentLoginOnce(): Promise<{
+  success: boolean;
+  errorMessage?: string;
+}> {
   if (!loginInFlight) {
     loginInFlight = loginWithSavedCredentials().finally(() => {
       loginInFlight = null;
     });
   }
 
-  const outcome = await loginInFlight;
+  return loginInFlight;
+}
+
+async function sessionNeedsRefresh(): Promise<boolean> {
+  if (!(await hasScraperSession())) {
+    return true;
+  }
+  return isSessionPastTtl();
+}
+
+async function ensureRememberMeSessionAlive(): Promise<void> {
+  if (!(await sessionNeedsRefresh())) {
+    return;
+  }
+
+  const outcome = await silentLoginOnce();
 
   if (outcome.success || (await hasScraperSession())) {
     return;
@@ -130,8 +164,25 @@ async function ensureAuthenticatedInternal(): Promise<void> {
 
   throw new NotAuthenticatedError(
     outcome.errorMessage
-      ? `Nie udało się zalogować: ${outcome.errorMessage}`
-      : 'Nie udało się odświeżyć sesji. Zaloguj się ponownie.'
+      ? `Nie udało się odświeżyć sesji: ${outcome.errorMessage}`
+      : "Nie udało się odświeżyć sesji. Zaloguj się ponownie."
+  );
+}
+
+async function ensureAuthenticatedInternal(): Promise<void> {
+  const rememberMe = await isRememberMeEnabled();
+
+  if (rememberMe) {
+    await ensureRememberMeSessionAlive();
+    return;
+  }
+
+  if (await hasScraperSession()) {
+    return;
+  }
+
+  throw new NotAuthenticatedError(
+    "Brak aktywnej sesji. Zaloguj się, aby pobrać dane."
   );
 }
 
@@ -147,6 +198,52 @@ export async function ensureAuthenticatedBeforeScrape(): Promise<void> {
   return ensureInFlight;
 }
 
+export type RememberMeResolveResult = {
+  authenticated: boolean;
+  sessionDegraded: boolean;
+  errorMessage?: string;
+};
+
+/**
+ * Przy starcie / foreground: probe lub silent login, aby sesja była aktywna.
+ */
+export async function restoreRememberMeSession(): Promise<RememberMeResolveResult> {
+  const hasCookies = await hasScraperSession();
+  const pastTtl = await isSessionPastTtl();
+
+  if (hasCookies && !pastTtl) {
+    try {
+      const alive = await probeWdSessionAlive();
+      if (alive) {
+        return { authenticated: true, sessionDegraded: false };
+      }
+    } catch {
+      /* probe failed — spróbuj silent login */
+    }
+  }
+
+  const outcome = await silentLoginOnce();
+
+  if (outcome.success || (await hasScraperSession())) {
+    return { authenticated: true, sessionDegraded: false };
+  }
+
+  return {
+    authenticated: false,
+    sessionDegraded: false,
+    errorMessage: outcome.errorMessage,
+  };
+}
+
+export async function refreshSessionOnForeground(): Promise<RememberMeResolveResult> {
+  const rememberMe = await isRememberMeEnabled();
+  if (!rememberMe) {
+    return { authenticated: await hasScraperSession(), sessionDegraded: false };
+  }
+
+  return restoreRememberMeSession();
+}
+
 export function setupScraperAuthGuard(): void {
   if (authGuardRegistered) {
     return;
@@ -156,12 +253,52 @@ export function setupScraperAuthGuard(): void {
 
   client.interceptors.request.use(
     async (config) => {
-      if (shouldSkipAuthForRequest(config)) {
+      if (config.skipSessionGuard || shouldSkipAuthForRequest(config)) {
         return config;
       }
 
       await ensureAuthenticatedBeforeScrape();
       return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  client.interceptors.response.use(
+    async (response) => {
+      if (
+        response.config.skipSessionExpiryCheck ||
+        shouldSkipAuthForRequest(response.config) ||
+        response.config._sessionRetried
+      ) {
+        return response;
+      }
+
+      if (!responseIndicatesSessionExpired(response)) {
+        return response;
+      }
+
+      const rememberMe = await isRememberMeEnabled();
+
+      if (!rememberMe) {
+        notifySessionLost();
+        throw new SessionExpiredError();
+      }
+
+      const outcome = await silentLoginOnce();
+
+      if (!outcome.success && !(await hasScraperSession())) {
+        notifySessionLost();
+        throw new SessionExpiredError(
+          outcome.errorMessage ?? "Sesja wygasła i nie udało się jej odnowić."
+        );
+      }
+
+      const retryConfig: InternalAxiosRequestConfig = {
+        ...response.config,
+        _sessionRetried: true,
+      };
+
+      return client.request(retryConfig);
     },
     (error) => Promise.reject(error)
   );

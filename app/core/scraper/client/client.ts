@@ -1,47 +1,46 @@
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const WD_BASE_URL = "https://wd.ans-ns.edu.pl";
+import {
+  applySetCookiePairs,
+  clearCookieStore,
+  flushCookieWrites,
+  getCookieHeaderSync,
+  initCookieStore,
+  mergeCookieHeader,
+  setCookieHeader,
+  WD_BASE_URL,
+} from "./cookieStore";
 
-let cookieJar = "";
+export { WD_BASE_URL };
 
 /**
- * Load session on app start
+ * Load session on app start (CookieManager + jednorazowa migracja z AsyncStorage).
  */
 export async function initClient() {
-  const saved = await AsyncStorage.getItem("cookieJar");
-  if (saved) cookieJar = saved;
+  await initCookieStore();
 }
 
-/**
- * Persist cookies
- */
-async function saveCookies() {
-  await AsyncStorage.setItem("cookieJar", cookieJar);
-}
+export const client = axios.create({
+  baseURL: WD_BASE_URL,
+  validateStatus: () => true,
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120",
+  },
+});
 
-/**
- * Merge cookies like real browser (ASP.NET safe)
- */
-function mergeCookies(oldC: string, newC: string) {
-  const map = new Map<string, string>();
+client.interceptors.request.use(async (config) => {
+  await flushCookieWrites();
+  config.headers = config.headers || {};
 
-  [...oldC.split("; "), ...newC.split("; ")]
-    .filter(Boolean)
-    .forEach((c) => {
-      const idx = c.indexOf("=");
-      if (idx === -1) return;
+  const header = getCookieHeaderSync();
+  if (header) {
+    config.headers.Cookie = header;
+  }
 
-      const k = c.slice(0, idx);
-      const v = c.slice(idx + 1);
-
-      map.set(k.trim(), v.trim());
-    });
-
-  return Array.from(map.entries())
-    .map(([k, v]) => `${k}=${v}`)
-    .join("; ");
-}
+  return config;
+});
 
 /**
  * Na Androidzie kilka Set-Cookie bywa scalone w jeden string.
@@ -77,45 +76,13 @@ function pairsFromSetCookieHeader(setCookie: string | string[]): string[] {
   return pairs;
 }
 
-/**
- * Axios client WITHOUT cookie magic (we control everything)
- */
-export const client = axios.create({
-  baseURL: WD_BASE_URL,
-  validateStatus: () => true,
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120"
-  }
-});
-
-/**
- * Attach cookies (browser-like)
- */
-client.interceptors.request.use((config) => {
-  config.headers = config.headers || {};
-
-  if (cookieJar) {
-    config.headers.Cookie = cookieJar;
-  }
-
-  return config;
-});
-
-/**
- * Capture Set-Cookie (ASP.NET session binding)
- * Synchroniczna aktualizacja cookieJar — unikamy wyścigu z await przed odczytem getCookies().
- */
 client.interceptors.response.use((res) => {
   const setCookie = res.headers?.["set-cookie"];
 
   if (setCookie) {
     const parsed = pairsFromSetCookieHeader(setCookie).join("; ");
-
     if (parsed) {
-      cookieJar = mergeCookies(cookieJar, parsed);
-      void saveCookies();
+      applySetCookiePairs(parsed);
     }
   }
 
@@ -123,24 +90,20 @@ client.interceptors.response.use((res) => {
 });
 
 export function getCookies() {
-  return cookieJar;
+  return getCookieHeaderSync();
 }
 
-/** Scala dodatkowy nagłówek Cookie do jar (np. cookie z CookieManager / OkHttp). */
-export function mergeCookieHeaderIntoJar(header: string) {
-  if (!header?.trim()) return;
-  cookieJar = mergeCookies(cookieJar, header.trim());
-  void saveCookies();
+/** Scala nagłówek Cookie do jar (np. z CookieManager / OkHttp). */
+export async function mergeCookieHeaderIntoJar(header: string) {
+  await mergeCookieHeader(header);
 }
 
 export async function clearCookies() {
-  cookieJar = "";
-  await AsyncStorage.removeItem("cookieJar");
+  await clearCookieStore();
 }
 
-/** Ustawia ciasteczka sesji dla axios (np. po logowaniu przez CookieManager + fetch). */
 export async function setSessionCookies(headerValue: string | null | undefined) {
-  if (!headerValue?.trim()) return;
-  cookieJar = headerValue.trim();
-  await saveCookies();
+  await setCookieHeader(headerValue);
 }
+
+export { flushCookieWrites };

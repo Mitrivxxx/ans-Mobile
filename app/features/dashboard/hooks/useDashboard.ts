@@ -1,16 +1,15 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { AuthService } from '../../../core/scraper/auth/auth.service';
+import { useAuthSession } from '../../../context/AuthSessionContext';
 import { useStudentProfile } from '../../../context/StudentProfileContext';
 import { DASHBOARD_FEATURES } from '../dashboard.features';
 
 type Navigation = {
   navigate: (route: string) => void;
-  replace: (route: string) => void;
 };
 
 export function useDashboard(navigation: Navigation) {
-  const authService = useMemo(() => new AuthService(), []);
+  const { signOut } = useAuthSession();
   const { summary: profileSummary, loading: profileLoading, clear } =
     useStudentProfile();
   const [logoutLoading, setLogoutLoading] = useState(false);
@@ -29,11 +28,8 @@ export function useDashboard(navigation: Navigation) {
 
     try {
       setLogoutLoading(true);
-      console.log('[DASHBOARD] LOGOUT START');
-      await authService.logout();
-      console.log('[DASHBOARD] LOGOUT SUCCESS');
       clear();
-      navigation.replace('Login');
+      await signOut();
     } catch (err) {
       console.error('[DASHBOARD] LOGOUT ERROR', err);
       alert(
@@ -43,7 +39,7 @@ export function useDashboard(navigation: Navigation) {
     } finally {
       setLogoutLoading(false);
     }
-  }, [authService, clear, navigation, logoutLoading]);
+  }, [clear, logoutLoading, signOut]);
 
   return {
     features: DASHBOARD_FEATURES,

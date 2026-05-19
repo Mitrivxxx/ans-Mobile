@@ -1,5 +1,6 @@
 import { parseHTML } from "linkedom";
 
+import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import { fetchAvatarPhoto } from "./profile.avatar";
 import {
   fetchAccountDetailsPage,
@@ -108,6 +109,9 @@ export async function parseProfileSummary(): Promise<ProfileSummary> {
     fetchAvatarPhoto(),
   ]);
 
+  assertAuthenticatedHtml(accountHtml);
+  assertAuthenticatedHtml(studiesHtml);
+
   const account = parseAccountDetailsFromHtml(accountHtml);
   const studies = parseStudiesDataFromHtml(studiesHtml);
 
@@ -123,6 +127,9 @@ export async function parseProfileBundle(): Promise<{
     fetchStudiesPage(),
     fetchAvatarPhoto(),
   ]);
+
+  assertAuthenticatedHtml(accountHtml);
+  assertAuthenticatedHtml(studiesHtml);
 
   const account = parseAccountDetailsFromHtml(accountHtml);
   const studies = parseStudiesDataFromHtml(studiesHtml);
