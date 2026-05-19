@@ -13,6 +13,7 @@ import {
   timeToMinutes,
 } from '../utils/workWeek';
 import { dashboardSchedulePanelStyles as styles } from './DashboardSchedulePanel.styles';
+import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
 export default function DashboardSchedulePanel() {
   const {
@@ -24,6 +25,8 @@ export default function DashboardSchedulePanel() {
   } = useStudentPlanWeekLessons();
 
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
+
+  useRegisterScreenRefresh(refetch);
 
   const calendarWeek = useMemo(() => getCurrentWeek(), []);
   const [selectedDateKey, setSelectedDateKey] = useState(getDefaultWeekDateKey);

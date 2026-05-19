@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,7 +10,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 
+import RefreshableScrollView from '../components/RefreshableScrollView';
 import ScreenBackButton from '../components/ScreenBackButton';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import ScheduleLessonCard from '../components/schedule/ScheduleLessonCard';
 import {
   LecturerPlanService,
@@ -103,6 +104,8 @@ export default function LecturerPlanScreen() {
     fetchLessons();
   }, [fetchLessons]);
 
+  useRegisterScreenRefresh(fetchLessons);
+
   const lessonsByDate = useMemo(() => {
     const map = new Map<string, Lesson[]>();
     lessons.forEach((lesson) => {
@@ -190,7 +193,7 @@ export default function LecturerPlanScreen() {
 
   if (loading) {
     return (
-      <ScrollView
+      <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.screenContent}
         showsVerticalScrollIndicator={false}
@@ -201,13 +204,13 @@ export default function LecturerPlanScreen() {
             <ActivityIndicator color={ansColors.gold} />
             <Text style={styles.stateText}>Wczytywanie harmonogramu…</Text>
           </View>
-      </ScrollView>
+      </RefreshableScrollView>
     );
   }
 
   if (error) {
     return (
-      <ScrollView
+      <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.screenContent}
         showsVerticalScrollIndicator={false}
@@ -220,12 +223,12 @@ export default function LecturerPlanScreen() {
             <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </RefreshableScrollView>
     );
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       style={styles.screen}
       contentContainerStyle={styles.screenContent}
       showsVerticalScrollIndicator={false}
@@ -322,7 +325,7 @@ export default function LecturerPlanScreen() {
           ))}
         </View>
       )}
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 

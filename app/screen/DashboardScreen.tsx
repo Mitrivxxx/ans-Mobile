@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
+import RefreshableScrollView from '../components/RefreshableScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -46,7 +47,7 @@ export default function DashboardScreen(_props: Props) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
-      <ScrollView
+      <RefreshableScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -57,7 +58,7 @@ export default function DashboardScreen(_props: Props) {
           onSelect={setSelectedQuickAction}
         />
         {activePanel}
-      </ScrollView>
+      </RefreshableScrollView>
     </SafeAreaView>
   );
 }

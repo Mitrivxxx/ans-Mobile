@@ -28,6 +28,7 @@ import {
   REQUIRED_FIELD_MESSAGE,
 } from '../features/login/loginErrorDisplay';
 import { loginScreenStyles as styles } from '../features/login/LoginScreen.styles';
+import KeyboardDismissView from '../components/KeyboardDismissView';
 
 const ansLogo = require('../../assets/icons/anslogo.png');
 
@@ -240,6 +241,7 @@ export default function LoginScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <KeyboardDismissView>
       <KeyboardAwareScrollView
         ref={scrollRef}
         style={styles.scroll}
@@ -250,7 +252,7 @@ export default function LoginScreen({
         enableOnAndroid
         extraScrollHeight={80}
         extraHeight={80}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="never"
         showsVerticalScrollIndicator={false}
         enableResetScrollToCoords={false}
       >
@@ -356,6 +358,7 @@ export default function LoginScreen({
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
+      </KeyboardDismissView>
     </SafeAreaView>
   );
 }

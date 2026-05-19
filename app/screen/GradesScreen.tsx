@@ -1,13 +1,14 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import RefreshableScrollView from '../components/RefreshableScrollView';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import GradesSemesterPanel from '../features/grades/components/GradesSemesterPanel';
 import GradesSubjectCard from '../features/grades/components/GradesSubjectCard';
 import { gradesScreenStyles as styles } from '../features/grades/GradesScreen.styles';
@@ -34,6 +35,8 @@ export default function GradesScreen({ navigation }: Props) {
     refetch,
   } = useGrades();
 
+  useRegisterScreenRefresh(refetch);
+
   const swipeHandlers = useSemesterSwipe({
     canGoPrevious,
     canGoNext,
@@ -44,10 +47,13 @@ export default function GradesScreen({ navigation }: Props) {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
-        <View style={styles.centerState}>
+        <RefreshableScrollView
+          contentContainerStyle={styles.centerStateScroll}
+          showsVerticalScrollIndicator={false}
+        >
           <ActivityIndicator size="large" color={gradesColors.primary} />
           <Text style={styles.stateText}>Wczytywanie ocen…</Text>
-        </View>
+        </RefreshableScrollView>
       </SafeAreaView>
     );
   }
@@ -55,7 +61,10 @@ export default function GradesScreen({ navigation }: Props) {
   if (error) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
-        <View style={styles.centerState}>
+        <RefreshableScrollView
+          contentContainerStyle={styles.centerStateScroll}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={styles.stateText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryButton}
@@ -64,14 +73,14 @@ export default function GradesScreen({ navigation }: Props) {
           >
             <Text style={styles.retryText}>Spróbuj ponownie</Text>
           </TouchableOpacity>
-        </View>
+        </RefreshableScrollView>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
-      <ScrollView
+      <RefreshableScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -104,7 +113,7 @@ export default function GradesScreen({ navigation }: Props) {
             </View>
           </View>
         )}
-      </ScrollView>
+      </RefreshableScrollView>
     </SafeAreaView>
   );
 }

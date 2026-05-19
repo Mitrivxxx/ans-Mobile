@@ -1,18 +1,32 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useAppTheme } from '../context/AppThemeContext';
+import { useStudentProfile } from '../context/StudentProfileContext';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 
 export default function SettingsScreen() {
   const { isDarkMode, colors, toggleDarkMode } = useAppTheme();
+  const { refetch } = useStudentProfile();
+
+  const refreshScreen = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  useRegisterScreenRefresh(refreshScreen);
 
   return (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: colors.screenBackground }]}
       edges={['left', 'right', 'bottom']}
     >
-      <View style={styles.container}>
+      <RefreshableScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={[styles.title, { color: colors.textPrimary }]}>Ustawienia</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Preferencje aplikacji
@@ -46,7 +60,7 @@ export default function SettingsScreen() {
             ios_backgroundColor={colors.switchTrackOff}
           />
         </View>
-      </View>
+      </RefreshableScrollView>
     </SafeAreaView>
   );
 }
@@ -55,10 +69,14 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  container: {
+  scroll: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 32,
     gap: 10,
   },
   title: {

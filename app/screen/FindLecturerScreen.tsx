@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -19,6 +18,9 @@ import {
 } from '../core/scraper/features/lecturers/lecturers.service';
 import type { RootParamList } from '../navigation/navigationRef';
 import { ansColors } from '../theme/ansTheme';
+import KeyboardDismissView from '../components/KeyboardDismissView';
+import RefreshableScrollView from '../components/RefreshableScrollView';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 
 type FindLecturerNav = StackNavigationProp<RootParamList, 'FindLecturer'>;
 
@@ -57,6 +59,14 @@ export default function FindLecturerScreen() {
       setLoading(false);
     }
   }, [firstName, lastName, lecturersService]);
+
+  const refreshScreen = useCallback(async () => {
+    if (searched && (firstName.trim() || lastName.trim())) {
+      await handleSearch();
+    }
+  }, [firstName, handleSearch, lastName, searched]);
+
+  useRegisterScreenRefresh(refreshScreen);
 
   const handleReset = useCallback(() => {
     setFirstName('');
@@ -101,10 +111,11 @@ export default function FindLecturerScreen() {
       style={styles.safeArea}
       edges={['left', 'right', 'bottom']}
     >
-      <ScrollView
+      <KeyboardDismissView>
+      <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="never"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.formCard}>
@@ -189,7 +200,8 @@ export default function FindLecturerScreen() {
             {results.map(renderResultCard)}
           </View>
         ) : null}
-      </ScrollView>
+      </RefreshableScrollView>
+      </KeyboardDismissView>
     </SafeAreaView>
   );
 }

@@ -13,6 +13,7 @@ import {
 import { ansColors } from '../../../theme/ansTheme';
 import { isWithinLastDays } from '../utils/announcementDate';
 import { dashboardAnnouncementsPanelStyles as styles } from './DashboardAnnouncementsPanel.styles';
+import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
 const RECENT_WINDOW_DAYS = 7;
 
@@ -39,6 +40,8 @@ export default function DashboardAnnouncementsPanel() {
   useEffect(() => {
     fetchAnnouncements();
   }, [fetchAnnouncements]);
+
+  useRegisterScreenRefresh(fetchAnnouncements);
 
   const recentAnnouncements = useMemo(
     () =>

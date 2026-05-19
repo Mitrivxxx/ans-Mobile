@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -9,7 +8,9 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import RefreshableScrollView from '../components/RefreshableScrollView';
 import SyncBanner from '../components/SyncBanner';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import ScheduleLessonCard from '../components/schedule/ScheduleLessonCard';
 import type { Lesson } from '../core/scraper/features/plan/paln.service';
 import { HARMONOGRAM_ACCENT_COLOR } from '../features/dashboard/dashboard.quickActions';
@@ -88,6 +89,8 @@ export default function PlanScreen({ navigation }: Props) {
   } = useStudentPlanLessons();
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
+  useRegisterScreenRefresh(refetch);
+
   const today = useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = useState(() => dateKey(today));
   const [visibleMonth, setVisibleMonth] = useState(
@@ -154,26 +157,32 @@ export default function PlanScreen({ navigation }: Props) {
 
   if (isInitialLoading) {
     return (
-      <View style={styles.centerState}>
+      <RefreshableScrollView
+        contentContainerStyle={styles.centerStateScroll}
+        showsVerticalScrollIndicator={false}
+      >
         <ActivityIndicator color={ansColors.gold} />
         <Text style={styles.stateText}>Wczytywanie planu zajęć...</Text>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   if (isFatalError) {
     return (
-      <View style={styles.centerState}>
+      <RefreshableScrollView
+        contentContainerStyle={styles.centerStateScroll}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.errorText}>Nie udało się pobrać planu zajęć</Text>
         <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
           <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       style={styles.screen}
       contentContainerStyle={styles.screenContent}
       showsVerticalScrollIndicator={false}
@@ -277,7 +286,7 @@ export default function PlanScreen({ navigation }: Props) {
           ))}
         </View>
       )}
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
@@ -412,8 +421,8 @@ const styles = StyleSheet.create({
     color: ansColors.gray,
     textAlign: 'center',
   },
-  centerState: {
-    flex: 1,
+  centerStateScroll: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

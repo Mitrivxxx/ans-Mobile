@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
 import ProfileDetailsView from '../components/ProfileDetailsView';
+import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useStudentProfile } from '../context/StudentProfileContext';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import {
   ProfileService,
   type CompleteProfileData,
@@ -22,7 +23,11 @@ type Props = {
 
 export default function ProfileScreen({ navigation }: Props) {
   const profileService = useMemo(() => new ProfileService(), []);
-  const { summary: cachedSummary, loading: summaryLoading } = useStudentProfile();
+  const {
+    summary: cachedSummary,
+    loading: summaryLoading,
+    refetch: refetchSummary,
+  } = useStudentProfile();
   const [profile, setProfile] = useState<CompleteProfileData | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState('');
@@ -45,21 +50,27 @@ export default function ProfileScreen({ navigation }: Props) {
     void fetchProfileDetails();
   }, [fetchProfileDetails]);
 
+  const refreshProfile = useCallback(async () => {
+    await Promise.all([refetchSummary(), fetchProfileDetails()]);
+  }, [fetchProfileDetails, refetchSummary]);
+
+  useRegisterScreenRefresh(refreshProfile);
+
   const loading = summaryLoading || (loadingProfile && !profile);
   const summary = cachedSummary;
 
   if (loading) {
     return (
-      <View style={screenStyles.centerState}>
+      <RefreshableScrollView contentContainerStyle={screenStyles.centerStateScroll}>
         <ActivityIndicator color="#C9A227" />
         <Text style={screenStyles.stateText}>Wczytywanie profilu...</Text>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   if (error) {
     return (
-      <View style={screenStyles.centerState}>
+      <RefreshableScrollView contentContainerStyle={screenStyles.centerStateScroll}>
         <Text style={screenStyles.errorText}>{error}</Text>
         <TouchableOpacity
           onPress={fetchProfileDetails}
@@ -67,25 +78,25 @@ export default function ProfileScreen({ navigation }: Props) {
         >
           <Text style={screenStyles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   if (!profile || !summary) {
     return (
-      <View style={screenStyles.centerState}>
+      <RefreshableScrollView contentContainerStyle={screenStyles.centerStateScroll}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={screenStyles.backText}>← Powrót</Text>
         </TouchableOpacity>
         <Text style={screenStyles.stateText}>Brak danych profilu</Text>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={screenStyles.scrollContent}>
+    <RefreshableScrollView contentContainerStyle={screenStyles.scrollContent}>
       <ProfileDetailsView summary={summary} profile={profile} />
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
@@ -103,6 +114,14 @@ const screenStyles = {
   },
   centerState: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+    backgroundColor: '#ECEEF1',
+  },
+  centerStateScroll: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

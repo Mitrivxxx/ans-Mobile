@@ -17,6 +17,7 @@ import {
   RememberMeAuthProvider,
   useRememberMeAuth,
 } from './app/context/RememberMeAuthContext';
+import { ScreenRefreshProvider } from './app/context/ScreenRefreshContext';
 import { StudentProfileProvider } from './app/context/StudentProfileContext';
 import { navigationRef } from './app/navigation/navigationRef';
 import LoginScreen from './app/screen/LoginScreen';
@@ -61,6 +62,7 @@ function AppShell() {
     <>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <NavigationContainer ref={navigationRef}>
+        <ScreenRefreshProvider>
         <StudentProfileProvider>
           <SidebarProvider>
             <View style={{ flex: 1, backgroundColor: colors.appBackground }}>
@@ -99,6 +101,7 @@ function AppShell() {
             </View>
           </SidebarProvider>
         </StudentProfileProvider>
+        </ScreenRefreshProvider>
       </NavigationContainer>
     </>
   );

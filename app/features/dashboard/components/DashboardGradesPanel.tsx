@@ -13,6 +13,7 @@ import {
 import GradesSubjectCard from '../../grades/components/GradesSubjectCard';
 import { gradesColors } from '../../grades/gradesTheme';
 import { dashboardGradesPanelStyles as styles } from './DashboardGradesPanel.styles';
+import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
 const ACTIVE_STATUS_KEYWORD = 'w trakcie nauki';
 
@@ -59,6 +60,8 @@ export default function DashboardGradesPanel() {
   useEffect(() => {
     fetchGrades();
   }, [fetchGrades]);
+
+  useRegisterScreenRefresh(fetchGrades);
 
   const activeSemester = useMemo(
     () => pickActiveSemester(semesters),

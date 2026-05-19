@@ -2,14 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+import RefreshableScrollView from '../components/RefreshableScrollView';
 import ScreenBackButton from '../components/ScreenBackButton';
+import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
+import { useRefreshControlProps } from '../hooks/useRefreshControlProps';
 import {
   AnnouncementsService,
   type Announcement,
@@ -74,33 +76,55 @@ export default function AnnouncementsScreen({ navigation }: Props) {
     fetchAnnouncements();
   }, [fetchAnnouncements]);
 
+  const refreshScreen = useCallback(async () => {
+    if (selected) {
+      const item = announcements.find((entry) => entry.id === selectedId);
+      if (item) {
+        await fetchDetails(item);
+        return;
+      }
+    }
+    await fetchAnnouncements();
+  }, [announcements, fetchAnnouncements, fetchDetails, selected, selectedId]);
+
+  useRegisterScreenRefresh(refreshScreen);
+  const { refreshControl } = useRefreshControlProps();
+
   const normalizeContent = useCallback((value: string) => {
     return value.replace(/<br\s*\/?>/gi, '\n');
   }, []);
 
   if (loading) {
     return (
-      <View style={styles.centerState}>
+      <RefreshableScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.centerStateScroll}
+        showsVerticalScrollIndicator={false}
+      >
         <ActivityIndicator color={ansColors.gold} />
         <Text style={styles.stateText}>Wczytywanie ogłoszeń...</Text>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   if (error && announcements.length === 0 && !selected) {
     return (
-      <View style={styles.centerState}>
+      <RefreshableScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.centerStateScroll}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity onPress={fetchAnnouncements} style={styles.retryButton}>
           <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
-      </View>
+      </RefreshableScrollView>
     );
   }
 
   if (selected) {
     return (
-      <ScrollView
+      <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.detailsContent}
         showsVerticalScrollIndicator={false}
@@ -131,7 +155,7 @@ export default function AnnouncementsScreen({ navigation }: Props) {
             {selected.content ? normalizeContent(selected.content) : '-'}
           </Text>
         </View>
-      </ScrollView>
+      </RefreshableScrollView>
     );
   }
 
@@ -142,6 +166,7 @@ export default function AnnouncementsScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={refreshControl}
         ListHeaderComponent={
           error || detailsLoading ? (
             <View style={styles.listHeader}>
@@ -203,6 +228,14 @@ const styles = StyleSheet.create({
   },
   centerState: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ansColors.dashboardBg,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  centerStateScroll: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: ansColors.dashboardBg,

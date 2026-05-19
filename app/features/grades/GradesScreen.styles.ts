@@ -49,6 +49,13 @@ export const gradesScreenStyles = StyleSheet.create({
     paddingHorizontal: GRADES_HORIZONTAL_PADDING,
     gap: 16,
   },
+  centerStateScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: GRADES_HORIZONTAL_PADDING,
+    gap: 16,
+  },
   stateText: {
     fontSize: 16,
     color: gradesColors.textMuted,
