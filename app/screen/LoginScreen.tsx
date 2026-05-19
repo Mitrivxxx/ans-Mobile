@@ -153,22 +153,11 @@ export default function LoginScreen() {
             }
           : undefined;
 
-      console.log('[LOGIN SCREEN] START LOGIN', {
-        username: username.trim(),
-        withCaptcha: Boolean(loginOptions?.continuationHtml),
-      });
-
       const result = await authService.login(
         username.trim(),
         passwordAttempt,
         loginOptions
       );
-
-      console.log('[LOGIN SCREEN] LOGIN RESULT:', {
-        success: result.success,
-        requiresCaptcha: result.requiresCaptcha,
-        errorCode: result.errorCode,
-      });
 
       if (result.requiresCaptcha) {
         if (result.continuationHtml) {
@@ -204,7 +193,6 @@ export default function LoginScreen() {
       resetCaptchaUi();
       markAuthenticated();
     } catch (err: unknown) {
-      console.log('[LOGIN SCREEN] CATCH ERROR', err);
       const code = classifyLoginThrowable(err);
       if (code) {
         setServerError(code);

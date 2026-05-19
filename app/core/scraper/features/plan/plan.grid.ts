@@ -1,5 +1,5 @@
 import qs from 'qs';
-import { client } from '../../client/client';
+import { client, WD_BASE_URL } from '../../client/client';
 import type { PlanFetchParams } from './plan.dateRange';
 import { getSemesterPlanParams } from './plan.dateRange';
 
@@ -29,7 +29,7 @@ export async function initPlanSession(
   await client.post('/Plany/PlanyStudentow', payload, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Referer: 'https://wd.ans-ns.edu.pl/Plany/PlanyStudentow',
+      Referer: `${WD_BASE_URL}/Plany/PlanyStudentow`,
     },
   });
 }
@@ -73,7 +73,7 @@ export async function fetchGrid(
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'X-Requested-With': 'XMLHttpRequest',
-      Referer: 'https://wd.ans-ns.edu.pl/Plany/PlanyStudentow',
+      Referer: `${WD_BASE_URL}/Plany/PlanyStudentow`,
     },
   });
 

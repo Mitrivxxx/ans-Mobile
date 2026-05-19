@@ -8,12 +8,9 @@ import { parsePlan, Lesson } from './plan.parse';
 
 export class PlanService {
   private async getLessonsForParams(params: PlanFetchParams): Promise<Lesson[]> {
-    console.log('[PLAN] Fetch range:', params);
     await initPlanSession(params);
     const gridHtml = await fetchGrid(undefined, params);
-    const lessons = parsePlan(gridHtml);
-    console.log('[PLAN] Found lessons:', lessons.length);
-    return lessons;
+    return parsePlan(gridHtml);
   }
 
   /** Pełny plan semestru — zakładka Plan zajęć w sidebarze. */

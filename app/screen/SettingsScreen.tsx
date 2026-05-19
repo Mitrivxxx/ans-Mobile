@@ -16,8 +16,7 @@ import { useStudentProfile } from '../context/StudentProfileContext';
 import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-
-const APP_VERSION = require('../../package.json').version as string;
+import { APP_VERSION } from '../version';
 
 export default function SettingsScreen() {
   const { isDarkMode, colors, toggleDarkMode } = useAppTheme();

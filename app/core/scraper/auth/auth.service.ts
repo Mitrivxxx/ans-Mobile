@@ -11,7 +11,6 @@ import {
   getCookiesFromManager,
   hasAuthenticationCookie,
   mergeAuthCookiesFromNativeIfNeeded,
-  showCookies,
 } from "../client/cookies";
 
 import type { LoginResult, LoginWdOptions } from "./auth.types";
@@ -98,7 +97,6 @@ async function loginWD(
         });
 
         if (getRes.status !== 200) {
-          console.log("Logowanie się nie powiodło");
           return loginFailureFromHttpStatus(getRes.status);
         }
 
@@ -109,7 +107,6 @@ async function loginWD(
 
         await flushCookieWrites();
       } catch (error: unknown) {
-        console.log("Logowanie się nie powiodło");
         return loginFailureFromThrowable(error);
       }
     }
@@ -120,7 +117,6 @@ async function loginWD(
       verificationToken = extractVerificationToken(loginPageHtml);
 
       if (!verificationToken) {
-        console.log("Logowanie się nie powiodło");
         const hasLoginFields =
           /name=["']Username["']/i.test(loginPageHtml) &&
           /name=["']Password["']/i.test(loginPageHtml);
@@ -133,7 +129,6 @@ async function loginWD(
         };
       }
     } catch (error: any) {
-      console.log("Logowanie się nie powiodło");
       return {
         success: false,
         error: `STEP 2 FAILED: ${error.message}`,
@@ -145,7 +140,6 @@ async function loginWD(
       const jar = getAxiosCookieHeader();
 
       if (!hasRequiredSessionCookies(jar)) {
-        console.log("Logowanie się nie powiodło");
         return {
           success: false,
           error:
@@ -153,7 +147,6 @@ async function loginWD(
         };
       }
     } catch (error: any) {
-      console.log("Logowanie się nie powiodło");
       return {
         success: false,
         error: `STEP 3 FAILED: ${error.message}`,
@@ -191,7 +184,6 @@ async function loginWD(
       formData.append("Password", password);
       appendCaptchaFields(formData, loginPageHtml, options?.captcha);
     } catch (error: any) {
-      console.log("Logowanie się nie powiodło");
       return {
         success: false,
         error: `STEP 4 FAILED: ${error.message}`,
@@ -224,11 +216,9 @@ async function loginWD(
 
       const postHttpError = classifyLoginHttpStatus(postRes.status);
       if (postHttpError) {
-        console.log("Logowanie się nie powiodło");
         return loginFailure(postHttpError);
       }
     } catch (error: unknown) {
-      console.log("Logowanie się nie powiodło");
       return loginFailureFromThrowable(error);
     }
 
@@ -237,7 +227,6 @@ async function loginWD(
     try {
       authCookies = await getCookiesFromManager();
     } catch (error: any) {
-      console.log("Logowanie się nie powiodło");
       return {
         success: false,
         error: `STEP 6 FAILED: ${error.message}`,
@@ -258,8 +247,6 @@ async function loginWD(
         typeof postRes.data === "string"
           ? postRes.data
           : String(postRes.data ?? "");
-
-      console.log("Logowanie się nie powiodło");
 
       if (isCaptchaRequiredInHtml(responseText)) {
         return buildCaptchaRequiredResult(
@@ -286,14 +273,10 @@ async function loginWD(
     await setSessionCookies(getAxiosCookieHeader());
     await markSessionEstablished();
 
-    console.log("Udało się zalogować");
-    await showCookies("po logowaniu");
-
     return {
       success: true,
     };
   } catch (error: unknown) {
-    console.log("Logowanie się nie powiodło");
     return loginFailureFromThrowable(error);
   }
 }

@@ -103,30 +103,24 @@ function delay(ms: number): Promise<void> {
 export async function fetchAvatarPhoto(): Promise<string> {
   const triedPaths = new Set<string>();
 
-  const tryHtml = (html: string, source: string): string => {
-    const photo = extractAvatarFromHtml(html);
-    if (photo) {
-      console.log("[PROFILE] Avatar found:", source, "bytes:", photo.length);
-    }
-    return photo;
-  };
+  const tryHtml = (html: string): string => extractAvatarFromHtml(html);
 
   for (const path of AVATAR_PAGE_PATHS) {
     triedPaths.add(path);
     const html = await fetchHtmlPage(path);
-    const photo = tryHtml(html, path);
+    const photo = tryHtml(html);
     if (photo) {
       return photo;
     }
   }
 
   let homeHtml = await fetchHtmlPage("/");
-  let photo = tryHtml(homeHtml, "/ (initial)");
+  let photo = tryHtml(homeHtml);
 
   if (!photo && /\bLoading\b/i.test(homeHtml)) {
     await delay(800);
     homeHtml = await fetchHtmlPage("/");
-    photo = tryHtml(homeHtml, "/ (retry)");
+    photo = tryHtml(homeHtml);
   }
 
   if (!photo) {
@@ -134,7 +128,7 @@ export async function fetchAvatarPhoto(): Promise<string> {
     for (const path of extraPaths.slice(0, 8)) {
       triedPaths.add(path);
       const html = await fetchHtmlPage(path);
-      photo = tryHtml(html, path);
+      photo = tryHtml(html);
       if (photo) {
         return photo;
       }

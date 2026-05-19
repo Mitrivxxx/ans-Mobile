@@ -21,8 +21,6 @@ export class LecturerPlanService {
       lessons = parseLecturerPlan(gridRaw);
     }
 
-    console.log("[LECTURER PLAN] Lessons:", lessons.length);
-
     return lessons;
   }
 }

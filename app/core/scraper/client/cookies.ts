@@ -17,42 +17,6 @@ export function hasAuthenticationCookie(cookieHeader: string): boolean {
   );
 }
 
-/** Wyświetla wszystkie cookies (CookieManager + jar w pamięci). Tylko w __DEV__. */
-export async function showCookies(context?: string): Promise<void> {
-  if (!__DEV__) {
-    return;
-  }
-
-  const prefix = context ? `[${context}] ` : "";
-  try {
-    const nativeCookies = await CookieManager.get(WD_BASE_URL);
-    const names = Object.keys(nativeCookies);
-
-    console.log(`${prefix}Cookies (CookieManager, ${WD_BASE_URL}):`);
-    if (names.length === 0) {
-      console.log("  (brak)");
-    } else {
-      for (const name of names) {
-        const c = nativeCookies[name];
-        console.log(`  ${c.name}=${c.value}`);
-      }
-    }
-
-    const jar = getCookieHeaderSync();
-    console.log(`${prefix}Cookies (session jar):`);
-    if (!jar) {
-      console.log("  (brak)");
-    } else {
-      for (const part of jar.split("; ").filter(Boolean)) {
-        console.log(`  ${part}`);
-      }
-    }
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.log(`${prefix}Cookies: błąd odczytu — ${msg}`);
-  }
-}
-
 export async function getCookiesFromManager(
   url: string = WD_BASE_URL
 ): Promise<string> {

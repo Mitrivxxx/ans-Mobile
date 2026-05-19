@@ -1,5 +1,3 @@
-import { showCookies } from "../client/cookies";
-
 import { clearSession } from "./session.store";
 
 export async function logout(): Promise<void> {
@@ -8,5 +6,4 @@ export async function logout(): Promise<void> {
   } catch {
     /* ignore */
   }
-  await showCookies("po wylogowaniu");
 }
