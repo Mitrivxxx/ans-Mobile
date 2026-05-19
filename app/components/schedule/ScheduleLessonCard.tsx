@@ -1,4 +1,5 @@
 import React from 'react';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -8,16 +9,18 @@ import {
   isELearningNotes,
 } from '../../features/plan/utils/lessonSubjectLabel';
 import { resolveLessonTypeStyle } from '../../theme/lessonTypeTheme';
-import { ansColors } from '../../theme/ansTheme';
-import { scheduleLessonCardStyles as styles } from './ScheduleLessonCard.styles';
+import { useAppTheme } from '../../context/AppThemeContext';
+import { createScheduleLessonCardStyles } from './ScheduleLessonCard.styles';
 
 type Props = {
   lesson: Lesson;
 };
 
 export default function ScheduleLessonCard({ lesson }: Props) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createScheduleLessonCardStyles);
   const typeStyle = resolveLessonTypeStyle(lesson.type, lesson.groups);
-  const accentColor = typeStyle?.color ?? ansColors.grayLight;
+  const accentColor = typeStyle?.color ?? colors.grayLight;
   const groupLabel = lesson.groups;
   const subjectLabel = formatLessonSubjectLabel(lesson.subject, lesson.notes);
   const isELearning = isELearningNotes(lesson.notes);
@@ -58,7 +61,7 @@ export default function ScheduleLessonCard({ lesson }: Props) {
               <MaterialCommunityIcons
                 name="account-outline"
                 size={14}
-                color={ansColors.gray}
+                color={colors.gray}
               />
               <Text style={styles.lessonMetaText} numberOfLines={2}>
                 {lesson.teacher}

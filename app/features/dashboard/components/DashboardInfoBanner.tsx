@@ -1,7 +1,8 @@
 import React from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import { Text, View } from 'react-native';
 
-import { dashboardInfoBannerStyles as styles } from './DashboardInfoBanner.styles';
+import { createDashboardInfoBannerStyles } from './DashboardInfoBanner.styles';
 
 /** Tymczasowa treść — docelowo z API / konfiguracji. */
 export const DASHBOARD_INFO_BANNER_DEV_MESSAGE =
@@ -14,6 +15,7 @@ type Props = {
 export default function DashboardInfoBanner({
   message = DASHBOARD_INFO_BANNER_DEV_MESSAGE,
 }: Props) {
+  const styles = useThemedStyles(createDashboardInfoBannerStyles);
   if (!message.trim()) {
     return null;
   }

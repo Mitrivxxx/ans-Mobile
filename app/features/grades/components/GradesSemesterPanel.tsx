@@ -3,11 +3,12 @@ import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
 import type { SemesterGrades } from '../../../core/scraper/features/grades/grades.service';
-import { gradesColors } from '../gradesTheme';
+import { useGradesColors } from '../useGradesColors';
+import { useGradesThemedStyles } from '../useGradesThemedStyles';
 import GradesSummaryCard from './GradesSummaryCard';
 import {
   ARROW_OUTSIDE_SIZE,
-  gradesSemesterPanelStyles as styles,
+  createGradesSemesterPanelStyles,
 } from './GradesSemesterPanel.styles';
 
 type Props = {
@@ -25,6 +26,9 @@ export default function GradesSemesterPanel({
   onPrevious,
   onNext,
 }: Props) {
+  const gradesColors = useGradesColors();
+  const styles = useGradesThemedStyles(createGradesSemesterPanelStyles);
+
   return (
     <View>
       <View style={styles.wrap}>

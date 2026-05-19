@@ -1,16 +1,17 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 
-export const dashboardFeaturesSectionStyles = StyleSheet.create({
+export function createDashboardFeaturesSectionStyles(c: AnsColors) {
+  return StyleSheet.create({
   block: {
     width: '100%',
-    backgroundColor: ansColors.dashboardBg,
+    backgroundColor: c.dashboardBg,
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: ansColors.charcoal,
+    color: c.charcoal,
     letterSpacing: 0.2,
     marginBottom: 16,
   },
@@ -21,3 +22,4 @@ export const dashboardFeaturesSectionStyles = StyleSheet.create({
     rowGap: 14,
   },
 });
+}

@@ -1,17 +1,71 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAuthSession } from '../context/AuthSessionContext';
-import { ansColors } from '../theme/ansTheme';
+import { useAppTheme } from '../context/AppThemeContext';
 
 export default function AuthSyncBanner() {
+  const { colors } = useAppTheme();
   const {
     sessionDegraded,
     sessionDegradedMessage,
     retrySessionRestore,
     signOut,
   } = useAuthSession();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrapper: {
+          paddingHorizontal: 14,
+          paddingTop: 8,
+          paddingBottom: 4,
+        },
+        banner: {
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          borderRadius: 12,
+          backgroundColor: colors.errorBg,
+          borderWidth: 1,
+          borderColor: colors.grayBorder,
+        },
+        errorText: {
+          flex: 1,
+          fontSize: 13,
+          lineHeight: 18,
+          color: colors.error,
+          fontWeight: '600',
+        },
+        actions: {
+          flexDirection: 'row',
+          justifyContent: 'flex-end',
+          gap: 12,
+          marginTop: 6,
+        },
+        actionButton: {
+          paddingVertical: 4,
+          paddingHorizontal: 2,
+        },
+        pressed: {
+          opacity: 0.7,
+        },
+        actionPrimary: {
+          fontSize: 13,
+          fontWeight: '700',
+          color: colors.gold,
+        },
+        actionSecondary: {
+          fontSize: 13,
+          fontWeight: '600',
+          color: colors.gray,
+        },
+      }),
+    [colors]
+  );
 
   if (!sessionDegraded) {
     return null;
@@ -23,7 +77,7 @@ export default function AuthSyncBanner() {
         <MaterialCommunityIcons
           name="cloud-off-outline"
           size={20}
-          color={ansColors.error}
+          color={colors.error}
         />
         <Text style={styles.errorText}>
           {sessionDegradedMessage ||
@@ -55,52 +109,3 @@ export default function AuthSyncBanner() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#FFF5F5',
-    borderWidth: 1,
-    borderColor: '#F5C6C6',
-  },
-  errorText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    color: ansColors.error,
-    fontWeight: '600',
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 6,
-  },
-  actionButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 2,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  actionPrimary: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: ansColors.gold,
-  },
-  actionSecondary: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: ansColors.gray,
-  },
-});

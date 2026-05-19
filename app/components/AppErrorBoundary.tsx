@@ -6,7 +6,7 @@ import {
   View,
 } from 'react-native';
 
-import { ansColors } from '../theme/ansTheme';
+import { useAppTheme } from '../context/AppThemeContext';
 
 type Props = {
   children: ReactNode;
@@ -16,6 +16,80 @@ type State = {
   hasError: boolean;
   message: string;
 };
+
+function AppErrorFallback({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  const { colors } = useAppTheme();
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+      backgroundColor: colors.surface,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.charcoal,
+      marginBottom: 8,
+    },
+    message: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: colors.gray,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    devMessage: {
+      fontSize: 12,
+      color: colors.error,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    button: {
+      backgroundColor: colors.gold,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 12,
+    },
+    buttonPressed: {
+      opacity: 0.85,
+    },
+    buttonText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.black,
+    },
+  });
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Coś poszło nie tak</Text>
+      <Text style={styles.message}>
+        Aplikacja napotkała nieoczekiwany błąd. Możesz spróbować ponownie.
+      </Text>
+      {__DEV__ && message ? (
+        <Text style={styles.devMessage}>{message}</Text>
+      ) : null}
+      <Pressable
+        onPress={onRetry}
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+        ]}
+        accessibilityRole="button"
+      >
+        <Text style={styles.buttonText}>Spróbuj ponownie</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 export default class AppErrorBoundary extends Component<Props, State> {
   state: State = {
@@ -41,71 +115,13 @@ export default class AppErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <View style={styles.container}>
-          <Text style={styles.title}>Coś poszło nie tak</Text>
-          <Text style={styles.message}>
-            Aplikacja napotkała nieoczekiwany błąd. Możesz spróbować ponownie.
-          </Text>
-          {__DEV__ && this.state.message ? (
-            <Text style={styles.devMessage}>{this.state.message}</Text>
-          ) : null}
-          <Pressable
-            onPress={this.handleRetry}
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-            ]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonText}>Spróbuj ponownie</Text>
-          </Pressable>
-        </View>
+        <AppErrorFallback
+          message={this.state.message}
+          onRetry={this.handleRetry}
+        />
       );
     }
 
     return this.props.children;
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: ansColors.surface,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: ansColors.black,
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: ansColors.gray,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  devMessage: {
-    fontSize: 12,
-    color: ansColors.error,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: ansColors.gold,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: ansColors.black,
-  },
-});

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useThemedStyles } from '../theme/useThemedStyles';
 import {
   ActivityIndicator,
   Image,
@@ -9,8 +10,8 @@ import {
 
 import { useStudentProfile } from '../context/StudentProfileContext';
 import { navigateTo } from '../navigation/navigationRef';
-import { ansColors } from '../theme/ansTheme';
-import { appHeaderStyles as styles } from './AppHeader.styles';
+import { useAppTheme } from '../context/AppThemeContext';
+import { createAppHeaderStyles } from './AppHeader.styles';
 
 function getInitials(firstName: string, lastName: string): string {
   const a = firstName.trim().charAt(0);
@@ -19,6 +20,8 @@ function getInitials(firstName: string, lastName: string): string {
 }
 
 export default function AppHeaderAvatar() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createAppHeaderStyles);
   const { summary, loading } = useStudentProfile();
   const [imageError, setImageError] = useState(false);
 
@@ -43,7 +46,7 @@ export default function AppHeaderAvatar() {
     >
       {loading ? (
         <View style={styles.avatarLoading}>
-          <ActivityIndicator size="small" color={ansColors.gold} />
+          <ActivityIndicator size="small" color={colors.gold} />
         </View>
       ) : showPhoto(summary, imageError) && summary ? (
         <Image

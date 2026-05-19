@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 
-export const gradesSummaryCardStyles = StyleSheet.create({
+export function createGradesSummaryCardStyles(c: AnsColors) {
+  return StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#31ABA0',
@@ -21,13 +22,13 @@ export const gradesSummaryCardStyles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: ansColors.surface,
+    color: c.surface,
     marginBottom: 10,
   },
   averageValue: {
     fontSize: 32,
     fontWeight: '700',
-    color: ansColors.surface,
+    color: c.surface,
     lineHeight: 36,
   },
   detailsBlock: {
@@ -42,10 +43,11 @@ export const gradesSummaryCardStyles = StyleSheet.create({
     textAlign: 'right',
   },
   detailLabel: {
-    color: ansColors.surface,
+    color: c.surface,
   },
   detailValue: {
     fontWeight: '700',
-    color: ansColors.surface,
+    color: c.surface,
   },
 });
+}

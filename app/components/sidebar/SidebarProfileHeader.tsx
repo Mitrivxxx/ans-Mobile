@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 
 import { useStudentProfile } from '../../context/StudentProfileContext';
-import { ansColors } from '../../theme/ansTheme';
-import { sidebarProfileHeaderStyles as styles } from './SidebarProfileHeader.styles';
+import { useAppTheme } from '../../context/AppThemeContext';
+import { createSidebarProfileHeaderStyles } from './SidebarProfileHeader.styles';
 
 function getInitials(firstName: string, lastName: string): string {
   const a = firstName.trim().charAt(0);
@@ -12,6 +13,8 @@ function getInitials(firstName: string, lastName: string): string {
 }
 
 export default function SidebarProfileHeader() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createSidebarProfileHeaderStyles);
   const { summary, loading } = useStudentProfile();
   const [imageError, setImageError] = useState(false);
 
@@ -23,7 +26,7 @@ export default function SidebarProfileHeader() {
     <View style={styles.header}>
       {loading ? (
         <View style={styles.loadingRow}>
-          <ActivityIndicator color={ansColors.gold} />
+          <ActivityIndicator color={colors.gold} />
           <Text style={styles.loadingText}>Wczytywanie profilu…</Text>
         </View>
       ) : !summary ? (

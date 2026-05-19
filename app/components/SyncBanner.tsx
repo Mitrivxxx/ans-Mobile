@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { SyncStatus } from '../core/queryClient/syncTypes';
-import { ansColors } from '../theme/ansTheme';
+import { useAppTheme } from '../context/AppThemeContext';
 
 type Props = {
   status: SyncStatus;
@@ -19,9 +19,54 @@ export default function SyncBanner({
   status,
   loadingText,
   errorText,
-  accentColor = ansColors.gold,
+  accentColor,
   onDismissUpToDate,
 }: Props) {
+  const { colors } = useAppTheme();
+  const resolvedAccent = accentColor ?? colors.gold;
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        banner: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 14,
+          marginBottom: 12,
+          borderRadius: 12,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.grayBorder,
+        },
+        bannerSuccess: {
+          borderColor: '#B8E6C1',
+          backgroundColor: '#F3FBF5',
+        },
+        bannerError: {
+          borderColor: '#F5C6C6',
+          backgroundColor: '#FFF5F5',
+        },
+        loadingText: {
+          fontSize: 13,
+          color: colors.gray,
+          fontWeight: '600',
+        },
+        successText: {
+          fontSize: 13,
+          color: colors.charcoal,
+          fontWeight: '700',
+        },
+        errorText: {
+          fontSize: 13,
+          color: colors.error,
+          fontWeight: '600',
+        },
+      }),
+    [colors]
+  );
+
   useEffect(() => {
     if (status !== 'upToDate') {
       return;
@@ -38,7 +83,7 @@ export default function SyncBanner({
   if (status === 'loading') {
     return (
       <View style={styles.banner}>
-        <ActivityIndicator size="small" color={accentColor} />
+        <ActivityIndicator size="small" color={resolvedAccent} />
         <Text style={styles.loadingText}>{loadingText}</Text>
       </View>
     );
@@ -58,48 +103,9 @@ export default function SyncBanner({
       <MaterialCommunityIcons
         name="alert-circle-outline"
         size={18}
-        color={ansColors.error}
+        color={colors.error}
       />
       <Text style={styles.errorText}>{errorText}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 12,
-    borderRadius: 12,
-    backgroundColor: ansColors.surface,
-    borderWidth: 1,
-    borderColor: ansColors.grayBorder,
-  },
-  bannerSuccess: {
-    borderColor: '#B8E6C1',
-    backgroundColor: '#F3FBF5',
-  },
-  bannerError: {
-    borderColor: '#F5C6C6',
-    backgroundColor: '#FFF5F5',
-  },
-  loadingText: {
-    fontSize: 13,
-    color: ansColors.gray,
-    fontWeight: '600',
-  },
-  successText: {
-    fontSize: 13,
-    color: ansColors.charcoal,
-    fontWeight: '700',
-  },
-  errorText: {
-    fontSize: 13,
-    color: ansColors.error,
-    fontWeight: '600',
-  },
-});

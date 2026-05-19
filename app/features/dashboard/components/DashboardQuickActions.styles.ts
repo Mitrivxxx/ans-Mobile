@@ -1,6 +1,6 @@
 import { Dimensions, StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
 const GRID_GAP = 10;
@@ -14,7 +14,8 @@ export const QUICK_ACTION_ICON_SIZE = 52;
 export const QUICK_ACTION_BUTTON_HEIGHT = 116;
 export const QUICK_ACTION_TITLE_HEIGHT = 32;
 
-export const dashboardQuickActionsStyles = StyleSheet.create({
+export function createDashboardQuickActionsStyles(c: AnsColors) {
+  return StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -32,14 +33,14 @@ export const dashboardQuickActionsStyles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
+    borderColor: c.dashboardFeatureBorder,
     paddingVertical: 12,
     paddingHorizontal: 4,
     overflow: 'hidden',
-    shadowColor: ansColors.black,
+    shadowColor: c.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -75,11 +76,12 @@ export const dashboardQuickActionsStyles = StyleSheet.create({
     width: '100%',
     fontSize: 11,
     fontWeight: '600',
-    color: ansColors.charcoal,
+    color: c.charcoal,
     textAlign: 'center',
     lineHeight: 14,
   },
   titleFilled: {
-    color: ansColors.surface,
+    color: c.surface,
   },
 });
+}

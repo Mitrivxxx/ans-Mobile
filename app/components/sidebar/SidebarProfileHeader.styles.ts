@@ -1,17 +1,18 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../theme/ansTheme';
+import type { AnsColors } from '../../theme/ansTheme';
 
 export const SIDEBAR_AVATAR_SIZE = 64;
 
-export const sidebarProfileHeaderStyles = StyleSheet.create({
+export function createSidebarProfileHeaderStyles(c: AnsColors) {
+  return StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: ansColors.dashboardFeatureBorder,
-    backgroundColor: ansColors.surface,
+    borderBottomColor: c.dashboardFeatureBorder,
+    backgroundColor: c.surface,
     alignItems: 'center',
   },
   content: {
@@ -27,16 +28,16 @@ export const sidebarProfileHeaderStyles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: ansColors.gray,
+    color: c.gray,
   },
   avatarWrap: {
     width: SIDEBAR_AVATAR_SIZE,
     height: SIDEBAR_AVATAR_SIZE,
     borderRadius: SIDEBAR_AVATAR_SIZE / 2,
     borderWidth: 2,
-    borderColor: ansColors.gold,
+    borderColor: c.gold,
     overflow: 'hidden',
-    backgroundColor: ansColors.background,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -47,13 +48,13 @@ export const sidebarProfileHeaderStyles = StyleSheet.create({
   avatarPlaceholder: {
     fontSize: 22,
     fontWeight: '800',
-    color: ansColors.goldDark,
+    color: c.goldDark,
   },
   name: {
     marginTop: 12,
     fontSize: 17,
     fontWeight: '800',
-    color: ansColors.black,
+    color: c.charcoal,
     lineHeight: 22,
     textAlign: 'center',
   },
@@ -61,20 +62,21 @@ export const sidebarProfileHeaderStyles = StyleSheet.create({
     marginTop: 4,
     fontSize: 13,
     lineHeight: 18,
-    color: ansColors.gray,
+    color: c.gray,
     textAlign: 'center',
   },
   album: {
     marginTop: 4,
     fontSize: 13,
     lineHeight: 18,
-    color: ansColors.gray,
+    color: c.gray,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 14,
-    color: ansColors.gray,
+    color: c.gray,
     textAlign: 'center',
     paddingVertical: 12,
   },
 });
+}

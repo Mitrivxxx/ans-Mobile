@@ -1,10 +1,11 @@
 import React from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import { useAppTheme } from '../../../context/AppThemeContext';
 import type { DashboardFeature } from '../dashboard.types';
 import DashboardIcon from '../icons/DashboardIcon';
-import { dashboardFeatureItemStyles as styles } from './DashboardFeatureItem.styles';
+import { createDashboardFeatureItemStyles } from './DashboardFeatureItem.styles';
 
 type Props = {
   feature: DashboardFeature;
@@ -15,6 +16,8 @@ export default function DashboardFeatureItem({
   feature,
   onPress,
 }: Props) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createDashboardFeatureItemStyles);
   return (
     <TouchableOpacity
       style={styles.touchable}
@@ -33,7 +36,7 @@ export default function DashboardFeatureItem({
           <DashboardIcon
             name={feature.icon}
             size={28}
-            color={ansColors.surface}
+            color={colors.surface}
           />
         </View>
         <Text style={styles.title} numberOfLines={2}>

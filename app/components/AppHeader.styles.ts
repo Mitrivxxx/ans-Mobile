@@ -1,17 +1,18 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../theme/ansTheme';
+import type { AnsColors } from '../theme/ansTheme';
 
 export const APP_HEADER_HEIGHT = 64;
 export const APP_HEADER_LOGO_SIZE = 44;
 export const APP_HEADER_AVATAR_SIZE = 46;
 export const APP_HEADER_SIDE_WIDTH = 48;
 
-export const appHeaderStyles = StyleSheet.create({
+export function createAppHeaderStyles(c: AnsColors) {
+  return StyleSheet.create({
   wrapper: {
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: ansColors.dashboardFeatureBorder,
+    borderBottomColor: c.dashboardFeatureBorder,
   },
   row: {
     flexDirection: 'row',
@@ -39,9 +40,9 @@ export const appHeaderStyles = StyleSheet.create({
     height: APP_HEADER_AVATAR_SIZE,
     borderRadius: APP_HEADER_AVATAR_SIZE / 2,
     overflow: 'hidden',
-    backgroundColor: ansColors.background,
+    backgroundColor: c.background,
     borderWidth: 1.5,
-    borderColor: ansColors.dashboardFeatureBorder,
+    borderColor: c.dashboardFeatureBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -52,12 +53,13 @@ export const appHeaderStyles = StyleSheet.create({
   avatarPlaceholder: {
     fontSize: 16,
     fontWeight: '800',
-    color: ansColors.goldDark,
+    color: c.goldDark,
   },
   avatarLoading: {
     width: APP_HEADER_AVATAR_SIZE,
     height: APP_HEADER_AVATAR_SIZE,
     borderRadius: APP_HEADER_AVATAR_SIZE / 2,
-    backgroundColor: ansColors.dashboardBg,
+    backgroundColor: c.dashboardBg,
   },
 });
+}

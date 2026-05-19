@@ -11,10 +11,11 @@ import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import GradesSemesterPanel from '../features/grades/components/GradesSemesterPanel';
 import GradesSubjectCard from '../features/grades/components/GradesSubjectCard';
-import { gradesScreenStyles as styles } from '../features/grades/GradesScreen.styles';
+import { createGradesScreenStyles } from '../features/grades/GradesScreen.styles';
 import { useGrades } from '../features/grades/hooks/useGrades';
 import { useSemesterSwipe } from '../features/grades/hooks/useSemesterSwipe';
-import { gradesColors } from '../features/grades/gradesTheme';
+import { useGradesColors } from '../features/grades/useGradesColors';
+import { useGradesThemedStyles } from '../features/grades/useGradesThemedStyles';
 
 type Props = {
   navigation: {
@@ -23,6 +24,8 @@ type Props = {
 };
 
 export default function GradesScreen({ navigation }: Props) {
+  const gradesColors = useGradesColors();
+  const styles = useGradesThemedStyles(createGradesScreenStyles);
   const {
     semesters,
     currentSemester,

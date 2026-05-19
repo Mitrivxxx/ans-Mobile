@@ -36,7 +36,6 @@ import { queryPersister } from './app/core/queryClient/queryPersister';
 import { usePrefetchUserScraperData } from './app/hooks/usePrefetchUserScraperData';
 import { PERSIST_MAX_AGE_MS } from './app/core/queryClient/persistentQueryConfig';
 import { shouldPersistQuery } from './app/core/queryClient/shouldPersistQuery';
-import { ansColors } from './app/theme/ansTheme';
 import type { RootParamList } from './app/navigation/navigationRef';
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
@@ -88,10 +87,10 @@ function AppShell() {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.appBackground,
+          backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator size="large" color={ansColors.gold} />
+        <ActivityIndicator size="large" color={colors.gold} />
       </View>
     );
   }
@@ -99,7 +98,7 @@ function AppShell() {
   if (authStatus === 'unauthenticated') {
     return (
       <>
-        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <StatusBar style="dark" />
         <NavigationContainer ref={navigationRef}>
           <AuthNavigator />
         </NavigationContainer>
@@ -114,7 +113,7 @@ function AppShell() {
         <ScreenRefreshProvider>
           <StudentProfileProvider>
             <SidebarProvider>
-              <View style={{ flex: 1, backgroundColor: colors.appBackground }}>
+              <View style={{ flex: 1, backgroundColor: colors.background }}>
                 <AppHeader />
                 <AuthSyncBanner />
                 <View style={{ flex: 1 }}>
@@ -137,28 +136,28 @@ export default function App() {
   }, []);
 
   return (
-    <AppErrorBoundary>
-      <AppInitGate>
-        <PersistQueryClientProvider
-          client={queryClient}
-          onSuccess={onPersistSuccess}
-          persistOptions={{
-            persister: queryPersister,
-            maxAge: PERSIST_MAX_AGE_MS,
-            dehydrateOptions: {
-              shouldDehydrateQuery: shouldPersistQuery,
-            },
-          }}
-        >
-          <SafeAreaProvider>
-            <AppThemeProvider>
+    <AppThemeProvider>
+      <AppErrorBoundary>
+        <AppInitGate>
+          <PersistQueryClientProvider
+            client={queryClient}
+            onSuccess={onPersistSuccess}
+            persistOptions={{
+              persister: queryPersister,
+              maxAge: PERSIST_MAX_AGE_MS,
+              dehydrateOptions: {
+                shouldDehydrateQuery: shouldPersistQuery,
+              },
+            }}
+          >
+            <SafeAreaProvider>
               <AuthSessionProvider persistReady={persistReady}>
                 <AppShell />
               </AuthSessionProvider>
-            </AppThemeProvider>
-          </SafeAreaProvider>
-        </PersistQueryClientProvider>
-      </AppInitGate>
-    </AppErrorBoundary>
+            </SafeAreaProvider>
+          </PersistQueryClientProvider>
+        </AppInitGate>
+      </AppErrorBoundary>
+    </AppThemeProvider>
   );
 }

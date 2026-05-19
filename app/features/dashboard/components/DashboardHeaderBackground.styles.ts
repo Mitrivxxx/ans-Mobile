@@ -1,16 +1,18 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 
 export const DASHBOARD_HEADER_HEIGHT = 200;
 export const DASHBOARD_HEADER_LOGO_SIZE = 188;
 
-export const dashboardHeaderBackgroundStyles = StyleSheet.create({
+export function createDashboardHeaderBackgroundStyles(c: AnsColors) {
+  return StyleSheet.create({
   root: {
     height: DASHBOARD_HEADER_HEIGHT,
-    backgroundColor: ansColors.dashboardBg,
+    backgroundColor: c.dashboardBg,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
 });
+}

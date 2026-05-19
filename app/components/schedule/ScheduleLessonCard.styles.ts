@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../theme/ansTheme';
+import type { AnsColors } from '../../theme/ansTheme';
 
-export const scheduleLessonCardStyles = StyleSheet.create({
+export function createScheduleLessonCardStyles(c: AnsColors) {
+  return StyleSheet.create({
   lessonRow: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -21,7 +22,7 @@ export const scheduleLessonCardStyles = StyleSheet.create({
   timeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: ansColors.charcoal,
+    color: c.charcoal,
     letterSpacing: -0.2,
   },
   timeLine: {
@@ -29,25 +30,25 @@ export const scheduleLessonCardStyles = StyleSheet.create({
     height: 24,
     marginVertical: 2,
     borderRadius: 1,
-    backgroundColor: ansColors.grayLight,
+    backgroundColor: c.grayLight,
   },
   lessonCard: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: ansColors.grayBorder,
+    borderColor: c.grayBorder,
     overflow: 'hidden',
-    shadowColor: ansColors.black,
+    shadowColor: c.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
   lessonCardELearning: {
-    backgroundColor: ansColors.dashboardBluePale,
-    borderColor: ansColors.dashboardBlueLight,
+    backgroundColor: c.dashboardBluePale,
+    borderColor: c.dashboardBlueLight,
   },
   lessonAccent: {
     width: 6,
@@ -68,7 +69,7 @@ export const scheduleLessonCardStyles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '800',
-    color: ansColors.charcoal,
+    color: c.charcoal,
   },
   lessonTypePill: {
     minWidth: 28,
@@ -91,6 +92,7 @@ export const scheduleLessonCardStyles = StyleSheet.create({
   lessonMetaText: {
     flex: 1,
     fontSize: 13,
-    color: ansColors.gray,
+    color: c.gray,
   },
 });
+}

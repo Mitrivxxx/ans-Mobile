@@ -1,6 +1,6 @@
 import { Dimensions, StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
 const GRID_GAP = 14;
@@ -11,20 +11,21 @@ export const DASHBOARD_FEATURE_CARD_WIDTH =
 
 export const FEATURE_ICON_CIRCLE_SIZE = 56;
 
-export const dashboardFeatureItemStyles = StyleSheet.create({
+export function createDashboardFeatureItemStyles(c: AnsColors) {
+  return StyleSheet.create({
   touchable: {
     width: DASHBOARD_FEATURE_CARD_WIDTH,
     borderRadius: 20,
   },
   card: {
     alignItems: 'center',
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
+    borderColor: c.dashboardFeatureBorder,
     paddingVertical: 20,
     paddingHorizontal: 12,
-    shadowColor: ansColors.black,
+    shadowColor: c.black,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -41,8 +42,9 @@ export const dashboardFeatureItemStyles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: ansColors.charcoal,
+    color: c.charcoal,
     textAlign: 'center',
     lineHeight: 18,
   },
 });
+}

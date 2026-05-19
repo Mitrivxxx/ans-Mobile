@@ -25,6 +25,8 @@ import {
   registerSessionLostHandler,
   restoreRememberMeSession,
 } from '../core/scraper/auth/ensureAuthenticated';
+import { clearSession } from '../core/scraper/auth/session.store';
+import { probeWdSessionAlive } from '../core/scraper/auth/sessionValidation';
 import { initClient } from '../core/scraper/client/client';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated';
@@ -88,6 +90,18 @@ async function resolveRememberMeWithDegradedFallback(): Promise<{
   };
 }
 
+async function hasLiveScraperSession(): Promise<boolean> {
+  if (!(await hasScraperSession())) {
+    return false;
+  }
+
+  try {
+    return await probeWdSessionAlive();
+  } catch {
+    return false;
+  }
+}
+
 async function resolveAuthStatus(): Promise<{
   status: Exclude<AuthStatus, 'unknown'>;
   sessionDegraded: boolean;
@@ -110,9 +124,7 @@ async function resolveAuthStatus(): Promise<{
     };
   }
 
-  const hadLoginBefore = await hasAppLoginRecord();
-
-  if (hadLoginBefore && (await hasScraperSession())) {
+  if (await hasLiveScraperSession()) {
     return {
       status: 'authenticated',
       sessionDegraded: false,
@@ -121,7 +133,7 @@ async function resolveAuthStatus(): Promise<{
     };
   }
 
-  if (hadLoginBefore && hasAnyUserCache()) {
+  if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
     const degraded = resolveDegradedState();
     return {
       status: degraded.status,
@@ -129,6 +141,10 @@ async function resolveAuthStatus(): Promise<{
       sessionDegradedMessage: degraded.sessionDegradedMessage,
       rememberMeEnabled: false,
     };
+  }
+
+  if (await hasScraperSession()) {
+    await clearSession();
   }
 
   return {

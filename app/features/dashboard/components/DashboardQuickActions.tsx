@@ -1,9 +1,10 @@
 import React from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import { View } from 'react-native';
 
 import { DASHBOARD_QUICK_ACTIONS } from '../dashboard.quickActions';
 import DashboardQuickActionButton from './DashboardQuickActionButton';
-import { dashboardQuickActionsStyles as styles } from './DashboardQuickActions.styles';
+import { createDashboardQuickActionsStyles } from './DashboardQuickActions.styles';
 
 type Props = {
   selectedTitle: string | null;
@@ -14,6 +15,7 @@ export default function DashboardQuickActions({
   selectedTitle,
   onSelect,
 }: Props) {
+  const styles = useThemedStyles(createDashboardQuickActionsStyles);
   return (
     <View style={styles.wrap}>
       {DASHBOARD_QUICK_ACTIONS.map((action) => (

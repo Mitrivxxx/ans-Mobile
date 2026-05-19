@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 import {
   ActivityIndicator,
   Animated,
@@ -16,9 +17,9 @@ import {
   getCurrentRouteName,
   type SidebarRouteName,
 } from '../../navigation/navigationRef';
-import { ansColors } from '../../theme/ansTheme';
+import { useAppTheme } from '../../context/AppThemeContext';
 import {
-  appSidebarStyles as styles,
+  createAppSidebarStyles,
   SIDEBAR_WIDTH,
 } from './AppSidebar.styles';
 import { SIDEBAR_MENU_ITEMS } from './sidebar.menu';
@@ -27,6 +28,8 @@ import { useSidebar } from './SidebarContext';
 import { useSidebarActions } from './useSidebarActions';
 
 export default function AppSidebar() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createAppSidebarStyles);
   const { isOpen, close } = useSidebar();
   const { onNavigate, onLogout, logoutLoading } = useSidebarActions();
   const [currentRoute, setCurrentRoute] = useState<string | undefined>();
@@ -111,7 +114,7 @@ export default function AppSidebar() {
                     <DashboardIcon
                       name={feature.icon}
                       size={22}
-                      color={ansColors.surface}
+                      color={colors.surface}
                     />
                   </View>
                   <View style={styles.menuTextBlock}>
@@ -131,7 +134,7 @@ export default function AppSidebar() {
                   <MaterialCommunityIcons
                     name="chevron-right"
                     size={20}
-                    color={ansColors.grayLight}
+                    color={colors.grayLight}
                   />
                 </Pressable>
               );
@@ -151,13 +154,13 @@ export default function AppSidebar() {
               accessibilityLabel="Wyloguj"
             >
               {logoutLoading ? (
-                <ActivityIndicator color={ansColors.error} />
+                <ActivityIndicator color={colors.error} />
               ) : (
                 <>
                   <MaterialCommunityIcons
                     name="logout"
                     size={20}
-                    color={ansColors.error}
+                    color={colors.error}
                   />
                   <Text style={styles.logoutLabel}>Wyloguj</Text>
                 </>

@@ -59,19 +59,44 @@ export function useUserPersistentQuery<TData>({
   const { refetch, isStale, data } = query;
   const hasCachedData = data !== undefined;
 
-  const syncInBackground = useCallback(async () => {
-    if (!enabled) {
-      return;
-    }
+  const runSync = useCallback(
+    async (options?: { minLoadingMs?: number }) => {
+      if (!enabled) {
+        return;
+      }
 
-    setSyncStatus('loading');
-    const result = await refetch();
-    if (result.isError) {
-      setSyncStatus('error');
-      return;
-    }
-    setSyncStatus('upToDate');
-  }, [enabled, refetch]);
+      setSyncStatus('loading');
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+
+      const startedAt = Date.now();
+      try {
+        const result = await refetch();
+        const minLoadingMs = options?.minLoadingMs ?? 0;
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < minLoadingMs) {
+          await new Promise((resolve) => setTimeout(resolve, minLoadingMs - elapsed));
+        }
+        if (result.isError) {
+          setSyncStatus('error');
+          return;
+        }
+        setSyncStatus('upToDate');
+      } catch {
+        setSyncStatus('error');
+      }
+    },
+    [enabled, refetch]
+  );
+
+  const syncInBackground = useCallback(() => runSync(), [runSync]);
+
+  /** Ręczny pull-to-refresh — baner „Aktualizowanie…” i „Jesteś na bieżąco”. */
+  const forceRefresh = useCallback(
+    () => runSync({ minLoadingMs: 400 }),
+    [runSync]
+  );
 
   const syncIfStale = useCallback(async () => {
     if (!enabled) {
@@ -103,6 +128,7 @@ export function useUserPersistentQuery<TData>({
     isInitialLoading: query.isPending && !hasCachedData,
     hasCachedData,
     refresh: syncInBackground,
+    forceRefresh,
     refetch,
     isFatalError: query.isError && !hasCachedData,
   };

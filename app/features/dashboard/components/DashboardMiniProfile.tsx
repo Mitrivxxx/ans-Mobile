@@ -3,10 +3,11 @@ import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { ProfileSummary } from '../../../core/scraper/features/profile/profile.service';
-import { ansColors } from '../../../theme/ansTheme';
+import { useAppTheme } from '../../../context/AppThemeContext';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
-  dashboardMiniProfileStyles as styles,
   META_ICON_SIZE,
+  createDashboardMiniProfileStyles,
 } from './DashboardMiniProfile.styles';
 
 type Props = {
@@ -21,6 +22,8 @@ function getInitials(firstName: string, lastName: string): string {
 }
 
 export default function DashboardMiniProfile({ summary, loading }: Props) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createDashboardMiniProfileStyles);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export default function DashboardMiniProfile({ summary, loading }: Props) {
     return (
       <View style={styles.card}>
         <View style={styles.loadingRow}>
-          <ActivityIndicator color={ansColors.gold} />
+          <ActivityIndicator color={colors.gold} />
           <Text style={styles.loadingText}>Wczytywanie profilu…</Text>
         </View>
       </View>
@@ -71,7 +74,7 @@ export default function DashboardMiniProfile({ summary, loading }: Props) {
             <MaterialCommunityIcons
               name="card-account-details-outline"
               size={META_ICON_SIZE}
-              color={ansColors.gold}
+              color={colors.gold}
             />
             <Text style={styles.metaText} numberOfLines={1}>
               Album: {summary.albumNumber}
@@ -83,7 +86,7 @@ export default function DashboardMiniProfile({ summary, loading }: Props) {
             <MaterialCommunityIcons
               name="school-outline"
               size={META_ICON_SIZE}
-              color={ansColors.gold}
+              color={colors.gold}
             />
             <Text style={styles.metaText} numberOfLines={2}>
               {summary.major}

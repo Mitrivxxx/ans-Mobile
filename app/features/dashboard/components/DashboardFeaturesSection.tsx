@@ -1,9 +1,10 @@
 import React from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import { View } from 'react-native';
 
 import type { DashboardFeature } from '../dashboard.types';
 import DashboardFeatureItem from './DashboardFeatureItem';
-import { dashboardFeaturesSectionStyles as styles } from './DashboardFeaturesSection.styles';
+import { createDashboardFeaturesSectionStyles } from './DashboardFeaturesSection.styles';
 
 type Props = {
   features: DashboardFeature[];
@@ -14,6 +15,7 @@ export default function DashboardFeaturesSection({
   features,
   onFeaturePress,
 }: Props) {
+  const styles = useThemedStyles(createDashboardFeaturesSectionStyles);
   return (
     <View style={styles.block}>
       <View style={styles.list}>

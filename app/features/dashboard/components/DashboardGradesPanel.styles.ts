@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
-export const dashboardGradesPanelStyles = StyleSheet.create({
+export function createDashboardGradesPanelStyles(c: AnsColors) {
+  return StyleSheet.create({
   wrap: {
     paddingHorizontal: DASHBOARD_HORIZONTAL_PADDING,
     paddingTop: 8,
@@ -20,11 +21,11 @@ export const dashboardGradesPanelStyles = StyleSheet.create({
   stateText: {
     marginTop: 8,
     fontSize: 14,
-    color: ansColors.gray,
+    color: c.gray,
   },
   errorText: {
     fontSize: 14,
-    color: ansColors.error,
+    color: c.error,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -32,22 +33,23 @@ export const dashboardGradesPanelStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: ansColors.black,
+    backgroundColor: c.black,
   },
   retryButtonText: {
-    color: ansColors.gold,
+    color: c.gold,
     fontWeight: '700',
   },
   emptyCard: {
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: ansColors.grayBorder,
+    borderColor: c.grayBorder,
   },
   emptyText: {
     fontSize: 14,
-    color: ansColors.gray,
+    color: c.gray,
     textAlign: 'center',
   },
 });
+}

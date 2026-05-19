@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
   Animated,
   Image,
@@ -8,7 +9,7 @@ import {
 } from 'react-native';
 
 import type { DashboardQuickAction } from '../dashboard.quickActions';
-import { dashboardQuickActionsStyles as styles } from './DashboardQuickActions.styles';
+import { createDashboardQuickActionsStyles } from './DashboardQuickActions.styles';
 
 type Props = {
   action: DashboardQuickAction;
@@ -21,6 +22,7 @@ export default function DashboardQuickActionButton({
   isSelected,
   onSelect,
 }: Props) {
+  const styles = useThemedStyles(createDashboardQuickActionsStyles);
   const fillProgress = useRef(new Animated.Value(0)).current;
   const [textOnFill, setTextOnFill] = useState(false);
 

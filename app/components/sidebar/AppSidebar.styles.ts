@@ -1,10 +1,11 @@
 import { Dimensions, StyleSheet } from 'react-native';
 
-import { ansColors } from '../../theme/ansTheme';
+import type { AnsColors } from '../../theme/ansTheme';
 
 export const SIDEBAR_WIDTH = Math.min(300, Dimensions.get('window').width * 0.86);
 
-export const appSidebarStyles = StyleSheet.create({
+export function createAppSidebarStyles(c: AnsColors) {
+  return StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
@@ -23,10 +24,10 @@ export const appSidebarStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: SIDEBAR_WIDTH,
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRightWidth: 1,
-    borderRightColor: ansColors.dashboardFeatureBorder,
-    shadowColor: ansColors.black,
+    borderRightColor: c.dashboardFeatureBorder,
+    shadowColor: c.black,
     shadowOffset: { width: 4, height: 0 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
@@ -56,7 +57,7 @@ export const appSidebarStyles = StyleSheet.create({
     opacity: 0.85,
   },
   menuItemActive: {
-    backgroundColor: ansColors.dashboardBluePale,
+    backgroundColor: c.dashboardBluePale,
   },
   iconWrap: {
     width: 40,
@@ -72,14 +73,14 @@ export const appSidebarStyles = StyleSheet.create({
   menuTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: ansColors.black,
+    color: c.charcoal,
   },
   menuTitleActive: {
-    color: ansColors.dashboardBlue,
+    color: c.dashboardBlue,
   },
   menuDescription: {
     fontSize: 12,
-    color: ansColors.gray,
+    color: c.gray,
     marginTop: 2,
   },
   footer: {
@@ -87,7 +88,7 @@ export const appSidebarStyles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: ansColors.dashboardFeatureBorder,
+    borderTopColor: c.dashboardFeatureBorder,
   },
   logoutButton: {
     flexDirection: 'row',
@@ -96,9 +97,9 @@ export const appSidebarStyles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: ansColors.errorBg,
+    backgroundColor: c.errorBg,
     borderWidth: 1,
-    borderColor: ansColors.grayBorder,
+    borderColor: c.grayBorder,
   },
   logoutButtonDisabled: {
     opacity: 0.65,
@@ -106,6 +107,7 @@ export const appSidebarStyles = StyleSheet.create({
   logoutLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: ansColors.error,
+    color: c.error,
   },
 });
+}

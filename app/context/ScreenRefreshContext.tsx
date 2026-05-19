@@ -11,7 +11,8 @@ type ScreenRefreshFn = () => void | Promise<unknown>;
 
 type ScreenRefreshContextValue = {
   register: (refresh: ScreenRefreshFn) => void;
-  unregister: () => void;
+  /** Usuwa handler tylko jeśli nadal jest tym samym, który zarejestrował ekran. */
+  unregister: (refresh: ScreenRefreshFn) => void;
   refreshing: boolean;
   onRefresh: () => Promise<void>;
 };
@@ -32,8 +33,10 @@ export function ScreenRefreshProvider({
     handlerRef.current = refresh;
   }, []);
 
-  const unregister = useCallback(() => {
-    handlerRef.current = null;
+  const unregister = useCallback((refresh: ScreenRefreshFn) => {
+    if (handlerRef.current === refresh) {
+      handlerRef.current = null;
+    }
   }, []);
 
   const onRefresh = useCallback(async () => {

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
   ActivityIndicator,
   Text,
@@ -9,11 +10,13 @@ import {
 import { pickActiveSemester } from '../../../core/scraper/features/grades/pickPrioritySemester';
 import GradesSubjectCard from '../../grades/components/GradesSubjectCard';
 import { useGradesQuery } from '../../grades/hooks/useGradesQuery';
-import { gradesColors } from '../../grades/gradesTheme';
-import { dashboardGradesPanelStyles as styles } from './DashboardGradesPanel.styles';
+import { useGradesColors } from '../../grades/useGradesColors';
+import { createDashboardGradesPanelStyles } from './DashboardGradesPanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
 export default function DashboardGradesPanel() {
+  const gradesColors = useGradesColors();
+  const styles = useThemedStyles(createDashboardGradesPanelStyles);
   const { semesters, isInitialLoading, isFatalError, refetch } = useGradesQuery();
 
   useRegisterScreenRefresh(async () => {

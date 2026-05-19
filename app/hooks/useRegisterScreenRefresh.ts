@@ -12,8 +12,11 @@ export function useRegisterScreenRefresh(
 
   useFocusEffect(
     useCallback(() => {
-      register(() => refreshRef.current());
-      return unregister;
+      const handler = async () => {
+        await refreshRef.current();
+      };
+      register(handler);
+      return () => unregister(handler);
     }, [register, unregister])
   );
 }

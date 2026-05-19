@@ -1,4 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { useAppTheme } from '../context/AppThemeContext';
+import { useThemedStyles } from '../theme/useThemedStyles';
+import { createFindLecturerScreenStyles } from '../features/lecturer/FindLecturerScreen.styles';
 import {
   ActivityIndicator,
   Keyboard,
@@ -17,7 +20,6 @@ import {
   type LecturerSearchResult,
 } from '../core/scraper/features/lecturers/lecturers.service';
 import type { RootParamList } from '../navigation/navigationRef';
-import { ansColors } from '../theme/ansTheme';
 import KeyboardDismissView from '../components/KeyboardDismissView';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
@@ -25,6 +27,8 @@ import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 type FindLecturerNav = StackNavigationProp<RootParamList, 'FindLecturer'>;
 
 export default function FindLecturerScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createFindLecturerScreenStyles);
   const navigation = useNavigation<FindLecturerNav>();
   const lecturersService = useMemo(() => new LecturersService(), []);
   const [firstName, setFirstName] = useState('');
@@ -165,7 +169,7 @@ export default function FindLecturerScreen() {
               accessibilityRole="button"
             >
               {loading ? (
-                <ActivityIndicator color={ansColors.surface} />
+                <ActivityIndicator color={colors.surface} />
               ) : (
                 <Text style={styles.primaryButtonText}>Szukaj</Text>
               )}
@@ -181,7 +185,7 @@ export default function FindLecturerScreen() {
 
         {loading ? (
           <View style={styles.inlineLoader}>
-            <ActivityIndicator color={ansColors.gold} />
+            <ActivityIndicator color={colors.gold} />
             <Text style={styles.inlineLoaderText}>Szukam prowadzących…</Text>
           </View>
         ) : null}
@@ -206,172 +210,3 @@ export default function FindLecturerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: ansColors.dashboardBg,
-  },
-  screen: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 32,
-    gap: 16,
-  },
-  formCard: {
-    backgroundColor: ansColors.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 1,
-    gap: 12,
-  },
-  field: {
-    gap: 6,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: ansColors.gray,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: ansColors.grayBorder,
-    backgroundColor: ansColors.background,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: ansColors.charcoal,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: ansColors.charcoal,
-    borderRadius: 999,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  primaryButtonText: {
-    color: ansColors.surface,
-    fontWeight: '700',
-    fontSize: 15,
-    letterSpacing: 0.3,
-  },
-  secondaryButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
-    backgroundColor: ansColors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButtonText: {
-    color: ansColors.charcoal,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  buttonDisabled: {
-    opacity: 0.55,
-  },
-  errorBox: {
-    backgroundColor: ansColors.errorBg,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#F4C7C7',
-  },
-  errorText: {
-    color: ansColors.error,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  inlineLoader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-  },
-  inlineLoaderText: {
-    color: ansColors.gray,
-    fontSize: 14,
-  },
-  emptyState: {
-    backgroundColor: ansColors.surface,
-    borderRadius: 14,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
-    alignItems: 'center',
-    gap: 6,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: ansColors.charcoal,
-  },
-  emptyDescription: {
-    fontSize: 13,
-    color: ansColors.gray,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  resultsSection: {
-    gap: 10,
-  },
-  resultCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: ansColors.surface,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 1,
-  },
-  resultName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    color: ansColors.charcoal,
-  },
-  classesButton: {
-    backgroundColor: ansColors.charcoal,
-    borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  classesButtonText: {
-    color: ansColors.surface,
-    fontWeight: '700',
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
-});

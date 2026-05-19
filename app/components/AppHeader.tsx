@@ -3,15 +3,17 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getCurrentRouteName, navigationRef } from '../navigation/navigationRef';
+import { useThemedStyles } from '../theme/useThemedStyles';
 import {
   APP_HEADER_LOGO_SIZE,
-  appHeaderStyles as styles,
+  createAppHeaderStyles,
 } from './AppHeader.styles';
 import AppHeaderAvatar from './AppHeaderAvatar';
 import AppLogo from './AppLogo';
 import SidebarMenuButton from './sidebar/SidebarMenuButton';
 
 export default function AppHeader() {
+  const styles = useThemedStyles(createAppHeaderStyles);
   const insets = useSafeAreaInsets();
   const [routeName, setRouteName] = useState(getCurrentRouteName);
 

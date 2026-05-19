@@ -16,7 +16,6 @@ import { useStudentProfile } from '../context/StudentProfileContext';
 import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { ansColors } from '../theme/ansTheme';
 
 const APP_VERSION = require('../../package.json').version as string;
 
@@ -85,7 +84,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colors.screenBackground }]}
+      style={[styles.safeArea, { backgroundColor: colors.dashboardBg }]}
       edges={['left', 'right', 'bottom']}
     >
       <RefreshableScrollView
@@ -93,16 +92,16 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.title, { color: colors.textPrimary }]}>
+        <Text style={[styles.title, { color: colors.charcoal }]}>
           Ustawienia
         </Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+        <Text style={[styles.subtitle, { color: colors.gray }]}>
           Preferencje aplikacji
         </Text>
 
         {isOffline ? (
-          <View style={[styles.offlineBanner, { borderColor: colors.border }]}>
-            <Text style={[styles.offlineText, { color: ansColors.error }]}>
+          <View style={[styles.offlineBanner, { borderColor: colors.grayBorder }]}>
+            <Text style={[styles.offlineText, { color: colors.error }]}>
               Brak połączenia z internetem. Część danych może być nieaktualna.
             </Text>
           </View>
@@ -112,18 +111,16 @@ export default function SettingsScreen() {
           style={[
             styles.card,
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              borderColor: colors.grayBorder,
             },
           ]}
         >
           <View style={styles.textBlock}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+            <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
               Tryb ciemny
             </Text>
-            <Text
-              style={[styles.cardDescription, { color: colors.textSecondary }]}
-            >
+            <Text style={[styles.cardDescription, { color: colors.gray }]}>
               Zmień wygląd aplikacji na ciemny motyw.
             </Text>
           </View>
@@ -143,18 +140,16 @@ export default function SettingsScreen() {
           style={[
             styles.card,
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              borderColor: colors.grayBorder,
             },
           ]}
         >
           <View style={styles.textBlock}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+            <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
               Zapamiętaj mnie
             </Text>
-            <Text
-              style={[styles.cardDescription, { color: colors.textSecondary }]}
-            >
+            <Text style={[styles.cardDescription, { color: colors.gray }]}>
               {rememberMeEnabled
                 ? 'Włączone — aplikacja może logować się automatycznie.'
                 : 'Wyłączone — wymagane logowanie przy każdej sesji.'}
@@ -176,8 +171,8 @@ export default function SettingsScreen() {
           style={[
             styles.actionCard,
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              borderColor: colors.grayBorder,
               opacity: cacheClearing ? 0.6 : 1,
             },
           ]}
@@ -185,17 +180,15 @@ export default function SettingsScreen() {
           disabled={cacheClearing}
           activeOpacity={0.85}
         >
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+          <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
             Wyczyść cache aplikacji
           </Text>
-          <Text
-            style={[styles.cardDescription, { color: colors.textSecondary }]}
-          >
+          <Text style={[styles.cardDescription, { color: colors.gray }]}>
             Usuwa zapisany plan i dane w pamięci (bez wylogowania).
           </Text>
         </TouchableOpacity>
 
-        <Text style={[styles.version, { color: colors.textSecondary }]}>
+        <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
         </Text>
       </RefreshableScrollView>

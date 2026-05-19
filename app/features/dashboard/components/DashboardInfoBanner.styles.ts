@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
-export const dashboardInfoBannerStyles = StyleSheet.create({
+export function createDashboardInfoBannerStyles(c: AnsColors) {
+  return StyleSheet.create({
   wrap: {
     paddingHorizontal: DASHBOARD_HORIZONTAL_PADDING,
     paddingTop: 24,
@@ -13,9 +14,9 @@ export const dashboardInfoBannerStyles = StyleSheet.create({
     borderRadius: 21,
     paddingVertical: 21,
     paddingHorizontal: 24,
-    backgroundColor: ansColors.dashboardBluePale,
+    backgroundColor: c.dashboardBluePale,
     borderWidth: 1,
-    borderColor: ansColors.dashboardBlueLight,
+    borderColor: c.dashboardBlueLight,
   },
   text: {
     fontSize: 21,
@@ -25,3 +26,4 @@ export const dashboardInfoBannerStyles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+}

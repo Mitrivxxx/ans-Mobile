@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ansColors } from '../../theme/ansTheme';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { useSidebar } from './SidebarContext';
 
 type Props = {
@@ -14,6 +14,7 @@ export default function SidebarMenuButton({
   size = 24,
   buttonSize = 44,
 }: Props) {
+  const { colors } = useAppTheme();
   const { open } = useSidebar();
 
   return (
@@ -28,7 +29,11 @@ export default function SidebarMenuButton({
       accessibilityLabel="Otwórz menu"
       hitSlop={8}
     >
-      <MaterialCommunityIcons name="menu" size={size} color={ansColors.black} />
+      <MaterialCommunityIcons
+        name="menu"
+        size={size}
+        color={colors.charcoal}
+      />
     </Pressable>
   );
 }

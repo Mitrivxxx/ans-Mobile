@@ -14,8 +14,14 @@ import type {
 } from '../../../core/scraper/features/grades/grades.service';
 import { usePartialGradesQuery } from '../hooks/usePartialGradesQuery';
 import { getGradeBadgeStyle } from '../gradeBadgeStyle';
-import { gradesColors } from '../gradesTheme';
-import { gradesSubjectCardStyles as styles } from './GradesSubjectCard.styles';
+import type { GradesColors } from '../gradesTheme';
+import { useGradesColors } from '../useGradesColors';
+import { useGradesThemedStyles } from '../useGradesThemedStyles';
+import {
+  createGradesSubjectCardStyles,
+} from './GradesSubjectCard.styles';
+
+type SubjectCardStyles = ReturnType<typeof createGradesSubjectCardStyles>;
 
 type Props = {
   subject: SubjectGrade;
@@ -25,11 +31,15 @@ type Props = {
 function PartialGradeRow({
   label,
   value,
+  styles,
+  palette,
 }: {
   label: string;
   value: string;
+  styles: SubjectCardStyles;
+  palette: GradesColors;
 }) {
-  const badgeStyle = getGradeBadgeStyle(value);
+  const badgeStyle = getGradeBadgeStyle(value, palette);
 
   return (
     <View style={styles.partialRow}>
@@ -52,8 +62,16 @@ function PartialGradeRow({
   );
 }
 
-function ActivitySection({ activity }: { activity: SubjectActivityDetails }) {
-  const badgeStyle = getGradeBadgeStyle(activity.finalGrade);
+function ActivitySection({
+  activity,
+  styles,
+  palette,
+}: {
+  activity: SubjectActivityDetails;
+  styles: SubjectCardStyles;
+  palette: GradesColors;
+}) {
+  const badgeStyle = getGradeBadgeStyle(activity.finalGrade, palette);
 
   return (
     <View style={styles.activityBlock}>
@@ -78,6 +96,8 @@ function ActivitySection({ activity }: { activity: SubjectActivityDetails }) {
               key={`${activity.form}-${index}-${entry.label}-${entry.value}`}
               label={entry.label}
               value={entry.value}
+              styles={styles}
+              palette={palette}
             />
           ))}
         </View>
@@ -97,6 +117,8 @@ export default function GradesSubjectCard({
   subject,
   expandable = false,
 }: Props) {
+  const gradesColors = useGradesColors();
+  const styles = useGradesThemedStyles(createGradesSubjectCardStyles);
   const [expanded, setExpanded] = useState(false);
   const canExpand = expandable && subject.pplsId != null;
   const shouldFetchPartial =
@@ -123,7 +145,7 @@ export default function GradesSubjectCard({
   }, [subject.pplsId, subject.subject]);
 
   const grade = subject.finalGrade || '—';
-  const badgeStyle = getGradeBadgeStyle(subject.finalGrade);
+  const badgeStyle = getGradeBadgeStyle(subject.finalGrade, gradesColors);
 
   const handleToggle = useCallback(() => {
     if (!canExpand) return;
@@ -213,6 +235,8 @@ export default function GradesSubjectCard({
                 <ActivitySection
                   key={activity.form}
                   activity={activity}
+                  styles={styles}
+                  palette={gradesColors}
                 />
               ))
             : null}

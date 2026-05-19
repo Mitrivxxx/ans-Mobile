@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import SyncBanner from '../../../components/SyncBanner';
@@ -12,21 +13,23 @@ import {
   lessonDateKeyFromScraper,
   timeToMinutes,
 } from '../utils/workWeek';
-import { dashboardSchedulePanelStyles as styles } from './DashboardSchedulePanel.styles';
+import { createDashboardSchedulePanelStyles } from './DashboardSchedulePanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
 export default function DashboardSchedulePanel() {
+  const styles = useThemedStyles(createDashboardSchedulePanelStyles);
   const {
     lessons,
     isInitialLoading,
     isFatalError,
     syncStatus,
-    refresh,
+    refetch,
+    forceRefresh,
   } = useStudentPlanWeekLessons();
 
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
-  useRegisterScreenRefresh(refresh);
+  useRegisterScreenRefresh(forceRefresh);
 
   const calendarWeek = useMemo(() => getCurrentWeek(), []);
   const [selectedDateKey, setSelectedDateKey] = useState(getDefaultWeekDateKey);
@@ -74,7 +77,7 @@ export default function DashboardSchedulePanel() {
       <View style={styles.wrap}>
         <View style={styles.centerState}>
           <Text style={styles.errorText}>Nie udało się pobrać harmonogramu</Text>
-          <TouchableOpacity onPress={() => void refresh()} style={styles.retryButton}>
+          <TouchableOpacity onPress={() => void refetch()} style={styles.retryButton}>
             <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
           </TouchableOpacity>
         </View>

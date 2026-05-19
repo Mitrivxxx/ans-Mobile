@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useThemedStyles } from '../theme/useThemedStyles';
 import { View } from 'react-native';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +10,7 @@ import DashboardGradesPanel from '../features/dashboard/components/DashboardGrad
 import DashboardInfoBanner from '../features/dashboard/components/DashboardInfoBanner';
 import DashboardQuickActions from '../features/dashboard/components/DashboardQuickActions';
 import DashboardSchedulePanel from '../features/dashboard/components/DashboardSchedulePanel';
-import { dashboardScreenStyles as styles } from '../features/dashboard/DashboardScreen.styles';
+import { createDashboardScreenStyles } from '../features/dashboard/DashboardScreen.styles';
 
 const HARMONOGRAM_ACTION_TITLE = 'Plan zajęć';
 const GRADES_ACTION_TITLE = 'Przedmioty i oceny';
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export default function DashboardScreen(_props: Props) {
+  const styles = useThemedStyles(createDashboardScreenStyles);
   const [selectedQuickAction, setSelectedQuickAction] = useState<string | null>(
     null
   );

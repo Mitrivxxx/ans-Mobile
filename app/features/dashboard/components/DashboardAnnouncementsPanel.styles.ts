@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import type { AnsColors } from '../../../theme/ansTheme';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
-export const dashboardAnnouncementsPanelStyles = StyleSheet.create({
+export function createDashboardAnnouncementsPanelStyles(c: AnsColors) {
+  return StyleSheet.create({
   wrap: {
     paddingHorizontal: DASHBOARD_HORIZONTAL_PADDING,
     paddingTop: 8,
@@ -13,11 +14,11 @@ export const dashboardAnnouncementsPanelStyles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
+    borderColor: c.dashboardFeatureBorder,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -27,7 +28,7 @@ export const dashboardAnnouncementsPanelStyles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: ansColors.charcoal,
+    color: c.charcoal,
     marginBottom: 6,
   },
   metaRow: {
@@ -40,11 +41,11 @@ export const dashboardAnnouncementsPanelStyles = StyleSheet.create({
   metaAuthor: {
     flex: 1,
     fontSize: 13,
-    color: ansColors.gray,
+    color: c.gray,
   },
   metaDate: {
     fontSize: 12,
-    color: ansColors.grayLight,
+    color: c.grayLight,
     fontWeight: '600',
   },
   centerState: {
@@ -55,11 +56,11 @@ export const dashboardAnnouncementsPanelStyles = StyleSheet.create({
   stateText: {
     marginTop: 8,
     fontSize: 14,
-    color: ansColors.gray,
+    color: c.gray,
   },
   errorText: {
     fontSize: 14,
-    color: ansColors.error,
+    color: c.error,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -67,22 +68,23 @@ export const dashboardAnnouncementsPanelStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: ansColors.black,
+    backgroundColor: c.black,
   },
   retryButtonText: {
-    color: ansColors.gold,
+    color: c.gold,
     fontWeight: '700',
   },
   emptyCard: {
-    backgroundColor: ansColors.surface,
+    backgroundColor: c.surface,
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: ansColors.grayBorder,
+    borderColor: c.grayBorder,
   },
   emptyText: {
     fontSize: 14,
-    color: ansColors.gray,
+    color: c.gray,
     textAlign: 'center',
   },
 });
+}

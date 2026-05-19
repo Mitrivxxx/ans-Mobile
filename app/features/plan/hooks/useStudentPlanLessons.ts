@@ -20,6 +20,7 @@ export function useStudentPlanLessons() {
     syncStatus: query.syncStatus,
     refresh: query.refresh,
     refetch: query.refetch,
+    forceRefresh: query.forceRefresh,
     isFatalError: query.isFatalError,
   };
 }

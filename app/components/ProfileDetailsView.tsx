@@ -2,8 +2,16 @@ import React from 'react';
 import { Image, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import type { CompleteProfileData, ProfileSummary } from '../core/scraper/features/profile/profile.service';
-import { ansColors } from '../theme/ansTheme';
+import type {
+  CompleteProfileData,
+  ProfileSummary,
+} from '../core/scraper/features/profile/profile.service';
+import { useAppTheme } from '../context/AppThemeContext';
+import { useThemedStyles } from '../theme/useThemedStyles';
+import {
+  createProfileDetailsStyles,
+  type ProfileDetailsStyles,
+} from './ProfileDetailsView.styles';
 
 type Props = {
   summary: ProfileSummary | null;
@@ -14,22 +22,22 @@ type FieldProps = {
   label: string;
   value: string;
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  styles: ProfileDetailsStyles;
+  gold: string;
 };
-
-const AVATAR_SIZE = 128;
 
 function fieldValue(value: string): string {
   return value && value.trim() ? value : '—';
 }
 
-function SectionField({ label, value, icon }: FieldProps) {
+function SectionField({ label, value, icon, styles, gold }: FieldProps) {
   return (
     <View style={styles.fieldRow}>
       <View style={styles.fieldIconWrap}>
         <MaterialCommunityIcons
           name={icon ?? 'checkbox-blank-circle-outline'}
           size={16}
-          color={ansColors.gold}
+          color={gold}
         />
       </View>
       <View style={styles.fieldTextWrap}>
@@ -43,9 +51,11 @@ function SectionField({ label, value, icon }: FieldProps) {
 function ProfileCard({
   title,
   children,
+  styles,
 }: {
   title: string;
   children: React.ReactNode;
+  styles: ProfileDetailsStyles;
 }) {
   return (
     <View style={styles.sectionCard}>
@@ -60,12 +70,17 @@ function getInitials(firstName: string, lastName: string): string {
 }
 
 export default function ProfileDetailsView({ summary, profile }: Props) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createProfileDetailsStyles);
+
   if (!summary || !profile) {
     return null;
   }
 
   const hasPhoto = Boolean(summary.photo);
   const initials = getInitials(summary.firstName, summary.lastName);
+
+  const fieldProps = { styles, gold: colors.gold };
 
   return (
     <View style={styles.root}>
@@ -109,174 +124,32 @@ export default function ProfileDetailsView({ summary, profile }: Props) {
         </View>
       </View>
 
-      <ProfileCard title="Konto">
-        <SectionField label="Imię" value={profile.firstName} icon="account" />
-        <SectionField label="Nazwisko" value={profile.lastName} icon="account" />
-        <SectionField label="Numer albumu" value={profile.albumNumber} icon="card-account-details-outline" />
-        <SectionField label="Kierunek" value={profile.major} icon="school-outline" />
-        <SectionField label="Login" value={profile.login} icon="identifier" />
-        <SectionField label="Email prywatny" value={profile.privateEmail} icon="email-outline" />
-        <SectionField label="Email uczelniany" value={profile.universityEmail} icon="email-newsletter" />
+      <ProfileCard title="Konto" styles={styles}>
+        <SectionField label="Imię" value={profile.firstName} icon="account" {...fieldProps} />
+        <SectionField label="Nazwisko" value={profile.lastName} icon="account" {...fieldProps} />
+        <SectionField label="Numer albumu" value={profile.albumNumber} icon="card-account-details-outline" {...fieldProps} />
+        <SectionField label="Kierunek" value={profile.major} icon="school-outline" {...fieldProps} />
+        <SectionField label="Login" value={profile.login} icon="identifier" {...fieldProps} />
+        <SectionField label="Email prywatny" value={profile.privateEmail} icon="email-outline" {...fieldProps} />
+        <SectionField label="Email uczelniany" value={profile.universityEmail} icon="email-newsletter" {...fieldProps} />
       </ProfileCard>
 
-      <ProfileCard title="Studia">
-        <SectionField label="Tok studiów" value={profile.studyTrack} icon="timeline-text-outline" />
-        <SectionField label="Numer legitymacji" value={profile.legitimationNumber} icon="badge-account-outline" />
-        <SectionField label="Status studenta" value={profile.studentStatus} icon="account-check-outline" />
-        <SectionField label="Rok" value={profile.year} icon="calendar-range-outline" />
-        <SectionField label="Semestr" value={profile.semester} icon="numeric-9-box-multiple-outline" />
-        <SectionField label="Tryb studiów" value={profile.studyMode} icon="swap-horizontal" />
-        <SectionField label="Wydział" value={profile.faculty} icon="office-building-outline" />
-        <SectionField label="Specjalność" value={profile.specialization} icon="shape-outline" />
-        <SectionField label="Uzyskiwany tytuł" value={profile.title} icon="school-outline" />
-        <SectionField label="Semestr akademicki naboru" value={profile.enrollmentSemester} icon="calendar-star" />
-        <SectionField label="Data rozpoczęcia studiów" value={profile.studiesStartDate} icon="calendar-start" />
-        <SectionField label="Przewidywana data zakończenia studiów" value={profile.studiesEndDate} icon="calendar-end" />
-        <SectionField label="Tok indywidualny" value={profile.individualTrack} icon="account-cog-outline" />
-        <SectionField label="Numer i data umowy" value={profile.contractNumber} icon="file-document-outline" />
+      <ProfileCard title="Studia" styles={styles}>
+        <SectionField label="Tok studiów" value={profile.studyTrack} icon="timeline-text-outline" {...fieldProps} />
+        <SectionField label="Numer legitymacji" value={profile.legitimationNumber} icon="badge-account-outline" {...fieldProps} />
+        <SectionField label="Status studenta" value={profile.studentStatus} icon="account-check-outline" {...fieldProps} />
+        <SectionField label="Rok" value={profile.year} icon="calendar-range-outline" {...fieldProps} />
+        <SectionField label="Semestr" value={profile.semester} icon="numeric-9-box-multiple-outline" {...fieldProps} />
+        <SectionField label="Tryb studiów" value={profile.studyMode} icon="swap-horizontal" {...fieldProps} />
+        <SectionField label="Wydział" value={profile.faculty} icon="office-building-outline" {...fieldProps} />
+        <SectionField label="Specjalność" value={profile.specialization} icon="shape-outline" {...fieldProps} />
+        <SectionField label="Uzyskiwany tytuł" value={profile.title} icon="school-outline" {...fieldProps} />
+        <SectionField label="Semestr akademicki naboru" value={profile.enrollmentSemester} icon="calendar-star" {...fieldProps} />
+        <SectionField label="Data rozpoczęcia studiów" value={profile.studiesStartDate} icon="calendar-start" {...fieldProps} />
+        <SectionField label="Przewidywana data zakończenia studiów" value={profile.studiesEndDate} icon="calendar-end" {...fieldProps} />
+        <SectionField label="Tok indywidualny" value={profile.individualTrack} icon="account-cog-outline" {...fieldProps} />
+        <SectionField label="Numer i data umowy" value={profile.contractNumber} icon="file-document-outline" {...fieldProps} />
       </ProfileCard>
     </View>
   );
 }
-
-const styles = {
-  root: {
-    gap: 16,
-  },
-  headerCard: {
-    backgroundColor: ansColors.surface,
-    borderRadius: 22,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: ansColors.grayBorder,
-    shadowColor: ansColors.black,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    gap: 16,
-    alignItems: 'center',
-  },
-  avatarWrap: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    borderWidth: 2,
-    borderColor: ansColors.gold,
-    overflow: 'hidden',
-    backgroundColor: ansColors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatar: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-  },
-  avatarPlaceholder: {
-    color: ansColors.gold,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  headerCopy: {
-    flex: 1,
-  },
-  headerName: {
-    color: ansColors.charcoal,
-    fontSize: 26,
-    fontWeight: '800',
-    lineHeight: 30,
-  },
-  headerMeta: {
-    color: ansColors.gray,
-    fontSize: 15,
-    marginTop: 8,
-    lineHeight: 21,
-  },
-  chipRow: {
-    marginTop: 16,
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  chip: {
-    minWidth: 84,
-    flexGrow: 1,
-    backgroundColor: ansColors.background,
-    borderWidth: 1,
-    borderColor: ansColors.grayBorder,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-  },
-  chipLabel: {
-    color: ansColors.gray,
-    fontSize: 11,
-    marginBottom: 4,
-  },
-  chipValue: {
-    color: ansColors.charcoal,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  sectionCard: {
-    backgroundColor: ansColors.surface,
-    borderRadius: 22,
-    padding: 16,
-    shadowColor: ansColors.black,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: ansColors.grayBorder,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: ansColors.charcoal,
-    marginBottom: 12,
-  },
-  sectionBody: {
-    gap: 8,
-  },
-  fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: ansColors.background,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#ECE9E1',
-  },
-  fieldIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(201,162,39,0.14)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-    marginTop: 0,
-  },
-  fieldTextWrap: {
-    flex: 1,
-  },
-  fieldLabel: {
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    color: ansColors.gray,
-    marginBottom: 4,
-    fontWeight: '700',
-  },
-  fieldValue: {
-    fontSize: 14,
-    lineHeight: 19,
-    color: ansColors.charcoal,
-    fontWeight: '600',
-  },
-} as const;

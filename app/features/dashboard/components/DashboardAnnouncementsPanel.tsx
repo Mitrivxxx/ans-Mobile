@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
   ActivityIndicator,
   Text,
@@ -6,15 +7,17 @@ import {
   View,
 } from 'react-native';
 
-import { ansColors } from '../../../theme/ansTheme';
+import { useAppTheme } from '../../../context/AppThemeContext';
 import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
 import { isWithinLastDays } from '../utils/announcementDate';
-import { dashboardAnnouncementsPanelStyles as styles } from './DashboardAnnouncementsPanel.styles';
+import { createDashboardAnnouncementsPanelStyles } from './DashboardAnnouncementsPanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
 const RECENT_WINDOW_DAYS = 7;
 
 export default function DashboardAnnouncementsPanel() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createDashboardAnnouncementsPanelStyles);
   const { announcements, isInitialLoading, isFatalError, refetch } =
     useAnnouncementsQuery();
 
@@ -34,7 +37,7 @@ export default function DashboardAnnouncementsPanel() {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
-          <ActivityIndicator color={ansColors.gold} />
+          <ActivityIndicator color={colors.gold} />
           <Text style={styles.stateText}>Wczytywanie ogłoszeń...</Text>
         </View>
       </View>
