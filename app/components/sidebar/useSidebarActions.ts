@@ -5,7 +5,7 @@ import { useStudentProfile } from '../../context/StudentProfileContext';
 import {
   navigateTo,
   replaceTo,
-  type AppRouteName,
+  type SidebarRouteName,
 } from '../../navigation/navigationRef';
 import { useSidebar } from './SidebarContext';
 
@@ -16,7 +16,7 @@ export function useSidebarActions() {
   const [logoutLoading, setLogoutLoading] = useState(false);
 
   const onNavigate = useCallback(
-    (route: AppRouteName) => {
+    (route: SidebarRouteName) => {
       navigateTo(route);
       close();
     },

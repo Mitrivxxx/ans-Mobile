@@ -13,8 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DashboardIcon from '../../features/dashboard/icons/DashboardIcon';
 import {
-  type AppRouteName,
   getCurrentRouteName,
+  type SidebarRouteName,
 } from '../../navigation/navigationRef';
 import { ansColors } from '../../theme/ansTheme';
 import {
@@ -93,7 +93,7 @@ export default function AppSidebar() {
               return (
                 <Pressable
                   key={feature.route}
-                  onPress={() => onNavigate(feature.route as AppRouteName)}
+                  onPress={() => onNavigate(feature.route as SidebarRouteName)}
                   style={({ pressed }) => [
                     styles.menuItem,
                     isActive && styles.menuItemActive,

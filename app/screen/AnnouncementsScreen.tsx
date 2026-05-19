@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 
+import ScreenBackButton from '../components/ScreenBackButton';
 import {
   AnnouncementsService,
   type Announcement,
@@ -104,16 +105,13 @@ export default function AnnouncementsScreen({ navigation }: Props) {
         contentContainerStyle={styles.detailsContent}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity
+        <ScreenBackButton
+          label="← Lista ogłoszeń"
           onPress={() => {
             setSelected(null);
             setSelectedId(null);
           }}
-          style={styles.backButton}
-          accessibilityRole="button"
-        >
-          <Text style={styles.backButtonText}>← Lista ogłoszeń</Text>
-        </TouchableOpacity>
+        />
 
         <View style={styles.detailsCard}>
           <View style={styles.metaRow}>
@@ -290,20 +288,6 @@ const styles = StyleSheet.create({
   emptyState: {
     paddingVertical: 40,
     alignItems: 'center',
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: ansColors.surface,
-    borderWidth: 1,
-    borderColor: ansColors.dashboardFeatureBorder,
-    marginBottom: 12,
-  },
-  backButtonText: {
-    color: ansColors.charcoal,
-    fontWeight: '600',
   },
   detailsContent: {
     paddingBottom: 24,

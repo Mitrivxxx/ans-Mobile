@@ -7,6 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import AppHeader from './app/components/AppHeader';
 import AppSidebar from './app/components/sidebar/AppSidebar';
 import { SidebarProvider } from './app/components/sidebar/SidebarContext';
+import {
+  AppThemeProvider,
+  useAppTheme,
+} from './app/context/AppThemeContext';
 import { StudentProfileProvider } from './app/context/StudentProfileContext';
 import { navigationRef } from './app/navigation/navigationRef';
 import LoginScreen from './app/screen/LoginScreen';
@@ -16,32 +20,23 @@ import GradesScreen from './app/screen/GradesScreen';
 import AnnouncementsScreen from './app/screen/AnnouncementsScreen';
 import ProfileScreen from './app/screen/ProfileScreen';
 import FindLecturerScreen from './app/screen/FindLecturerScreen';
+import LecturerPlanScreen from './app/screen/LecturerPlanScreen';
+import SettingsScreen from './app/screen/SettingsScreen';
 import { initClient } from './app/core/scraper/client/client';
+import type { RootParamList } from './app/navigation/navigationRef';
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootParamList>();
 
-export default function App() {
-  useEffect(() => {
-    async function bootstrap() {
-      console.log('[APP] Initializing...');
-      
-      try {
-        await initClient();
-        console.log('[APP] Cookie store initialized');
-      } catch (error) {
-        console.error('[APP] Init error:', error);
-      }
-    }
+function AppShell() {
+  const { isDarkMode, colors } = useAppTheme();
 
-    bootstrap();
-  }, []);
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
+    <>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <NavigationContainer ref={navigationRef}>
         <StudentProfileProvider>
           <SidebarProvider>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, backgroundColor: colors.appBackground }}>
               <AppHeader />
               <View style={{ flex: 1 }}>
                 <Stack.Navigator
@@ -62,6 +57,11 @@ export default function App() {
                     name="FindLecturer"
                     component={FindLecturerScreen}
                   />
+                  <Stack.Screen
+                    name="LecturerPlan"
+                    component={LecturerPlanScreen}
+                  />
+                  <Stack.Screen name="Settings" component={SettingsScreen} />
                 </Stack.Navigator>
               </View>
               <AppSidebar />
@@ -69,6 +69,31 @@ export default function App() {
           </SidebarProvider>
         </StudentProfileProvider>
       </NavigationContainer>
+    </>
+  );
+}
+
+export default function App() {
+  useEffect(() => {
+    async function bootstrap() {
+      console.log('[APP] Initializing...');
+      
+      try {
+        await initClient();
+        console.log('[APP] Cookie store initialized');
+      } catch (error) {
+        console.error('[APP] Init error:', error);
+      }
+    }
+
+    bootstrap();
+  }, []);
+
+  return (
+    <SafeAreaProvider>
+      <AppThemeProvider>
+        <AppShell />
+      </AppThemeProvider>
     </SafeAreaProvider>
   );
 }

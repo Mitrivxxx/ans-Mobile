@@ -19,6 +19,7 @@ const ICON_NAMES: Record<
   announcements: 'bell-outline',
   profile: 'account-outline',
   lecturer: 'account-search-outline',
+  settings: 'cog-outline',
 };
 
 export default function DashboardIcon({
