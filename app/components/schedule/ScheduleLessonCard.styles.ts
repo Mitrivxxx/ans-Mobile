@@ -45,6 +45,10 @@ export const scheduleLessonCardStyles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  lessonCardELearning: {
+    backgroundColor: ansColors.dashboardBluePale,
+    borderColor: ansColors.dashboardBlueLight,
+  },
   lessonAccent: {
     width: 6,
   },

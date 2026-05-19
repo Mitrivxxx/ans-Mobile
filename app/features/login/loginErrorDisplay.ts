@@ -1,3 +1,4 @@
+import type { LoginResult } from '../../core/scraper/auth/auth.types';
 import type { LoginErrorCode } from '../../core/scraper/auth/login.errors';
 
 const LOGIN_ERROR_MESSAGES: Record<
@@ -19,4 +20,19 @@ export function getLoginErrorMessage(code: LoginErrorCode): string {
     return REQUIRED_FIELD_MESSAGE;
   }
   return LOGIN_ERROR_MESSAGES[code];
+}
+
+export function getLoginResultErrorMessage(result: LoginResult): string {
+  if (result.errorCode) {
+    return getLoginErrorMessage(result.errorCode);
+  }
+
+  if (result.requiresCaptcha) {
+    return (
+      result.error ??
+      'Wymagana weryfikacja CAPTCHA. Zaloguj się ponownie na ekranie logowania.'
+    );
+  }
+
+  return result.error ?? 'Nie udało się zalogować. Spróbuj ponownie.';
 }

@@ -5,6 +5,9 @@ import { gradesColors } from '../gradesTheme';
 const GRADE_BADGE_SIZE = 48;
 
 export const gradesSubjectCardStyles = StyleSheet.create({
+  wrap: {
+    gap: 0,
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -20,6 +23,18 @@ export const gradesSubjectCardStyles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+  },
+  cardExpanded: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  trailing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  chevron: {
+    marginLeft: 2,
   },
   info: {
     flex: 1,
@@ -47,5 +62,97 @@ export const gradesSubjectCardStyles = StyleSheet.create({
   gradeText: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  details: {
+    marginTop: -6,
+    paddingTop: 10,
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    backgroundColor: gradesColors.surface,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: gradesColors.border,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+    gap: 12,
+  },
+  detailsState: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  detailsStateText: {
+    fontSize: 13,
+    color: gradesColors.textMuted,
+  },
+  detailsErrorText: {
+    fontSize: 13,
+    color: gradesColors.gradeRed,
+  },
+  retryText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: gradesColors.primary,
+    marginTop: 4,
+  },
+  activityBlock: {
+    gap: 8,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  activityForm: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    color: gradesColors.text,
+  },
+  activityFinalBadge: {
+    minWidth: 40,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  activityFinalText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  partialList: {
+    gap: 6,
+    paddingLeft: 4,
+  },
+  partialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  partialLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: gradesColors.textMuted,
+    lineHeight: 18,
+  },
+  partialGradeBadge: {
+    minWidth: 36,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  partialGradeText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  noPartialText: {
+    fontSize: 13,
+    color: gradesColors.textMuted,
+    fontStyle: 'italic',
+    paddingLeft: 4,
   },
 });

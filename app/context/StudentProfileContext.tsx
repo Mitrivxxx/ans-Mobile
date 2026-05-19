@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -38,6 +39,7 @@ export function StudentProfileProvider({
   const [routeName, setRouteName] = useState<string | undefined>(
     getCurrentRouteName()
   );
+  const fetchStartedRef = useRef(false);
 
   useEffect(() => {
     const syncRoute = () => setRouteName(getCurrentRouteName());
@@ -53,6 +55,7 @@ export function StudentProfileProvider({
   const clear = useCallback(() => {
     setSummary(null);
     setLoading(false);
+    fetchStartedRef.current = false;
   }, []);
 
   const refetch = useCallback(async () => {
@@ -74,15 +77,16 @@ export function StudentProfileProvider({
       return;
     }
 
+    if (summary !== null || fetchStartedRef.current) {
+      return;
+    }
+
+    fetchStartedRef.current = true;
     let cancelled = false;
 
     (async () => {
       try {
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        if (cancelled) {
-          return;
-        }
         const data = await profileService.getProfileSummary();
         if (!cancelled) {
           setSummary(data);
@@ -91,6 +95,7 @@ export function StudentProfileProvider({
         console.error('[STUDENT PROFILE]', err);
         if (!cancelled) {
           setSummary(null);
+          fetchStartedRef.current = false;
         }
       } finally {
         if (!cancelled) {
@@ -102,10 +107,15 @@ export function StudentProfileProvider({
     return () => {
       cancelled = true;
     };
-  }, [clear, profileService, routeName]);
+  }, [clear, profileService, routeName, summary]);
 
   const value = useMemo(
-    () => ({ summary, loading, refetch, clear }),
+    () => ({
+      summary,
+      loading: loading && summary === null,
+      refetch,
+      clear,
+    }),
     [summary, loading, refetch, clear]
   );
 

@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 
 import ProfileDetailsView from '../components/ProfileDetailsView';
+import { useStudentProfile } from '../context/StudentProfileContext';
 import {
   ProfileService,
   type CompleteProfileData,
-  type ProfileSummary,
 } from '../core/scraper/features/profile/profile.service';
 
 type Props = {
@@ -22,30 +22,31 @@ type Props = {
 
 export default function ProfileScreen({ navigation }: Props) {
   const profileService = useMemo(() => new ProfileService(), []);
-  const [summary, setSummary] = useState<ProfileSummary | null>(null);
+  const { summary: cachedSummary, loading: summaryLoading } = useStudentProfile();
   const [profile, setProfile] = useState<CompleteProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfileDetails = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoadingProfile(true);
       setError('');
-      const { summary: summaryData, profile: profileData } =
-        await profileService.getProfileBundle();
-      setSummary(summaryData);
+      const profileData = await profileService.getProfile();
       setProfile(profileData);
     } catch (err) {
       console.error('[PROFILE SCREEN]', err);
       setError('Nie udało się pobrać profilu');
     } finally {
-      setLoading(false);
+      setLoadingProfile(false);
     }
   }, [profileService]);
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    void fetchProfileDetails();
+  }, [fetchProfileDetails]);
+
+  const loading = summaryLoading || (loadingProfile && !profile);
+  const summary = cachedSummary;
 
   if (loading) {
     return (
@@ -60,14 +61,17 @@ export default function ProfileScreen({ navigation }: Props) {
     return (
       <View style={screenStyles.centerState}>
         <Text style={screenStyles.errorText}>{error}</Text>
-        <TouchableOpacity onPress={fetchProfile} style={screenStyles.retryButton}>
+        <TouchableOpacity
+          onPress={fetchProfileDetails}
+          style={screenStyles.retryButton}
+        >
           <Text style={screenStyles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  if (!profile) {
+  if (!profile || !summary) {
     return (
       <View style={screenStyles.centerState}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -91,10 +95,6 @@ const screenStyles = {
     paddingTop: 18,
     paddingBottom: 36,
     backgroundColor: '#ECEEF1',
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 16,
   },
   backText: {
     fontSize: 16,

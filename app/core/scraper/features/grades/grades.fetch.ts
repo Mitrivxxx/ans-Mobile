@@ -25,3 +25,17 @@ export async function fetchSemesterSubjects(
     return "";
   }
 }
+
+export async function fetchPartialGrades(pplsId: number): Promise<string> {
+  const response = await client.get(
+    "/TokStudiow/StudentPrzedmiotyIOceny/OcenySrodsemestralne",
+    {
+      params: {
+        area: "TokStudiow",
+        ppls: pplsId,
+        _: Date.now(),
+      },
+    }
+  );
+  return responseBody(response.data);
+}

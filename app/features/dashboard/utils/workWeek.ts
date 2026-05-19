@@ -1,10 +1,16 @@
-export const WORKDAY_LABELS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt'] as const;
+export const WEEKDAY_LABELS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'] as const;
 
-export type WorkWeekDay = {
-  label: (typeof WORKDAY_LABELS)[number];
+/** @deprecated Użyj WEEKDAY_LABELS */
+export const WORKDAY_LABELS = WEEKDAY_LABELS;
+
+export type WeekDay = {
+  label: (typeof WEEKDAY_LABELS)[number];
   date: Date;
   dateKey: string;
 };
+
+/** @deprecated Użyj WeekDay */
+export type WorkWeekDay = WeekDay;
 
 export function dateKeyFromDate(date: Date): string {
   const year = date.getFullYear();
@@ -13,15 +19,15 @@ export function dateKeyFromDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-/** Poniedziałek–piątek tygodnia, w którym leży `referenceDate`. */
-export function getCurrentWorkWeek(referenceDate = new Date()): WorkWeekDay[] {
+/** Poniedziałek–niedziela tygodnia, w którym leży `referenceDate`. */
+export function getCurrentWeek(referenceDate = new Date()): WeekDay[] {
   const monday = new Date(referenceDate);
   const dayOfWeek = monday.getDay();
   const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   monday.setHours(0, 0, 0, 0);
   monday.setDate(monday.getDate() + diffToMonday);
 
-  return WORKDAY_LABELS.map((label, index) => {
+  return WEEKDAY_LABELS.map((label, index) => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
     return {
@@ -32,12 +38,22 @@ export function getCurrentWorkWeek(referenceDate = new Date()): WorkWeekDay[] {
   });
 }
 
-/** Domyślny dzień: dziś (Pn–Pt), w weekend — poniedziałek bieżącego tygodnia roboczego. */
-export function getDefaultWorkWeekDateKey(referenceDate = new Date()): string {
-  const week = getCurrentWorkWeek(referenceDate);
+/** @deprecated Użyj getCurrentWeek */
+export function getCurrentWorkWeek(referenceDate = new Date()): WeekDay[] {
+  return getCurrentWeek(referenceDate);
+}
+
+/** Domyślny dzień: dziś, jeśli jest w bieżącym tygodniu; w innym wypadku poniedziałek. */
+export function getDefaultWeekDateKey(referenceDate = new Date()): string {
+  const week = getCurrentWeek(referenceDate);
   const todayKey = dateKeyFromDate(referenceDate);
   const todayInWeek = week.find((day) => day.dateKey === todayKey);
   return todayInWeek?.dateKey ?? week[0].dateKey;
+}
+
+/** @deprecated Użyj getDefaultWeekDateKey */
+export function getDefaultWorkWeekDateKey(referenceDate = new Date()): string {
+  return getDefaultWeekDateKey(referenceDate);
 }
 
 export function lessonDateKeyFromScraper(dateText: string): string | null {
@@ -51,7 +67,7 @@ export function lessonDateKeyFromScraper(dateText: string): string | null {
     return null;
   }
 
-  return `${year}-${month}-${day}`;
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 }
 
 export function timeToMinutes(value: string): number {

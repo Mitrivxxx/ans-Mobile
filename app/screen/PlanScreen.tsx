@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -9,9 +9,12 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import SyncBanner from '../components/SyncBanner';
 import ScheduleLessonCard from '../components/schedule/ScheduleLessonCard';
-import { PlanService, type Lesson } from '../core/scraper/features/plan/paln.service';
+import type { Lesson } from '../core/scraper/features/plan/paln.service';
 import { HARMONOGRAM_ACCENT_COLOR } from '../features/dashboard/dashboard.quickActions';
+import { useStudentPlanLessons } from '../features/plan/hooks/useStudentPlanLessons';
+import { useSyncBanner } from '../hooks/useSyncBanner';
 import { ansColors } from '../theme/ansTheme';
 
 const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
@@ -76,33 +79,20 @@ function timeToMinutes(value: string): number {
 }
 
 export default function PlanScreen({ navigation }: Props) {
-  const planService = useMemo(() => new PlanService(), []);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    lessons,
+    isInitialLoading,
+    isFatalError,
+    syncStatus,
+    refetch,
+  } = useStudentPlanLessons();
+  const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
+
   const today = useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = useState(() => dateKey(today));
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
-
-  const fetchLessons = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await planService.getLessons();
-      setLessons(data);
-    } catch (err) {
-      console.error('[PLAN SCREEN]', err);
-      setError('Nie udało się pobrać planu zajęć');
-    } finally {
-      setLoading(false);
-    }
-  }, [planService]);
-
-  useEffect(() => {
-    fetchLessons();
-  }, [fetchLessons]);
 
   const lessonsByDate = useMemo(() => {
     const map = new Map<string, Lesson[]>();
@@ -162,7 +152,7 @@ export default function PlanScreen({ navigation }: Props) {
     setSelectedDate(dateKey(next));
   };
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color={ansColors.gold} />
@@ -171,11 +161,11 @@ export default function PlanScreen({ navigation }: Props) {
     );
   }
 
-  if (error) {
+  if (isFatalError) {
     return (
       <View style={styles.centerState}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity onPress={fetchLessons} style={styles.retryButton}>
+        <Text style={styles.errorText}>Nie udało się pobrać planu zajęć</Text>
+        <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
           <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </View>
@@ -188,6 +178,14 @@ export default function PlanScreen({ navigation }: Props) {
       contentContainerStyle={styles.screenContent}
       showsVerticalScrollIndicator={false}
     >
+      <SyncBanner
+        status={bannerStatus}
+        loadingText="Aktualizowanie harmonogramu…"
+        errorText="Nie udało się zaktualizować harmonogramu"
+        accentColor={HARMONOGRAM_ACCENT_COLOR}
+        onDismissUpToDate={dismissUpToDate}
+      />
+
       <View style={styles.calendarCard}>
         <View style={styles.calendarHeader}>
           <TouchableOpacity

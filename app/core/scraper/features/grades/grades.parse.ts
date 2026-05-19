@@ -4,11 +4,19 @@ import {
   fetchGradesPage,
   fetchSemesterSubjects,
 } from "./grades.fetch";
-import type { RawSubjectData, SemesterGrades, SubjectGrade } from "./grades.types";
-
-export type {
+import type {
+  PartialGradeEntry,
   RawSubjectData,
   SemesterGrades,
+  SubjectActivityDetails,
+  SubjectGrade,
+} from "./grades.types";
+
+export type {
+  PartialGradeEntry,
+  RawSubjectData,
+  SemesterGrades,
+  SubjectActivityDetails,
   SubjectGrade,
 } from "./grades.types";
 
@@ -161,6 +169,95 @@ export function extractSemesterRequestPath(
   return null;
 }
 
+function extractPplsIdFromRow(row: Element): number | null {
+  const onclick =
+    row
+      .querySelector('button[onclick*="onPokazOcenyClick"]')
+      ?.getAttribute("onclick") ??
+    row.querySelector('[onclick*="onPokazOcenyClick"]')?.getAttribute("onclick") ??
+    "";
+
+  const match = onclick.match(/onPokazOcenyClick\([^,]+,\s*(\d+)/);
+  if (!match?.[1]) return null;
+
+  const pplsId = parseInt(match[1], 10);
+  return Number.isNaN(pplsId) ? null : pplsId;
+}
+
+function parseWocTable(wocTable: Element | null): PartialGradeEntry[] {
+  if (!wocTable) return [];
+
+  const entries: PartialGradeEntry[] = [];
+
+  for (const row of Array.from(wocTable.querySelectorAll("tr"))) {
+    if (row.querySelector("th")) continue;
+
+    const cells = Array.from(row.querySelectorAll("td")).map((cell) =>
+      normalizeText(cell.textContent ?? "")
+    );
+
+    if (cells.length === 0 || cells.every((cell) => !cell)) continue;
+
+    if (cells.length === 1) {
+      entries.push({ label: "", value: cells[0] });
+      continue;
+    }
+
+    if (cells.length === 2) {
+      entries.push({ label: cells[0], value: cells[1] });
+      continue;
+    }
+
+    const gradeIdx = cells.findIndex((cell) =>
+      /^[\d]+([.,][\d]+)?$/.test(cell)
+    );
+    const value =
+      gradeIdx >= 0 ? cells[gradeIdx] : cells[cells.length - 1] ?? "";
+    const labelParts = cells.filter(
+      (cell, index) => index !== gradeIdx && cell !== value
+    );
+
+    entries.push({
+      label: labelParts.filter(Boolean).join(" · "),
+      value,
+    });
+  }
+
+  return entries;
+}
+
+export function parsePartialGradesHtml(
+  html: string
+): SubjectActivityDetails[] {
+  const doc = parseDocument(html);
+  const table = doc.querySelector("table");
+  if (!table) return [];
+
+  const activities: SubjectActivityDetails[] = [];
+
+  for (const row of Array.from(table.querySelectorAll("tbody tr"))) {
+    const cells = row.querySelectorAll("td");
+    if (cells.length < 4) continue;
+
+    const form = normalizeText(cells[2].textContent ?? "");
+    if (!form) continue;
+
+    const finalGrade = normalizeText(cells[3].textContent ?? "");
+    const woc =
+      cells[4]?.querySelector("table.woc") ??
+      cells[cells.length - 1]?.querySelector("table.woc") ??
+      null;
+
+    activities.push({
+      form,
+      finalGrade,
+      partialGrades: parseWocTable(woc),
+    });
+  }
+
+  return activities;
+}
+
 export function extractSubjectsFromTable(
   tableHtml: string
 ): RawSubjectData[] {
@@ -186,9 +283,10 @@ export function extractSubjectsFromTable(
     const teacher = teacherMatch?.[1]?.trim() ?? "";
 
     const finalGrade = (cells[6].textContent ?? "").trim();
+    const pplsId = extractPplsIdFromRow(row);
 
     if (subject && teacher) {
-      subjects.push({ subject, teacher, finalGrade });
+      subjects.push({ subject, teacher, finalGrade, pplsId });
     }
   });
 
@@ -239,6 +337,7 @@ export async function parseGrades(): Promise<SemesterGrades[]> {
           finalGrade: subject.finalGrade,
           subjectWeight: 1,
           weightedAverage: subject.finalGrade,
+          pplsId: subject.pplsId,
           partialGrades: [],
         });
       }

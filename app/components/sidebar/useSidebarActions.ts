@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { clearUserAppCache } from '../../core/queryClient/clearUserAppCache';
 import { AuthService } from '../../core/scraper/auth/auth.service';
+import { useRememberMeAuth } from '../../context/RememberMeAuthContext';
 import { useStudentProfile } from '../../context/StudentProfileContext';
 import {
   navigateTo,
@@ -12,6 +14,7 @@ import { useSidebar } from './SidebarContext';
 export function useSidebarActions() {
   const { close } = useSidebar();
   const { clear } = useStudentProfile();
+  const { disableRememberMe } = useRememberMeAuth();
   const authService = useMemo(() => new AuthService(), []);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
@@ -31,7 +34,9 @@ export function useSidebarActions() {
     try {
       setLogoutLoading(true);
       await authService.logout();
+      await disableRememberMe();
       clear();
+      await clearUserAppCache();
       close();
       replaceTo('Login');
     } catch (err) {
@@ -43,7 +48,7 @@ export function useSidebarActions() {
     } finally {
       setLogoutLoading(false);
     }
-  }, [authService, clear, close, logoutLoading]);
+  }, [authService, clear, close, disableRememberMe, logoutLoading]);
 
   return {
     onNavigate,

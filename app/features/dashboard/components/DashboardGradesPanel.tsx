@@ -104,8 +104,9 @@ export default function DashboardGradesPanel() {
       <View style={styles.subjectList}>
         {activeSemester.subjects.map((subject) => (
           <GradesSubjectCard
-            key={`${activeSemester.semester}-${subject.subject}`}
+            key={`${activeSemester.semester}-${subject.subject}-${subject.pplsId ?? 'na'}`}
             subject={subject}
+            expandable
           />
         ))}
       </View>

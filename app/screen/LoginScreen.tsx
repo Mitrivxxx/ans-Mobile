@@ -20,8 +20,11 @@ import { ansColors } from '../theme/ansTheme';
 import LoginCaptchaSection from '../features/login/LoginCaptchaSection';
 import LoginIconInput from '../features/login/LoginIconInput';
 import LoginInfoButton from '../features/login/LoginInfoButton';
+import { useRememberMeAuth } from '../context/RememberMeAuthContext';
+import { isRememberMeEnabled } from '../core/auth/rememberMe.storage';
 import {
   getLoginErrorMessage,
+  getLoginResultErrorMessage,
   REQUIRED_FIELD_MESSAGE,
 } from '../features/login/loginErrorDisplay';
 import { loginScreenStyles as styles } from '../features/login/LoginScreen.styles';
@@ -32,6 +35,7 @@ export default function LoginScreen({
   navigation,
 }: any) {
   const authService = useMemo(() => new AuthService(), []);
+  const { enableRememberMe, disableRememberMe } = useRememberMeAuth();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -54,6 +58,20 @@ export default function LoginScreen({
   const [captchaBuster, setCaptchaBuster] = useState(0);
 
   const captchaVisible = captchaContinuationHtml !== null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void isRememberMeEnabled().then((enabled) => {
+      if (!cancelled) {
+        setRememberMe(enabled);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!captchaVisible) {
@@ -165,11 +183,15 @@ export default function LoginScreen({
         if (result.errorCode) {
           setServerError(result.errorCode);
         } else {
-          setFormError(
-            result.error ?? 'Nie udało się zalogować. Spróbuj ponownie.'
-          );
+          setFormError(getLoginResultErrorMessage(result));
         }
         return;
+      }
+
+      if (rememberMe) {
+        await enableRememberMe(username.trim(), passwordAttempt);
+      } else {
+        await disableRememberMe();
       }
 
       resetCaptchaUi();
@@ -199,6 +221,9 @@ export default function LoginScreen({
     resetCaptchaUi,
     clearAllErrors,
     setServerError,
+    rememberMe,
+    enableRememberMe,
+    disableRememberMe,
   ]);
 
   const focusPassword = useCallback(() => {
