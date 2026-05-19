@@ -14,7 +14,8 @@ import { useStudentProfileQuery } from '../features/profile/hooks/useStudentProf
 type StudentProfileContextValue = {
   summary: ProfileSummary | null;
   loading: boolean;
-  refetch: () => Promise<void>;
+  photoRevision: number;
+  refetch: () => Promise<unknown>;
   clear: () => void;
 };
 
@@ -31,7 +32,9 @@ export function StudentProfileProvider({
   const {
     summary,
     isInitialLoading,
-    refetch: refetchQuery,
+    hasCachedSummary,
+    refetch: refreshProfile,
+    photoRevision,
   } = useStudentProfileQuery();
 
   const clear = useCallback(() => {
@@ -41,17 +44,18 @@ export function StudentProfileProvider({
   }, [userKey]);
 
   const refetch = useCallback(async () => {
-    await refetchQuery();
-  }, [refetchQuery]);
+    return refreshProfile();
+  }, [refreshProfile]);
 
   const value = useMemo(
     () => ({
       summary,
-      loading: isInitialLoading,
+      loading: isInitialLoading && !hasCachedSummary,
+      photoRevision,
       refetch,
       clear,
     }),
-    [summary, isInitialLoading, refetch, clear]
+    [summary, isInitialLoading, hasCachedSummary, photoRevision, refetch, clear]
   );
 
   return (

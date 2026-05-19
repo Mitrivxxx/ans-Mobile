@@ -6,7 +6,9 @@ export const queryKeys = {
       ['studentPlan', userKey, 'weekLessons'] as const,
   },
   grades: {
-    list: (userKey: string) => ['grades', userKey] as const,
+    index: (userKey: string) => ['grades', userKey, 'index'] as const,
+    semester: (userKey: string, semesterNumber: number) =>
+      ['grades', userKey, 'semester', semesterNumber] as const,
     partial: (userKey: string, pplsId: number) =>
       ['grades', userKey, 'partial', pplsId] as const,
   },

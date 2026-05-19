@@ -10,6 +10,7 @@ import ProfileDetailsView from '../components/ProfileDetailsView';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useStudentProfile } from '../context/StudentProfileContext';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
+import { useAppTheme } from '../context/AppThemeContext';
 import {
   ProfileService,
   type CompleteProfileData,
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export default function ProfileScreen({ navigation }: Props) {
+  const { colors } = useAppTheme();
   const profileService = useMemo(() => new ProfileService(), []);
   const {
     summary: cachedSummary,
@@ -59,24 +61,71 @@ export default function ProfileScreen({ navigation }: Props) {
   const loading = summaryLoading || (loadingProfile && !profile);
   const summary = cachedSummary;
 
+  const createDynamicStyles = () => ({
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingTop: 18,
+      paddingBottom: 36,
+      backgroundColor: colors.dashboardBg,
+    },
+    backText: {
+      fontSize: 16,
+      fontWeight: '700' as const,
+      color: colors.charcoal,
+    },
+    centerStateScroll: {
+      flexGrow: 1,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      padding: 24,
+      gap: 12,
+      backgroundColor: colors.dashboardBg,
+    },
+    stateText: {
+      fontSize: 15,
+      color: colors.gray,
+      textAlign: 'center' as const,
+    },
+    errorText: {
+      fontSize: 15,
+      color: colors.error,
+      textAlign: 'center' as const,
+      fontWeight: '700' as const,
+    },
+    retryButton: {
+      marginTop: 4,
+      backgroundColor: colors.black,
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+      borderRadius: 14,
+    },
+    retryButtonText: {
+      color: colors.gold,
+      fontWeight: '800' as const,
+      fontSize: 15,
+    },
+  });
+
+  const dynamicStyles = createDynamicStyles();
+
   if (loading) {
     return (
-      <RefreshableScrollView contentContainerStyle={screenStyles.centerStateScroll}>
-        <ActivityIndicator color="#C9A227" />
-        <Text style={screenStyles.stateText}>Wczytywanie profilu...</Text>
+      <RefreshableScrollView contentContainerStyle={dynamicStyles.centerStateScroll}>
+        <ActivityIndicator color={colors.gold} />
+        <Text style={dynamicStyles.stateText}>Wczytywanie profilu...</Text>
       </RefreshableScrollView>
     );
   }
 
   if (error) {
     return (
-      <RefreshableScrollView contentContainerStyle={screenStyles.centerStateScroll}>
-        <Text style={screenStyles.errorText}>{error}</Text>
+      <RefreshableScrollView contentContainerStyle={dynamicStyles.centerStateScroll}>
+        <Text style={dynamicStyles.errorText}>{error}</Text>
         <TouchableOpacity
           onPress={fetchProfileDetails}
-          style={screenStyles.retryButton}
+          style={dynamicStyles.retryButton}
         >
-          <Text style={screenStyles.retryButtonText}>Spróbuj ponownie</Text>
+          <Text style={dynamicStyles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </RefreshableScrollView>
     );
@@ -84,71 +133,18 @@ export default function ProfileScreen({ navigation }: Props) {
 
   if (!profile || !summary) {
     return (
-      <RefreshableScrollView contentContainerStyle={screenStyles.centerStateScroll}>
+      <RefreshableScrollView contentContainerStyle={dynamicStyles.centerStateScroll}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={screenStyles.backText}>← Powrót</Text>
+          <Text style={dynamicStyles.backText}>← Powrót</Text>
         </TouchableOpacity>
-        <Text style={screenStyles.stateText}>Brak danych profilu</Text>
+        <Text style={dynamicStyles.stateText}>Brak danych profilu</Text>
       </RefreshableScrollView>
     );
   }
 
   return (
-    <RefreshableScrollView contentContainerStyle={screenStyles.scrollContent}>
+    <RefreshableScrollView contentContainerStyle={dynamicStyles.scrollContent}>
       <ProfileDetailsView summary={summary} profile={profile} />
     </RefreshableScrollView>
   );
 }
-
-const screenStyles = {
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 18,
-    paddingBottom: 36,
-    backgroundColor: '#ECEEF1',
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1A1A',
-  },
-  centerState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-    backgroundColor: '#ECEEF1',
-  },
-  centerStateScroll: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-    backgroundColor: '#ECEEF1',
-  },
-  stateText: {
-    fontSize: 15,
-    color: '#666666',
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 15,
-    color: '#B71C1C',
-    textAlign: 'center',
-    fontWeight: '700',
-  },
-  retryButton: {
-    marginTop: 4,
-    backgroundColor: '#0D0D0D',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 14,
-  },
-  retryButtonText: {
-    color: '#C9A227',
-    fontWeight: '800',
-    fontSize: 15,
-  },
-} as const;

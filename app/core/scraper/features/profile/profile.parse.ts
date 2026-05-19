@@ -103,10 +103,9 @@ function buildProfileSummary(
 }
 
 export async function parseProfileSummary(): Promise<ProfileSummary> {
-  const [accountHtml, studiesHtml, photo] = await Promise.all([
+  const [accountHtml, studiesHtml] = await Promise.all([
     fetchAccountDetailsPage(),
     fetchStudiesPage(),
-    fetchAvatarPhoto(),
   ]);
 
   assertAuthenticatedHtml(accountHtml);
@@ -114,6 +113,13 @@ export async function parseProfileSummary(): Promise<ProfileSummary> {
 
   const account = parseAccountDetailsFromHtml(accountHtml);
   const studies = parseStudiesDataFromHtml(studiesHtml);
+
+  let photo = "";
+  try {
+    photo = await fetchAvatarPhoto();
+  } catch (error) {
+    console.warn("[PROFILE] Nie udało się pobrać zdjęcia profilu:", error);
+  }
 
   return buildProfileSummary(account, studies, photo);
 }

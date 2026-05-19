@@ -4,7 +4,7 @@ import { useAuthSession } from "../context/AuthSessionContext";
 import { prefetchUserScraperData } from "../core/queryClient/prefetchUserScraperData";
 import { useQueryUserKey } from "../core/queryClient/useQueryUserKey";
 
-/** Jednorazowy prefetch danych WD po wejściu w sesję (w tle). */
+/** Jednorazowy prefetch po sesji: plan tygodnia, potem pozostałe dane w tle. */
 export function usePrefetchUserScraperData(): void {
   const { authStatus } = useAuthSession();
   const userKey = useQueryUserKey();

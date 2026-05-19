@@ -15,6 +15,8 @@ export type AnsColors = {
   surface: string;
   error: string;
   errorBg: string;
+  successBg: string;
+  successBorder: string;
   dashboardBlue: string;
   dashboardBlueMid: string;
   dashboardBlueLight: string;
@@ -41,6 +43,8 @@ export const lightAnsColors: AnsColors = {
   surface: '#FFFFFF',
   error: '#B71C1C',
   errorBg: '#FFEBEE',
+  successBg: '#F3FBF5',
+  successBorder: '#B8E6C1',
   dashboardBlue: '#6BA3D6',
   dashboardBlueMid: '#8BB8E3',
   dashboardBlueLight: '#B8D9F2',
@@ -67,6 +71,8 @@ export const darkAnsColors: AnsColors = {
   surface: '#1B2330',
   error: '#EF5350',
   errorBg: '#3D1F24',
+  successBg: '#1A2A22',
+  successBorder: '#2D4A38',
   dashboardBlue: '#6BA3D6',
   dashboardBlueMid: '#8BB8E3',
   dashboardBlueLight: '#4A6A8A',

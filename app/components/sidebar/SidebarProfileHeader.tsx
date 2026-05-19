@@ -1,9 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useThemedStyles } from '../../theme/useThemedStyles';
-import { ActivityIndicator, Image, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { useStudentProfile } from '../../context/StudentProfileContext';
 import { useAppTheme } from '../../context/AppThemeContext';
+import { useProfilePhoto } from '../../hooks/useProfilePhoto';
 import { createSidebarProfileHeaderStyles } from './SidebarProfileHeader.styles';
 
 function getInitials(firstName: string, lastName: string): string {
@@ -15,12 +22,10 @@ function getInitials(firstName: string, lastName: string): string {
 export default function SidebarProfileHeader() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createSidebarProfileHeaderStyles);
-  const { summary, loading } = useStudentProfile();
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [summary?.photo]);
+  const { summary, loading, refetch } = useStudentProfile();
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
+    summary?.photo
+  );
 
   return (
     <View style={styles.header}>
@@ -30,15 +35,21 @@ export default function SidebarProfileHeader() {
           <Text style={styles.loadingText}>Wczytywanie profilu…</Text>
         </View>
       ) : !summary ? (
-        <Text style={styles.emptyText}>Nie udało się wczytać profilu</Text>
+        <View style={styles.loadingRow}>
+          <Text style={styles.emptyText}>Nie udało się wczytać profilu</Text>
+          <TouchableOpacity onPress={() => void refetch()} activeOpacity={0.8}>
+            <Text style={styles.retryText}>Odśwież</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <View style={styles.content}>
           <View style={styles.avatarWrap}>
-            {summary.photo && !imageError ? (
+            {showPhoto ? (
               <Image
-                source={{ uri: summary.photo }}
+                key={imageKey}
+                source={{ uri: displayUri }}
                 style={styles.avatar}
-                onError={() => setImageError(true)}
+                onError={onImageError}
               />
             ) : (
               <Text style={styles.avatarPlaceholder}>

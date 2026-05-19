@@ -76,7 +76,11 @@ export function createSidebarProfileHeaderStyles(c: AnsColors) {
     fontSize: 14,
     color: c.gray,
     textAlign: 'center',
-    paddingVertical: 12,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: c.goldDark,
   },
 });
 }

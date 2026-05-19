@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useThemedStyles } from '../theme/useThemedStyles';
 import {
   ActivityIndicator,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { useStudentProfile } from '../context/StudentProfileContext';
+import { useProfilePhoto } from '../hooks/useProfilePhoto';
 import { navigateTo } from '../navigation/navigationRef';
 import { useAppTheme } from '../context/AppThemeContext';
 import { createAppHeaderStyles } from './AppHeader.styles';
@@ -23,15 +24,13 @@ export default function AppHeaderAvatar() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createAppHeaderStyles);
   const { summary, loading } = useStudentProfile();
-  const [imageError, setImageError] = useState(false);
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
+    summary?.photo
+  );
 
   const goToProfile = useCallback(() => {
     navigateTo('Profile');
   }, []);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [summary?.photo]);
 
   return (
     <Pressable
@@ -48,11 +47,12 @@ export default function AppHeaderAvatar() {
         <View style={styles.avatarLoading}>
           <ActivityIndicator size="small" color={colors.gold} />
         </View>
-      ) : showPhoto(summary, imageError) && summary ? (
+      ) : showPhoto && summary ? (
         <Image
-          source={{ uri: summary.photo }}
+          key={imageKey}
+          source={{ uri: displayUri }}
           style={styles.avatar}
-          onError={() => setImageError(true)}
+          onError={onImageError}
         />
       ) : (
         <Text style={styles.avatarPlaceholder}>
@@ -63,11 +63,4 @@ export default function AppHeaderAvatar() {
       )}
     </Pressable>
   );
-}
-
-function showPhoto(
-  summary: { photo?: string } | null,
-  imageError: boolean
-): boolean {
-  return Boolean(summary?.photo) && !imageError;
 }

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 
 import type { ProfileSummary } from '../core/scraper/features/profile/profile.service';
+import { useProfilePhoto } from '../hooks/useProfilePhoto';
 
 const AVATAR_SIZE = 96;
 
@@ -11,11 +12,9 @@ type Props = {
 };
 
 export default function ProfileSummaryView({ summary, loading }: Props) {
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [summary?.photo]);
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
+    summary?.photo
+  );
 
   if (loading) {
     return (
@@ -30,20 +29,17 @@ export default function ProfileSummaryView({ summary, loading }: Props) {
     return null;
   }
 
-  const showPhoto = Boolean(summary.photo) && !imageError;
-
   return (
     <View>
       {showPhoto ? (
         <Image
-          source={{ uri: summary.photo }}
+          key={imageKey}
+          source={{ uri: displayUri }}
           style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
-          onError={() => setImageError(true)}
+          onError={onImageError}
         />
       ) : (
-        <Text>
-          {imageError ? 'Nie udało się wyświetlić zdjęcia' : 'Brak zdjęcia'}
-        </Text>
+        <Text>Brak zdjęcia</Text>
       )}
       <Text>
         {summary.firstName} {summary.lastName}

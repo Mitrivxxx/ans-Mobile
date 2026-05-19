@@ -8,7 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
-const logoSource = require('../../assets/icons/logo_mobile.png');
+const logoSource = require('../../assets/icons/logov2.png');
 
 const DEFAULT_ACCESSIBILITY_LABEL =
   'Logo Akademii Nauk Stosowanych w Nowym Sączu';

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
   ActivityIndicator,
@@ -7,9 +7,8 @@ import {
   View,
 } from 'react-native';
 
-import { pickActiveSemester } from '../../../core/scraper/features/grades/pickPrioritySemester';
 import GradesSubjectCard from '../../grades/components/GradesSubjectCard';
-import { useGradesQuery } from '../../grades/hooks/useGradesQuery';
+import { useGrades } from '../../grades/hooks/useGrades';
 import { useGradesColors } from '../../grades/useGradesColors';
 import { createDashboardGradesPanelStyles } from './DashboardGradesPanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
@@ -17,20 +16,11 @@ import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefres
 export default function DashboardGradesPanel() {
   const gradesColors = useGradesColors();
   const styles = useThemedStyles(createDashboardGradesPanelStyles);
-  const { semesters, isInitialLoading, isFatalError, refetch } = useGradesQuery();
+  const { currentSemester, loading, error, refetch } = useGrades();
 
-  useRegisterScreenRefresh(async () => {
-    await refetch();
-  });
+  useRegisterScreenRefresh(refetch);
 
-  const activeSemester = useMemo(
-    () => pickActiveSemester(semesters),
-    [semesters]
-  );
-
-  const hasActiveSubjects = (activeSemester?.subjects.length ?? 0) > 0;
-
-  if (isInitialLoading && !hasActiveSubjects) {
+  if (loading) {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
@@ -41,11 +31,11 @@ export default function DashboardGradesPanel() {
     );
   }
 
-  if (isFatalError) {
+  if (error) {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
-          <Text style={styles.errorText}>Nie udało się pobrać ocen</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             onPress={() => void refetch()}
             style={styles.retryButton}
@@ -57,7 +47,7 @@ export default function DashboardGradesPanel() {
     );
   }
 
-  if (!activeSemester || activeSemester.subjects.length === 0) {
+  if (!currentSemester || currentSemester.subjects.length === 0) {
     return (
       <View style={styles.wrap}>
         <View style={styles.emptyCard}>
@@ -70,9 +60,9 @@ export default function DashboardGradesPanel() {
   return (
     <View style={styles.wrap}>
       <View style={styles.subjectList}>
-        {activeSemester.subjects.map((subject) => (
+        {currentSemester.subjects.map((subject) => (
           <GradesSubjectCard
-            key={`${activeSemester.semester}-${subject.subject}-${subject.pplsId ?? 'na'}`}
+            key={`${currentSemester.semester}-${subject.subject}-${subject.pplsId ?? 'na'}`}
             subject={subject}
             expandable
           />

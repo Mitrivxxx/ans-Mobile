@@ -1,5 +1,7 @@
 import React from 'react';
 import { Image, Text, View } from 'react-native';
+
+import { useProfilePhoto } from '../hooks/useProfilePhoto';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type {
@@ -72,12 +74,14 @@ function getInitials(firstName: string, lastName: string): string {
 export default function ProfileDetailsView({ summary, profile }: Props) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createProfileDetailsStyles);
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
+    summary?.photo
+  );
 
   if (!summary || !profile) {
     return null;
   }
 
-  const hasPhoto = Boolean(summary.photo);
   const initials = getInitials(summary.firstName, summary.lastName);
 
   const fieldProps = { styles, gold: colors.gold };
@@ -87,10 +91,12 @@ export default function ProfileDetailsView({ summary, profile }: Props) {
       <View style={styles.headerCard}>
         <View style={styles.headerTopRow}>
           <View style={styles.avatarWrap}>
-            {hasPhoto ? (
+            {showPhoto ? (
               <Image
-                source={{ uri: summary.photo }}
+                key={imageKey}
+                source={{ uri: displayUri }}
                 style={styles.avatar}
+                onError={onImageError}
                 accessibilityIgnoresInvertColors
               />
             ) : (

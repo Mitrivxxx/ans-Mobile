@@ -30,6 +30,7 @@ export default function GradesScreen({ navigation }: Props) {
     semesters,
     currentSemester,
     loading,
+    isSemesterLoading,
     error,
     canGoPrevious,
     canGoNext,
@@ -101,7 +102,15 @@ export default function GradesScreen({ navigation }: Props) {
             />
 
             <View style={styles.subjectList}>
-              {currentSemester.subjects.length === 0 ? (
+              {isSemesterLoading ? (
+                <View style={styles.centerState}>
+                  <ActivityIndicator
+                    size="large"
+                    color={gradesColors.primary}
+                  />
+                  <Text style={styles.stateText}>Wczytywanie semestru…</Text>
+                </View>
+              ) : currentSemester.subjects.length === 0 ? (
                 <Text style={styles.emptyText}>
                   Brak przedmiotów w tym semestrze
                 </Text>

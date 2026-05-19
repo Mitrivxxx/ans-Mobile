@@ -1,81 +1,122 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { GradesSemesterMeta } from '../../../core/scraper/features/grades/grades.service';
 import type { SemesterGrades } from '../../../core/scraper/features/grades/grades.service';
-import { useGradesQuery } from './useGradesQuery';
+import { useGradesIndexQuery } from './useGradesIndexQuery';
+import { useSemesterGradesQuery } from './useSemesterGradesQuery';
 
-function indexOfLatestSemester(semesters: SemesterGrades[]): number {
-  if (semesters.length === 0) {
-    return 0;
-  }
-
-  let latestIndex = 0;
-  for (let index = 1; index < semesters.length; index += 1) {
-    if (semesters[index].semester > semesters[latestIndex].semester) {
-      latestIndex = index;
-    }
-  }
-
-  return latestIndex;
+function indexOfSemester(
+  semesters: GradesSemesterMeta[],
+  semesterNumber: number
+): number {
+  const index = semesters.findIndex(
+    (semester) => semester.semester === semesterNumber
+  );
+  return index >= 0 ? index : 0;
 }
 
 export function useGrades() {
   const {
-    semesters,
-    isInitialLoading,
-    isFatalError,
-    refetch,
-  } = useGradesQuery();
+    index,
+    isInitialLoading: indexLoading,
+    isFatalError: indexError,
+    refetch: refetchIndex,
+  } = useGradesIndexQuery();
+
+  const semestersMeta = index?.semesters ?? [];
   const [semesterIndex, setSemesterIndex] = useState(0);
   const appliedInitialSemesterRef = useRef(false);
 
   useEffect(() => {
-    if (semesters.length === 0) {
+    if (!index || semestersMeta.length === 0) {
       appliedInitialSemesterRef.current = false;
       setSemesterIndex(0);
       return;
     }
 
     if (!appliedInitialSemesterRef.current) {
-      setSemesterIndex(indexOfLatestSemester(semesters));
+      setSemesterIndex(
+        indexOfSemester(semestersMeta, index.initialSemesterNumber)
+      );
       appliedInitialSemesterRef.current = true;
       return;
     }
 
-    setSemesterIndex((index) =>
-      Math.min(index, semesters.length - 1)
+    setSemesterIndex((current) =>
+      Math.min(current, semestersMeta.length - 1)
     );
-  }, [semesters]);
+  }, [index, semestersMeta]);
+
+  const currentMeta = semestersMeta[semesterIndex] ?? null;
+
+  const {
+    semesterGrades,
+    isInitialLoading: semesterLoading,
+    hasCachedSemester,
+    isFatalError: semesterError,
+    refetch: refetchSemester,
+  } = useSemesterGradesQuery(currentMeta, semestersMeta.length > 0);
+
+  const semesters: SemesterGrades[] = useMemo(() => {
+    if (!index) {
+      return [];
+    }
+    return index.semesters.map((meta) => {
+      if (
+        currentMeta &&
+        meta.semester === currentMeta.semester &&
+        semesterGrades
+      ) {
+        return semesterGrades;
+      }
+      return {
+        semester: meta.semester,
+        semesterLabel: meta.semesterLabel,
+        academicSemester: meta.academicSemester,
+        semesterType: meta.semesterType,
+        semesterStatus: meta.semesterStatus,
+        semesterAverage: '0',
+        subjects: [],
+      };
+    });
+  }, [index, currentMeta, semesterGrades]);
 
   const currentSemester = semesters[semesterIndex] ?? null;
   const canGoPrevious = semesterIndex > 0;
-  const canGoNext = semesterIndex < semesters.length - 1;
+  const canGoNext = semesterIndex < semestersMeta.length - 1;
 
   const goToPreviousSemester = useCallback(() => {
-    setSemesterIndex((index) => Math.max(0, index - 1));
+    setSemesterIndex((i) => Math.max(0, i - 1));
   }, []);
 
   const goToNextSemester = useCallback(() => {
-    setSemesterIndex((index) =>
-      Math.min(semesters.length - 1, index + 1)
-    );
-  }, [semesters.length]);
+    setSemesterIndex((i) => Math.min(semestersMeta.length - 1, i + 1));
+  }, [semestersMeta.length]);
 
-  const hasAnySubjects = semesters.some(
-    (semester) => semester.subjects.length > 0
-  );
+  const loading =
+    (indexLoading && !index) ||
+    (semesterLoading && !hasCachedSemester && currentMeta != null);
+
+  const isFatalError = indexError || semesterError;
+
+  const refetch = useCallback(async () => {
+    await refetchIndex();
+    if (currentMeta) {
+      await refetchSemester();
+    }
+  }, [refetchIndex, refetchSemester, currentMeta]);
 
   return {
     semesters,
     currentSemester,
     semesterIndex,
-    loading: isInitialLoading && !hasAnySubjects,
+    loading,
     error: isFatalError ? 'Nie udało się pobrać ocen' : '',
     canGoPrevious,
     canGoNext,
     goToPreviousSemester,
     goToNextSemester,
-    refetch: async () => {
-      await refetch();
-    },
+    isSemesterLoading: semesterLoading && !hasCachedSemester,
+    refetch,
   };
 }

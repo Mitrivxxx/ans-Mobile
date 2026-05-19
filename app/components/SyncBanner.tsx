@@ -41,12 +41,12 @@ export default function SyncBanner({
           borderColor: colors.grayBorder,
         },
         bannerSuccess: {
-          borderColor: '#B8E6C1',
-          backgroundColor: '#F3FBF5',
+          borderColor: colors.successBorder,
+          backgroundColor: colors.successBg,
         },
         bannerError: {
-          borderColor: '#F5C6C6',
-          backgroundColor: '#FFF5F5',
+          borderColor: colors.grayBorder,
+          backgroundColor: colors.errorBg,
         },
         loadingText: {
           fontSize: 13,
