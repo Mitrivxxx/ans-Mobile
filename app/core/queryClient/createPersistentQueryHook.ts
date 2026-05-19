@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, type QueryKey } from '@tanstack/react-query';
 
 import { isDataEqual } from './isDataEqual';
+import { PERSISTENT_QUERY_STALE_TIME_MS } from './persistentQueryConfig';
 import type { SyncStatus } from './syncTypes';
 
 type PersistentQueryConfig<TData> = {
@@ -10,6 +11,9 @@ type PersistentQueryConfig<TData> = {
   queryFn: () => Promise<TData>;
   equals?: (a: TData, b: TData) => boolean;
   syncOnMount?: boolean;
+  staleTime?: number;
+  /** false = wyłączony; domyślnie ten sam co staleTime. */
+  refetchInterval?: number | false;
 };
 
 export function createPersistentQueryHook<TData>({
@@ -17,6 +21,8 @@ export function createPersistentQueryHook<TData>({
   queryFn,
   equals = isDataEqual,
   syncOnMount = false,
+  staleTime = PERSISTENT_QUERY_STALE_TIME_MS,
+  refetchInterval = false,
 }: PersistentQueryConfig<TData>) {
   return function usePersistentQuery() {
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
@@ -24,7 +30,8 @@ export function createPersistentQueryHook<TData>({
     const query = useQuery<TData>({
       queryKey,
       queryFn,
-      staleTime: Number.POSITIVE_INFINITY,
+      staleTime,
+      refetchInterval: refetchInterval === false ? false : refetchInterval,
       gcTime: Number.POSITIVE_INFINITY,
       refetchOnMount: false,
       refetchOnWindowFocus: false,
@@ -42,7 +49,8 @@ export function createPersistentQueryHook<TData>({
       },
     });
 
-    const { refetch } = query;
+    const { refetch, isStale, data } = query;
+    const hasCachedData = data !== undefined;
 
     const syncInBackground = useCallback(async () => {
       setSyncStatus('loading');
@@ -54,26 +62,34 @@ export function createPersistentQueryHook<TData>({
       setSyncStatus('upToDate');
     }, [refetch]);
 
+    const syncIfStale = useCallback(async () => {
+      if (hasCachedData && !isStale) {
+        setSyncStatus('upToDate');
+        return;
+      }
+      await syncInBackground();
+    }, [hasCachedData, isStale, syncInBackground]);
+
     useFocusEffect(
       useCallback(() => {
-        void syncInBackground();
-      }, [syncInBackground])
+        void syncIfStale();
+      }, [syncIfStale])
     );
 
     useEffect(() => {
       if (!syncOnMount) {
         return;
       }
-      void syncInBackground();
-    }, [syncInBackground, syncOnMount]);
-
-    const hasCachedData = query.data !== undefined;
+      void syncIfStale();
+    }, [syncIfStale, syncOnMount]);
 
     return {
       data: query.data,
       syncStatus,
       isInitialLoading: query.isPending && !hasCachedData,
       hasCachedData,
+      /** Wymusza scrape i aktualizuje syncStatus (PTR, przycisk odśwież). */
+      refresh: syncInBackground,
       refetch,
       isFatalError: query.isError && !hasCachedData,
     };

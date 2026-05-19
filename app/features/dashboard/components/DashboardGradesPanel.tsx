@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -6,69 +6,28 @@ import {
   View,
 } from 'react-native';
 
-import {
-  GradesService,
-  type SemesterGrades,
-} from '../../../core/scraper/features/grades/grades.service';
+import { pickActiveSemester } from '../../../core/scraper/features/grades/pickPrioritySemester';
 import GradesSubjectCard from '../../grades/components/GradesSubjectCard';
+import { useGradesQuery } from '../../grades/hooks/useGradesQuery';
 import { gradesColors } from '../../grades/gradesTheme';
 import { dashboardGradesPanelStyles as styles } from './DashboardGradesPanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
 
-const ACTIVE_STATUS_KEYWORD = 'w trakcie nauki';
-
-function pickActiveSemester(
-  semesters: SemesterGrades[]
-): SemesterGrades | null {
-  if (semesters.length === 0) {
-    return null;
-  }
-
-  const active = semesters.find((semester) =>
-    semester.semesterStatus.toLowerCase().includes(ACTIVE_STATUS_KEYWORD)
-  );
-
-  if (active) {
-    return active;
-  }
-
-  return semesters.reduce((highest, current) =>
-    current.semester > highest.semester ? current : highest
-  );
-}
-
 export default function DashboardGradesPanel() {
-  const gradesService = useMemo(() => new GradesService(), []);
-  const [semesters, setSemesters] = useState<SemesterGrades[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { semesters, isInitialLoading, isFatalError, refetch } = useGradesQuery();
 
-  const fetchGrades = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await gradesService.getGrades();
-      setSemesters(data);
-    } catch (err) {
-      console.error('[DASHBOARD GRADES]', err);
-      setError('Nie udało się pobrać ocen');
-    } finally {
-      setLoading(false);
-    }
-  }, [gradesService]);
-
-  useEffect(() => {
-    fetchGrades();
-  }, [fetchGrades]);
-
-  useRegisterScreenRefresh(fetchGrades);
+  useRegisterScreenRefresh(async () => {
+    await refetch();
+  });
 
   const activeSemester = useMemo(
     () => pickActiveSemester(semesters),
     [semesters]
   );
 
-  if (loading) {
+  const hasActiveSubjects = (activeSemester?.subjects.length ?? 0) > 0;
+
+  if (isInitialLoading && !hasActiveSubjects) {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
@@ -79,12 +38,15 @@ export default function DashboardGradesPanel() {
     );
   }
 
-  if (error) {
+  if (isFatalError) {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={fetchGrades} style={styles.retryButton}>
+          <Text style={styles.errorText}>Nie udało się pobrać ocen</Text>
+          <TouchableOpacity
+            onPress={() => void refetch()}
+            style={styles.retryButton}
+          >
             <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
           </TouchableOpacity>
         </View>

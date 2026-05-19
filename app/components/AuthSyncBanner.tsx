@@ -6,7 +6,12 @@ import { useAuthSession } from '../context/AuthSessionContext';
 import { ansColors } from '../theme/ansTheme';
 
 export default function AuthSyncBanner() {
-  const { sessionDegraded, retrySessionRestore, signOut } = useAuthSession();
+  const {
+    sessionDegraded,
+    sessionDegradedMessage,
+    retrySessionRestore,
+    signOut,
+  } = useAuthSession();
 
   if (!sessionDegraded) {
     return null;
@@ -21,9 +26,8 @@ export default function AuthSyncBanner() {
           color={ansColors.error}
         />
         <Text style={styles.errorText}>
-          Sesja WD wygasła lub nie udało się jej odnowić. Wyświetlany jest
-          zapisany plan zajęć — dane mogą być nieaktualne. Zaloguj się, aby
-          odświeżyć.
+          {sessionDegradedMessage ||
+            'Sesja WD wygasła. Wyświetlane są zapisane dane — mogą być nieaktualne.'}
         </Text>
       </View>
       <View style={styles.actions}>

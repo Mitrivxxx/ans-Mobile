@@ -1,21 +1,87 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  Alert,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useAppTheme } from '../context/AppThemeContext';
+import { useAuthSession } from '../context/AuthSessionContext';
 import { useStudentProfile } from '../context/StudentProfileContext';
+import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { ansColors } from '../theme/ansTheme';
+
+const APP_VERSION = require('../../package.json').version as string;
 
 export default function SettingsScreen() {
   const { isDarkMode, colors, toggleDarkMode } = useAppTheme();
   const { refetch } = useStudentProfile();
+  const { rememberMeEnabled, disableRememberMe } = useAuthSession();
+  const { isOffline } = useNetworkStatus();
+  const [cacheClearing, setCacheClearing] = useState(false);
 
   const refreshScreen = useCallback(async () => {
     await refetch();
   }, [refetch]);
 
   useRegisterScreenRefresh(refreshScreen);
+
+  const handleRememberMeToggle = useCallback(
+    async (next: boolean) => {
+      if (next) {
+        Alert.alert(
+          'Zapamiętaj mnie',
+          'Aby włączyć automatyczne logowanie, wyloguj się i zaloguj ponownie z zaznaczoną opcją „Zapamiętaj mnie” na ekranie logowania.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      await disableRememberMe();
+    },
+    [disableRememberMe]
+  );
+
+  const handleClearCache = useCallback(async () => {
+    if (cacheClearing) {
+      return;
+    }
+
+    Alert.alert(
+      'Wyczyść cache',
+      'Usunie zapisane plany i dane w aplikacji (bez wylogowania). Dane zostaną pobrane ponownie przy odświeżeniu ekranów.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Wyczyść',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              try {
+                setCacheClearing(true);
+                await clearQueryCacheOnly();
+                Alert.alert('Gotowe', 'Cache aplikacji został wyczyszczony.');
+              } catch (err) {
+                Alert.alert(
+                  'Błąd',
+                  err instanceof Error ? err.message : 'Nie udało się wyczyścić cache.'
+                );
+              } finally {
+                setCacheClearing(false);
+              }
+            })();
+          },
+        },
+      ]
+    );
+  }, [cacheClearing]);
 
   return (
     <SafeAreaView
@@ -27,10 +93,20 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Ustawienia</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>
+          Ustawienia
+        </Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Preferencje aplikacji
         </Text>
+
+        {isOffline ? (
+          <View style={[styles.offlineBanner, { borderColor: colors.border }]}>
+            <Text style={[styles.offlineText, { color: ansColors.error }]}>
+              Brak połączenia z internetem. Część danych może być nieaktualna.
+            </Text>
+          </View>
+        ) : null}
 
         <View
           style={[
@@ -45,8 +121,10 @@ export default function SettingsScreen() {
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
               Tryb ciemny
             </Text>
-            <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-              Zmien wyglad aplikacji na ciemny motyw.
+            <Text
+              style={[styles.cardDescription, { color: colors.textSecondary }]}
+            >
+              Zmień wygląd aplikacji na ciemny motyw.
             </Text>
           </View>
           <Switch
@@ -60,6 +138,66 @@ export default function SettingsScreen() {
             ios_backgroundColor={colors.switchTrackOff}
           />
         </View>
+
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <View style={styles.textBlock}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+              Zapamiętaj mnie
+            </Text>
+            <Text
+              style={[styles.cardDescription, { color: colors.textSecondary }]}
+            >
+              {rememberMeEnabled
+                ? 'Włączone — aplikacja może logować się automatycznie.'
+                : 'Wyłączone — wymagane logowanie przy każdej sesji.'}
+            </Text>
+          </View>
+          <Switch
+            value={rememberMeEnabled}
+            onValueChange={(value) => void handleRememberMeToggle(value)}
+            trackColor={{
+              false: colors.switchTrackOff,
+              true: colors.switchTrackOn,
+            }}
+            thumbColor={colors.switchThumb}
+            ios_backgroundColor={colors.switchTrackOff}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.actionCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+              opacity: cacheClearing ? 0.6 : 1,
+            },
+          ]}
+          onPress={() => void handleClearCache()}
+          disabled={cacheClearing}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+            Wyczyść cache aplikacji
+          </Text>
+          <Text
+            style={[styles.cardDescription, { color: colors.textSecondary }]}
+          >
+            Usuwa zapisany plan i dane w pamięci (bez wylogowania).
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.version, { color: colors.textSecondary }]}>
+          Wersja {APP_VERSION}
+        </Text>
       </RefreshableScrollView>
     </SafeAreaView>
   );
@@ -88,6 +226,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 12,
   },
+  offlineBanner: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 4,
+  },
+  offlineText: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
   card: {
     borderRadius: 16,
     borderWidth: 1,
@@ -97,6 +246,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
+  },
+  actionCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    gap: 4,
   },
   textBlock: {
     flex: 1,
@@ -109,5 +265,10 @@ const styles = StyleSheet.create({
   cardDescription: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  version: {
+    fontSize: 12,
+    marginTop: 16,
+    textAlign: 'center',
   },
 });

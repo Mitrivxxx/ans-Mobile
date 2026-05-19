@@ -1,35 +1,50 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import {
-  GradesService,
-  type SemesterGrades,
-} from '../../../core/scraper/features/grades/grades.service';
+import type { SemesterGrades } from '../../../core/scraper/features/grades/grades.service';
+import { useGradesQuery } from './useGradesQuery';
+
+function indexOfLatestSemester(semesters: SemesterGrades[]): number {
+  if (semesters.length === 0) {
+    return 0;
+  }
+
+  let latestIndex = 0;
+  for (let index = 1; index < semesters.length; index += 1) {
+    if (semesters[index].semester > semesters[latestIndex].semester) {
+      latestIndex = index;
+    }
+  }
+
+  return latestIndex;
+}
 
 export function useGrades() {
-  const gradesService = useMemo(() => new GradesService(), []);
-  const [semesters, setSemesters] = useState<SemesterGrades[]>([]);
+  const {
+    semesters,
+    isInitialLoading,
+    isFatalError,
+    refetch,
+  } = useGradesQuery();
   const [semesterIndex, setSemesterIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const fetchGrades = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await gradesService.getGrades();
-      setSemesters(data);
-      setSemesterIndex(data.length > 0 ? data.length - 1 : 0);
-    } catch (err) {
-      console.error('[GRADES]', err);
-      setError('Nie udało się pobrać ocen');
-    } finally {
-      setLoading(false);
-    }
-  }, [gradesService]);
+  const appliedInitialSemesterRef = useRef(false);
 
   useEffect(() => {
-    fetchGrades();
-  }, [fetchGrades]);
+    if (semesters.length === 0) {
+      appliedInitialSemesterRef.current = false;
+      setSemesterIndex(0);
+      return;
+    }
+
+    if (!appliedInitialSemesterRef.current) {
+      setSemesterIndex(indexOfLatestSemester(semesters));
+      appliedInitialSemesterRef.current = true;
+      return;
+    }
+
+    setSemesterIndex((index) =>
+      Math.min(index, semesters.length - 1)
+    );
+  }, [semesters]);
 
   const currentSemester = semesters[semesterIndex] ?? null;
   const canGoPrevious = semesterIndex > 0;
@@ -45,16 +60,22 @@ export function useGrades() {
     );
   }, [semesters.length]);
 
+  const hasAnySubjects = semesters.some(
+    (semester) => semester.subjects.length > 0
+  );
+
   return {
     semesters,
     currentSemester,
     semesterIndex,
-    loading,
-    error,
+    loading: isInitialLoading && !hasAnySubjects,
+    error: isFatalError ? 'Nie udało się pobrać ocen' : '',
     canGoPrevious,
     canGoNext,
     goToPreviousSemester,
     goToNextSemester,
-    refetch: fetchGrades,
+    refetch: async () => {
+      await refetch();
+    },
   };
 }

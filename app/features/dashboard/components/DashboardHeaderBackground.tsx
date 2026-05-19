@@ -1,20 +1,16 @@
 import React from 'react';
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 
-import { dashboardHeaderBackgroundStyles as styles } from './DashboardHeaderBackground.styles';
-
-const ansLogo = require('../../../../assets/icons/anslogo.png');
+import AppLogo from '../../../components/AppLogo';
+import {
+  DASHBOARD_HEADER_LOGO_SIZE,
+  dashboardHeaderBackgroundStyles as styles,
+} from './DashboardHeaderBackground.styles';
 
 export default function DashboardHeaderBackground() {
   return (
     <View style={styles.root}>
-      <Image
-        source={ansLogo}
-        style={styles.logo}
-        resizeMode="contain"
-        accessibilityIgnoresInvertColors
-        accessibilityLabel="Logo Akademii Nauk Stosowanych w Nowym Sączu"
-      />
+      <AppLogo size={DASHBOARD_HEADER_LOGO_SIZE} />
     </View>
   );
 }

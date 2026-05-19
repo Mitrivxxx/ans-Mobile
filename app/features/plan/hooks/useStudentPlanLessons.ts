@@ -1,25 +1,24 @@
 import {
   PlanService,
   type Lesson,
-} from '../../../core/scraper/features/plan/paln.service';
-import { createPersistentQueryHook } from '../../../core/queryClient/createPersistentQueryHook';
+} from '../../../core/scraper/features/plan/plan.service';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
+import { useUserPersistentQuery } from '../../../core/queryClient/useUserPersistentQuery';
 
 const planService = new PlanService();
 
-const useStudentPlanLessonsQuery = createPersistentQueryHook<Lesson[]>({
-  queryKey: queryKeys.studentPlan.lessons,
-  queryFn: () => planService.getLessons(),
-});
-
 export function useStudentPlanLessons() {
-  const query = useStudentPlanLessonsQuery();
+  const query = useUserPersistentQuery<Lesson[]>({
+    queryKey: queryKeys.studentPlan.lessons,
+    queryFn: () => planService.getLessons(),
+  });
 
   return {
     lessons: query.data ?? [],
     isInitialLoading: query.isInitialLoading,
     hasCachedLessons: query.hasCachedData,
     syncStatus: query.syncStatus,
+    refresh: query.refresh,
     refetch: query.refetch,
     isFatalError: query.isFatalError,
   };

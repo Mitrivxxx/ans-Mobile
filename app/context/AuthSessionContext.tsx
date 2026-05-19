@@ -13,11 +13,14 @@ import {
   isRememberMeEnabled,
   saveRememberMeCredentials,
 } from '../core/auth/rememberMe.storage';
-import { queryClient } from '../core/queryClient/queryClient';
-import { queryKeys } from '../core/queryClient/queryKeys';
+import { hasAppLoginRecord } from '../core/auth/sessionUser.storage';
+import {
+  formatDegradedCacheMessage,
+  getDegradedCacheKinds,
+  hasAnyUserCache,
+} from '../core/queryClient/hasAnyUserCache';
 import {
   hasScraperSession,
-  loginWithSavedCredentials,
   refreshSessionOnForeground,
   registerSessionLostHandler,
   restoreRememberMeSession,
@@ -29,8 +32,9 @@ export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated';
 type AuthSessionContextValue = {
   authStatus: AuthStatus;
   rememberMeEnabled: boolean;
-  /** Sesja WD niedostępna, ale jest zapisany plan — tryb offline. */
+  /** Sesja WD niedostępna, ale jest cache danych — tryb offline. */
   sessionDegraded: boolean;
+  sessionDegradedMessage: string;
   enableRememberMe: (username: string, password: string) => Promise<void>;
   disableRememberMe: () => Promise<void>;
   markAuthenticated: () => void;
@@ -40,34 +44,54 @@ type AuthSessionContextValue = {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
-function hasStudentPlanCache(): boolean {
-  const lessons = queryClient.getQueryData(queryKeys.studentPlan.lessons);
-  const weekLessons = queryClient.getQueryData(
-    queryKeys.studentPlan.weekLessons
-  );
-  return lessons !== undefined || weekLessons !== undefined;
+function resolveDegradedState(): {
+  status: 'authenticated';
+  sessionDegraded: true;
+  sessionDegradedMessage: string;
+} {
+  const kinds = getDegradedCacheKinds();
+  return {
+    status: 'authenticated',
+    sessionDegraded: true,
+    sessionDegradedMessage: formatDegradedCacheMessage(kinds),
+  };
 }
 
 async function resolveRememberMeWithDegradedFallback(): Promise<{
   status: Exclude<AuthStatus, 'unknown'>;
   sessionDegraded: boolean;
+  sessionDegradedMessage: string;
 }> {
   const restored = await restoreRememberMeSession();
 
   if (restored.authenticated) {
-    return { status: 'authenticated', sessionDegraded: false };
+    return {
+      status: 'authenticated',
+      sessionDegraded: false,
+      sessionDegradedMessage: '',
+    };
   }
 
-  if (hasStudentPlanCache()) {
-    return { status: 'authenticated', sessionDegraded: true };
+  if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+    const degraded = resolveDegradedState();
+    return {
+      status: degraded.status,
+      sessionDegraded: degraded.sessionDegraded,
+      sessionDegradedMessage: degraded.sessionDegradedMessage,
+    };
   }
 
-  return { status: 'unauthenticated', sessionDegraded: false };
+  return {
+    status: 'unauthenticated',
+    sessionDegraded: false,
+    sessionDegradedMessage: '',
+  };
 }
 
 async function resolveAuthStatus(): Promise<{
   status: Exclude<AuthStatus, 'unknown'>;
   sessionDegraded: boolean;
+  sessionDegradedMessage: string;
   rememberMeEnabled: boolean;
 }> {
   try {
@@ -86,10 +110,23 @@ async function resolveAuthStatus(): Promise<{
     };
   }
 
-  if (await hasScraperSession()) {
+  const hadLoginBefore = await hasAppLoginRecord();
+
+  if (hadLoginBefore && (await hasScraperSession())) {
     return {
       status: 'authenticated',
       sessionDegraded: false,
+      sessionDegradedMessage: '',
+      rememberMeEnabled: false,
+    };
+  }
+
+  if (hadLoginBefore && hasAnyUserCache()) {
+    const degraded = resolveDegradedState();
+    return {
+      status: degraded.status,
+      sessionDegraded: degraded.sessionDegraded,
+      sessionDegradedMessage: degraded.sessionDegradedMessage,
       rememberMeEnabled: false,
     };
   }
@@ -97,6 +134,7 @@ async function resolveAuthStatus(): Promise<{
   return {
     status: 'unauthenticated',
     sessionDegraded: false,
+    sessionDegradedMessage: '',
     rememberMeEnabled: false,
   };
 }
@@ -111,12 +149,14 @@ export function AuthSessionProvider({
   const [authStatus, setAuthStatus] = useState<AuthStatus>('unknown');
   const [rememberMeEnabled, setRememberMeEnabled] = useState(false);
   const [sessionDegraded, setSessionDegraded] = useState(false);
+  const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
 
   const applyResolvedSession = useCallback(
     (resolved: Awaited<ReturnType<typeof resolveAuthStatus>>) => {
       setAuthStatus(resolved.status);
       setRememberMeEnabled(resolved.rememberMeEnabled);
       setSessionDegraded(resolved.sessionDegraded);
+      setSessionDegradedMessage(resolved.sessionDegradedMessage);
     },
     []
   );
@@ -134,21 +174,17 @@ export function AuthSessionProvider({
 
   const handleSessionLost = useCallback(() => {
     void (async () => {
-      const rememberMe = await isRememberMeEnabled();
-      if (!rememberMe) {
-        setAuthStatus('unauthenticated');
-        setSessionDegraded(false);
-        return;
-      }
-
-      if (hasStudentPlanCache()) {
-        setAuthStatus('authenticated');
+      if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+        const degraded = resolveDegradedState();
+        setAuthStatus(degraded.status);
         setSessionDegraded(true);
+        setSessionDegradedMessage(degraded.sessionDegradedMessage);
         return;
       }
 
       setAuthStatus('unauthenticated');
       setSessionDegraded(false);
+      setSessionDegradedMessage('');
     })();
   }, []);
 
@@ -176,28 +212,53 @@ export function AuthSessionProvider({
 
       void (async () => {
         const rememberMe = await isRememberMeEnabled();
-        if (!rememberMe) {
+
+        if (rememberMe) {
+          const refreshed = await refreshSessionOnForeground();
+
+          if (refreshed.authenticated) {
+            setAuthStatus('authenticated');
+            setSessionDegraded(refreshed.sessionDegraded);
+            setSessionDegradedMessage('');
+            setRememberMeEnabled(true);
+            return;
+          }
+
+          if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+            const degraded = resolveDegradedState();
+            setAuthStatus(degraded.status);
+            setSessionDegraded(true);
+            setSessionDegradedMessage(degraded.sessionDegradedMessage);
+            setRememberMeEnabled(true);
+            return;
+          }
+
+          setAuthStatus('unauthenticated');
+          setSessionDegraded(false);
+          setSessionDegradedMessage('');
           return;
         }
 
-        const refreshed = await refreshSessionOnForeground();
+        const hadLoginBefore = await hasAppLoginRecord();
 
-        if (refreshed.authenticated) {
+        if (hadLoginBefore && (await hasScraperSession())) {
           setAuthStatus('authenticated');
-          setSessionDegraded(refreshed.sessionDegraded);
-          setRememberMeEnabled(true);
+          setSessionDegraded(false);
+          setSessionDegradedMessage('');
           return;
         }
 
-        if (hasStudentPlanCache()) {
-          setAuthStatus('authenticated');
+        if (hadLoginBefore && hasAnyUserCache()) {
+          const degraded = resolveDegradedState();
+          setAuthStatus(degraded.status);
           setSessionDegraded(true);
-          setRememberMeEnabled(true);
+          setSessionDegradedMessage(degraded.sessionDegradedMessage);
           return;
         }
 
         setAuthStatus('unauthenticated');
         setSessionDegraded(false);
+        setSessionDegradedMessage('');
       })();
     };
 
@@ -208,6 +269,7 @@ export function AuthSessionProvider({
   const markAuthenticated = useCallback(() => {
     setAuthStatus('authenticated');
     setSessionDegraded(false);
+    setSessionDegradedMessage('');
   }, []);
 
   const enableRememberMe = useCallback(
@@ -227,6 +289,7 @@ export function AuthSessionProvider({
     await performSignOut();
     setAuthStatus('unauthenticated');
     setSessionDegraded(false);
+    setSessionDegradedMessage('');
     setRememberMeEnabled(false);
   }, []);
 
@@ -235,6 +298,7 @@ export function AuthSessionProvider({
       authStatus,
       rememberMeEnabled,
       sessionDegraded,
+      sessionDegradedMessage,
       enableRememberMe,
       disableRememberMe,
       markAuthenticated,
@@ -245,6 +309,7 @@ export function AuthSessionProvider({
       authStatus,
       rememberMeEnabled,
       sessionDegraded,
+      sessionDegradedMessage,
       enableRememberMe,
       disableRememberMe,
       markAuthenticated,

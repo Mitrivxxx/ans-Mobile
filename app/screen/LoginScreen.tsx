@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ActivityIndicator,
-  Image,
   Text,
   TextInput,
   TouchableOpacity,
@@ -22,15 +21,19 @@ import LoginIconInput from '../features/login/LoginIconInput';
 import LoginInfoButton from '../features/login/LoginInfoButton';
 import { useAuthSession } from '../context/AuthSessionContext';
 import { isRememberMeEnabled } from '../core/auth/rememberMe.storage';
+import { saveLastUsername } from '../core/auth/sessionUser.storage';
+import { resetSilentLoginLimiter } from '../core/scraper/auth/silentLoginLimiter';
 import {
   getLoginErrorMessage,
   getLoginResultErrorMessage,
   REQUIRED_FIELD_MESSAGE,
 } from '../features/login/loginErrorDisplay';
-import { loginScreenStyles as styles } from '../features/login/LoginScreen.styles';
+import {
+  LOGIN_LOGO_SIZE,
+  loginScreenStyles as styles,
+} from '../features/login/LoginScreen.styles';
+import AppLogo from '../components/AppLogo';
 import KeyboardDismissView from '../components/KeyboardDismissView';
-
-const ansLogo = require('../../assets/icons/anslogo.png');
 
 export default function LoginScreen() {
   const authService = useMemo(() => new AuthService(), []);
@@ -188,12 +191,16 @@ export default function LoginScreen() {
         return;
       }
 
+      const loginUsername = username.trim();
+
       if (rememberMe) {
-        await enableRememberMe(username.trim(), passwordAttempt);
+        await enableRememberMe(loginUsername, passwordAttempt);
       } else {
         await disableRememberMe();
       }
 
+      await saveLastUsername(loginUsername);
+      resetSilentLoginLimiter();
       resetCaptchaUi();
       markAuthenticated();
     } catch (err: unknown) {
@@ -255,7 +262,7 @@ export default function LoginScreen() {
         enableResetScrollToCoords={false}
       >
         <View style={styles.header}>
-          <Image source={ansLogo} style={styles.logo} resizeMode="contain" />
+          <AppLogo size={LOGIN_LOGO_SIZE} style={styles.logo} />
           <Text style={styles.title}>WD-ANS Mobile</Text>
           <Text style={styles.subtitle}>Uczelnia w zasięgu ręki</Text>
           <LoginInfoButton />

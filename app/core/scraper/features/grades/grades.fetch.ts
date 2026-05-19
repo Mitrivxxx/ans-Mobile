@@ -14,16 +14,8 @@ export async function fetchGradesPage(): Promise<string> {
 export async function fetchSemesterSubjects(
   semesterRequestPath: string
 ): Promise<string> {
-  try {
-    const response = await client.get(semesterRequestPath);
-    return responseBody(response.data);
-  } catch (error) {
-    console.error(
-      `Blad pobierania przedmiotow dla URL ${semesterRequestPath}:`,
-      error
-    );
-    return "";
-  }
+  const response = await client.get(semesterRequestPath);
+  return responseBody(response.data);
 }
 
 export async function fetchPartialGrades(pplsId: number): Promise<string> {

@@ -4,6 +4,7 @@ import { ansColors } from '../../theme/ansTheme';
 import { LOGIN_INPUT_HEIGHT } from './LoginIconInput.styles';
 
 /** Dodatkowa przestrzeń pod przyciskiem — więcej scrolla w dół nad klawiaturą. */
+export const LOGIN_LOGO_SIZE = 141;
 export const LOGIN_SCROLL_BOTTOM_PADDING = 140;
 export const LOGIN_SCROLL_BOTTOM_PADDING_CAPTCHA = 220;
 
@@ -32,8 +33,6 @@ export const loginScreenStyles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 141,
-    height: 141,
     marginBottom: 20,
   },
   title: {

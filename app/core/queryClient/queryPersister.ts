@@ -3,4 +3,5 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 
 export const queryPersister = createAsyncStoragePersister({
   storage: AsyncStorage,
+  key: 'REACT_QUERY_OFFLINE_CACHE_PLAN_ONLY',
 });

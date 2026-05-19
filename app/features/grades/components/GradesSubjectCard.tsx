@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -7,11 +7,12 @@ import {
   View,
 } from 'react-native';
 
-import {
-  GradesService,
-  type SubjectActivityDetails,
-  type SubjectGrade,
+import { SessionExpiredError } from '../../../core/scraper/auth/sessionValidation';
+import type {
+  SubjectActivityDetails,
+  SubjectGrade,
 } from '../../../core/scraper/features/grades/grades.service';
+import { usePartialGradesQuery } from '../hooks/usePartialGradesQuery';
 import { getGradeBadgeStyle } from '../gradeBadgeStyle';
 import { gradesColors } from '../gradesTheme';
 import { gradesSubjectCardStyles as styles } from './GradesSubjectCard.styles';
@@ -85,57 +86,53 @@ function ActivitySection({ activity }: { activity: SubjectActivityDetails }) {
   );
 }
 
+function partialGradesErrorMessage(error: unknown): string {
+  if (error instanceof SessionExpiredError) {
+    return 'Sesja wygasła — zaloguj się ponownie.';
+  }
+  return 'Nie udało się pobrać szczegółów';
+}
+
 export default function GradesSubjectCard({
   subject,
   expandable = false,
 }: Props) {
-  const gradesService = useMemo(() => new GradesService(), []);
   const [expanded, setExpanded] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const [detailsError, setDetailsError] = useState('');
-  const [activities, setActivities] = useState<SubjectActivityDetails[]>(
-    subject.partialGrades
+  const canExpand = expandable && subject.pplsId != null;
+  const shouldFetchPartial =
+    expanded && canExpand && subject.partialGrades.length === 0;
+
+  const partialQuery = usePartialGradesQuery(
+    subject.pplsId,
+    shouldFetchPartial
   );
+
+  const activities: SubjectActivityDetails[] =
+    subject.partialGrades.length > 0
+      ? subject.partialGrades
+      : (partialQuery.data ?? []);
+
+  const loadingDetails = shouldFetchPartial && partialQuery.isFetching;
+  const detailsError =
+    partialQuery.isError && !partialQuery.data
+      ? partialGradesErrorMessage(partialQuery.error)
+      : '';
 
   useEffect(() => {
     setExpanded(false);
-    setDetailsError('');
-    setLoadingDetails(false);
-    setActivities(subject.partialGrades);
-  }, [subject.pplsId, subject.subject, subject.partialGrades]);
+  }, [subject.pplsId, subject.subject]);
 
   const grade = subject.finalGrade || '—';
   const badgeStyle = getGradeBadgeStyle(subject.finalGrade);
-  const canExpand = expandable && subject.pplsId != null;
-
-  const loadDetails = useCallback(async () => {
-    if (subject.pplsId == null) return;
-    if (activities.length > 0) return;
-
-    try {
-      setLoadingDetails(true);
-      setDetailsError('');
-      const data = await gradesService.getPartialGrades(subject.pplsId);
-      setActivities(data);
-    } catch (err) {
-      console.error('[GRADES PARTIAL]', err);
-      setDetailsError('Nie udało się pobrać szczegółów');
-    } finally {
-      setLoadingDetails(false);
-    }
-  }, [activities.length, gradesService, subject.pplsId]);
 
   const handleToggle = useCallback(() => {
     if (!canExpand) return;
+    setExpanded((current) => !current);
+  }, [canExpand]);
 
-    setExpanded((current) => {
-      const next = !current;
-      if (next) {
-        void loadDetails();
-      }
-      return next;
-    });
-  }, [canExpand, loadDetails]);
+  const retryPartial = useCallback(() => {
+    void partialQuery.refetch();
+  }, [partialQuery]);
 
   const cardContent = (
     <>
@@ -201,7 +198,7 @@ export default function GradesSubjectCard({
           {!loadingDetails && detailsError ? (
             <View style={styles.detailsState}>
               <Text style={styles.detailsErrorText}>{detailsError}</Text>
-              <TouchableOpacity onPress={loadDetails} activeOpacity={0.8}>
+              <TouchableOpacity onPress={retryPartial} activeOpacity={0.8}>
                 <Text style={styles.retryText}>Spróbuj ponownie</Text>
               </TouchableOpacity>
             </View>

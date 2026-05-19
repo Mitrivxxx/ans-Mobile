@@ -3,8 +3,7 @@ import { StyleSheet } from 'react-native';
 import { ansColors } from '../theme/ansTheme';
 
 export const APP_HEADER_HEIGHT = 64;
-export const APP_HEADER_LOGO_HEIGHT = 40;
-export const APP_HEADER_LOGO_WIDTH = 140;
+export const APP_HEADER_LOGO_SIZE = 44;
 export const APP_HEADER_AVATAR_SIZE = 46;
 export const APP_HEADER_SIDE_WIDTH = 48;
 
@@ -34,10 +33,6 @@ export const appHeaderStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logo: {
-    width: APP_HEADER_LOGO_WIDTH,
-    height: APP_HEADER_LOGO_HEIGHT,
   },
   avatarButton: {
     width: APP_HEADER_AVATAR_SIZE,

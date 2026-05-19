@@ -1,13 +1,14 @@
 import {
   parseGrades,
   parsePartialGradesHtml,
+  type GradesProgressCallback,
 } from "./grades.parse";
 import { fetchPartialGrades } from "./grades.fetch";
 import type { SemesterGrades, SubjectActivityDetails } from "./grades.types";
 
 export class GradesService {
-  async getGrades(): Promise<SemesterGrades[]> {
-    return parseGrades();
+  async getGrades(onProgress?: GradesProgressCallback): Promise<SemesterGrades[]> {
+    return parseGrades(onProgress);
   }
 
   async getPartialGrades(pplsId: number): Promise<SubjectActivityDetails[]> {

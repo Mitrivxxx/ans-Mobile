@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import type { Lesson } from '../../core/scraper/features/plan/paln.service';
+import type { Lesson } from '../../core/scraper/features/plan/plan.service';
 import {
   formatLessonSubjectLabel,
   isELearningNotes,

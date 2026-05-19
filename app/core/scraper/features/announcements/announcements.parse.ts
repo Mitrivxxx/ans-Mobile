@@ -1,5 +1,6 @@
 import { parseHTML } from "linkedom";
 
+import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import type { Announcement, AnnouncementDetails } from "./announcements.types";
 
 export type { Announcement, AnnouncementDetails } from "./announcements.types";
@@ -46,6 +47,7 @@ function extractLabeledField(container: Element, label: string): string {
 }
 
 export function parseAnnouncementDetails(html: string): AnnouncementDetails {
+  assertAuthenticatedHtml(html, "Sesja wygasła — nie można pobrać szczegółów ogłoszenia.");
   const doc = parseDocument(html);
 
   let content = "";
@@ -88,6 +90,7 @@ export function parseAnnouncementDetails(html: string): AnnouncementDetails {
 }
 
 export function parseAnnouncements(html: string): Announcement[] {
+  assertAuthenticatedHtml(html, "Sesja wygasła — nie można pobrać ogłoszeń.");
   const doc = parseDocument(html);
   const announcements: Announcement[] = [];
 

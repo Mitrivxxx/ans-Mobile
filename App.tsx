@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import AppErrorBoundary from './app/components/AppErrorBoundary';
+import AppInitGate from './app/components/AppInitGate';
 import AuthSyncBanner from './app/components/AuthSyncBanner';
 import AppHeader from './app/components/AppHeader';
 import AppSidebar from './app/components/sidebar/AppSidebar';
@@ -29,10 +31,10 @@ import ProfileScreen from './app/screen/ProfileScreen';
 import FindLecturerScreen from './app/screen/FindLecturerScreen';
 import LecturerPlanScreen from './app/screen/LecturerPlanScreen';
 import SettingsScreen from './app/screen/SettingsScreen';
-import { setupScraperAuthGuard } from './app/core/scraper/auth/ensureAuthenticated';
-import { initClient } from './app/core/scraper/client/client';
 import { queryClient } from './app/core/queryClient/queryClient';
 import { queryPersister } from './app/core/queryClient/queryPersister';
+import { usePrefetchUserScraperData } from './app/hooks/usePrefetchUserScraperData';
+import { PERSIST_MAX_AGE_MS } from './app/core/queryClient/persistentQueryConfig';
 import { shouldPersistQuery } from './app/core/queryClient/shouldPersistQuery';
 import { ansColors } from './app/theme/ansTheme';
 import type { RootParamList } from './app/navigation/navigationRef';
@@ -77,6 +79,7 @@ function MainNavigator() {
 function AppShell() {
   const { isDarkMode, colors } = useAppTheme();
   const { authStatus } = useAuthSession();
+  usePrefetchUserScraperData();
 
   if (authStatus === 'unknown') {
     return (
@@ -133,41 +136,29 @@ export default function App() {
     setPersistReady(true);
   }, []);
 
-  useEffect(() => {
-    async function bootstrap() {
-      console.log('[APP] Initializing...');
-
-      try {
-        setupScraperAuthGuard();
-        await initClient();
-        console.log('[APP] Cookie store initialized');
-      } catch (error) {
-        console.error('[APP] Init error:', error);
-      }
-    }
-
-    bootstrap();
-  }, []);
-
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      onSuccess={onPersistSuccess}
-      persistOptions={{
-        persister: queryPersister,
-        maxAge: Number.POSITIVE_INFINITY,
-        dehydrateOptions: {
-          shouldDehydrateQuery: shouldPersistQuery,
-        },
-      }}
-    >
-      <SafeAreaProvider>
-        <AppThemeProvider>
-          <AuthSessionProvider persistReady={persistReady}>
-            <AppShell />
-          </AuthSessionProvider>
-        </AppThemeProvider>
-      </SafeAreaProvider>
-    </PersistQueryClientProvider>
+    <AppErrorBoundary>
+      <AppInitGate>
+        <PersistQueryClientProvider
+          client={queryClient}
+          onSuccess={onPersistSuccess}
+          persistOptions={{
+            persister: queryPersister,
+            maxAge: PERSIST_MAX_AGE_MS,
+            dehydrateOptions: {
+              shouldDehydrateQuery: shouldPersistQuery,
+            },
+          }}
+        >
+          <SafeAreaProvider>
+            <AppThemeProvider>
+              <AuthSessionProvider persistReady={persistReady}>
+                <AppShell />
+              </AuthSessionProvider>
+            </AppThemeProvider>
+          </SafeAreaProvider>
+        </PersistQueryClientProvider>
+      </AppInitGate>
+    </AppErrorBoundary>
   );
 }

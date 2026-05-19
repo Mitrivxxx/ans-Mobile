@@ -18,6 +18,11 @@ import {
 import { getLoginResultErrorMessage } from "../../../features/login/loginErrorDisplay";
 
 import { AuthService } from "./auth.service";
+import {
+  canAttemptSilentLogin,
+  getSilentLoginBlockedMessage,
+  recordSilentLoginAttempt,
+} from "./silentLoginLimiter";
 import { isSessionAuthenticated } from "./session.store";
 import {
   isSessionPastTtl,
@@ -135,8 +140,18 @@ export async function silentLoginOnce(): Promise<{
   success: boolean;
   errorMessage?: string;
 }> {
+  if (!canAttemptSilentLogin()) {
+    return {
+      success: false,
+      errorMessage: getSilentLoginBlockedMessage(),
+    };
+  }
+
   if (!loginInFlight) {
-    loginInFlight = loginWithSavedCredentials().finally(() => {
+    loginInFlight = (async () => {
+      recordSilentLoginAttempt();
+      return loginWithSavedCredentials();
+    })().finally(() => {
       loginInFlight = null;
     });
   }

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getCurrentRouteName, navigationRef } from '../navigation/navigationRef';
-import { appHeaderStyles as styles } from './AppHeader.styles';
+import {
+  APP_HEADER_LOGO_SIZE,
+  appHeaderStyles as styles,
+} from './AppHeader.styles';
 import AppHeaderAvatar from './AppHeaderAvatar';
+import AppLogo from './AppLogo';
 import SidebarMenuButton from './sidebar/SidebarMenuButton';
-
-const ansLogo = require('../../assets/icons/logov2.png');
 
 export default function AppHeader() {
   const insets = useSafeAreaInsets();
@@ -36,12 +38,7 @@ export default function AppHeader() {
         </View>
 
         <View style={styles.center}>
-          <Image
-            source={ansLogo}
-            style={styles.logo}
-            resizeMode="contain"
-            accessibilityLabel="Logo Akademii Nauk Stosowanych"
-          />
+          <AppLogo size={APP_HEADER_LOGO_SIZE} />
         </View>
 
         <View style={styles.sideRight}>

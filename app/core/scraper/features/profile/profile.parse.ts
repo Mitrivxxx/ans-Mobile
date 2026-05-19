@@ -195,13 +195,16 @@ export async function parseStudiesData(): Promise<StudiesData> {
 }
 
 export async function parseCompleteProfile(): Promise<CompleteProfileData> {
-  const [accountData, studiesData] = await Promise.all([
-    parseAccountDetails(),
-    parseStudiesData(),
+  const [accountHtml, studiesHtml] = await Promise.all([
+    fetchAccountDetailsPage(),
+    fetchStudiesPage(),
   ]);
 
+  assertAuthenticatedHtml(accountHtml);
+  assertAuthenticatedHtml(studiesHtml);
+
   return {
-    ...accountData,
-    ...studiesData,
+    ...parseAccountDetailsFromHtml(accountHtml),
+    ...parseStudiesDataFromHtml(studiesHtml),
   };
 }

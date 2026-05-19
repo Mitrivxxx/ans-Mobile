@@ -1,5 +1,7 @@
 import { parseHTML } from 'linkedom';
 
+import { assertAuthenticatedHtml } from '../../auth/sessionValidation';
+
 export interface Lesson {
   date: string;
   from: string;
@@ -52,6 +54,7 @@ function getDataCellTexts(row: Element): string[] {
 }
 
 export function parsePlan(html: string): Lesson[] {
+  assertAuthenticatedHtml(html, 'Sesja wygasła — nie można pobrać planu zajęć.');
   const { document } = parseHTML(html);
   const lessons: Lesson[] = [];
   let currentDate = '';

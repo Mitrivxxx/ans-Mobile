@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { ansColors } from '../../../theme/ansTheme';
 
 export const DASHBOARD_HEADER_HEIGHT = 200;
+export const DASHBOARD_HEADER_LOGO_SIZE = 188;
 
 export const dashboardHeaderBackgroundStyles = StyleSheet.create({
   root: {
@@ -11,9 +12,5 @@ export const dashboardHeaderBackgroundStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-  },
-  logo: {
-    width: 188,
-    height: 188,
   },
 });

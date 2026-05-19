@@ -17,8 +17,12 @@ export function hasAuthenticationCookie(cookieHeader: string): boolean {
   );
 }
 
-/** Wyświetla wszystkie cookies (CookieManager + jar w pamięci). */
+/** Wyświetla wszystkie cookies (CookieManager + jar w pamięci). Tylko w __DEV__. */
 export async function showCookies(context?: string): Promise<void> {
+  if (!__DEV__) {
+    return;
+  }
+
   const prefix = context ? `[${context}] ` : "";
   try {
     const nativeCookies = await CookieManager.get(WD_BASE_URL);

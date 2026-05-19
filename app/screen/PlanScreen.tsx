@@ -12,7 +12,7 @@ import RefreshableScrollView from '../components/RefreshableScrollView';
 import SyncBanner from '../components/SyncBanner';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import ScheduleLessonCard from '../components/schedule/ScheduleLessonCard';
-import type { Lesson } from '../core/scraper/features/plan/paln.service';
+import type { Lesson } from '../core/scraper/features/plan/plan.service';
 import { HARMONOGRAM_ACCENT_COLOR } from '../features/dashboard/dashboard.quickActions';
 import { useStudentPlanLessons } from '../features/plan/hooks/useStudentPlanLessons';
 import { useSyncBanner } from '../hooks/useSyncBanner';
@@ -85,11 +85,11 @@ export default function PlanScreen({ navigation }: Props) {
     isInitialLoading,
     isFatalError,
     syncStatus,
-    refetch,
+    refresh,
   } = useStudentPlanLessons();
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
-  useRegisterScreenRefresh(refetch);
+  useRegisterScreenRefresh(refresh);
 
   const today = useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = useState(() => dateKey(today));
@@ -174,7 +174,7 @@ export default function PlanScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.errorText}>Nie udało się pobrać planu zajęć</Text>
-        <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
+        <TouchableOpacity onPress={() => void refresh()} style={styles.retryButton}>
           <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </RefreshableScrollView>

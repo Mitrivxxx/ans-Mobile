@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -6,11 +6,8 @@ import {
   View,
 } from 'react-native';
 
-import {
-  AnnouncementsService,
-  type Announcement,
-} from '../../../core/scraper/features/announcements/announcements.service';
 import { ansColors } from '../../../theme/ansTheme';
+import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
 import { isWithinLastDays } from '../utils/announcementDate';
 import { dashboardAnnouncementsPanelStyles as styles } from './DashboardAnnouncementsPanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
@@ -18,30 +15,12 @@ import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefres
 const RECENT_WINDOW_DAYS = 7;
 
 export default function DashboardAnnouncementsPanel() {
-  const announcementsService = useMemo(() => new AnnouncementsService(), []);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { announcements, isInitialLoading, isFatalError, refetch } =
+    useAnnouncementsQuery();
 
-  const fetchAnnouncements = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await announcementsService.getAnnouncements();
-      setAnnouncements(data);
-    } catch (err) {
-      console.error('[DASHBOARD ANNOUNCEMENTS]', err);
-      setError('Nie udało się pobrać ogłoszeń');
-    } finally {
-      setLoading(false);
-    }
-  }, [announcementsService]);
-
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
-
-  useRegisterScreenRefresh(fetchAnnouncements);
+  useRegisterScreenRefresh(async () => {
+    await refetch();
+  });
 
   const recentAnnouncements = useMemo(
     () =>
@@ -51,7 +30,7 @@ export default function DashboardAnnouncementsPanel() {
     [announcements]
   );
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
@@ -62,13 +41,13 @@ export default function DashboardAnnouncementsPanel() {
     );
   }
 
-  if (error) {
+  if (isFatalError) {
     return (
       <View style={styles.wrap}>
         <View style={styles.centerState}>
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>Nie udało się pobrać ogłoszeń</Text>
           <TouchableOpacity
-            onPress={fetchAnnouncements}
+            onPress={() => void refetch()}
             style={styles.retryButton}
           >
             <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>

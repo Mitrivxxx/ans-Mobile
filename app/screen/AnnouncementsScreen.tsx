@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,11 +12,9 @@ import RefreshableScrollView from '../components/RefreshableScrollView';
 import ScreenBackButton from '../components/ScreenBackButton';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useRefreshControlProps } from '../hooks/useRefreshControlProps';
-import {
-  AnnouncementsService,
-  type Announcement,
-  type AnnouncementDetails,
-} from '../core/scraper/features/announcements/announcements.service';
+import { type Announcement } from '../core/scraper/features/announcements/announcements.service';
+import { useAnnouncementDetailsQuery } from '../features/announcements/hooks/useAnnouncementDetailsQuery';
+import { useAnnouncementsQuery } from '../features/announcements/hooks/useAnnouncementsQuery';
 import { ansColors } from '../theme/ansTheme';
 
 type Props = {
@@ -26,66 +24,33 @@ type Props = {
 };
 
 export default function AnnouncementsScreen({ navigation }: Props) {
-  const announcementsService = useMemo(() => new AnnouncementsService(), []);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [selected, setSelected] = useState<AnnouncementDetails | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [detailsLoading, setDetailsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const {
+    announcements,
+    isInitialLoading,
+    isFatalError,
+    refetch: refetchAnnouncements,
+  } = useAnnouncementsQuery();
+  const [selectedItem, setSelectedItem] = useState<Announcement | null>(null);
 
-  const fetchAnnouncements = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      setSelected(null);
-      setSelectedId(null);
-      const data = await announcementsService.getAnnouncements();
-      setAnnouncements(data);
-    } catch (err) {
-      console.error('[ANNOUNCEMENTS SCREEN]', err);
-      setError('Nie udało się pobrać ogłoszeń');
-    } finally {
-      setLoading(false);
-    }
-  }, [announcementsService]);
-
-  const fetchDetails = useCallback(
-    async (item: Announcement) => {
-      try {
-        setDetailsLoading(true);
-        setError('');
-        setSelectedId(item.id);
-        const data = await announcementsService.getAnnouncementDetails(
-          item.url || item.id
-        );
-        setSelected(data);
-      } catch (err) {
-        console.error('[ANNOUNCEMENTS SCREEN] details', err);
-        setError('Nie udało się pobrać szczegółów ogłoszenia');
-        setSelected(null);
-        setSelectedId(null);
-      } finally {
-        setDetailsLoading(false);
-      }
-    },
-    [announcementsService]
+  const detailsQuery = useAnnouncementDetailsQuery(
+    selectedItem?.id ?? null,
+    selectedItem ? selectedItem.url || selectedItem.id : null
   );
 
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
+  const selected = detailsQuery.data ?? null;
+  const detailsLoading = detailsQuery.isFetching;
+  const detailsError =
+    detailsQuery.isError && !detailsQuery.data
+      ? 'Nie udało się pobrać szczegółów ogłoszenia'
+      : '';
 
   const refreshScreen = useCallback(async () => {
-    if (selected) {
-      const item = announcements.find((entry) => entry.id === selectedId);
-      if (item) {
-        await fetchDetails(item);
-        return;
-      }
+    if (selectedItem) {
+      await detailsQuery.refetch();
+      return;
     }
-    await fetchAnnouncements();
-  }, [announcements, fetchAnnouncements, fetchDetails, selected, selectedId]);
+    await refetchAnnouncements();
+  }, [detailsQuery, refetchAnnouncements, selectedItem]);
 
   useRegisterScreenRefresh(refreshScreen);
   const { refreshControl } = useRefreshControlProps();
@@ -94,7 +59,7 @@ export default function AnnouncementsScreen({ navigation }: Props) {
     return value.replace(/<br\s*\/?>/gi, '\n');
   }, []);
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <RefreshableScrollView
         style={styles.screen}
@@ -107,56 +72,95 @@ export default function AnnouncementsScreen({ navigation }: Props) {
     );
   }
 
-  if (error && announcements.length === 0 && !selected) {
+  if (isFatalError && announcements.length === 0 && !selectedItem) {
     return (
       <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.centerStateScroll}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity onPress={fetchAnnouncements} style={styles.retryButton}>
+        <Text style={styles.errorText}>Nie udało się pobrać ogłoszeń</Text>
+        <TouchableOpacity
+          onPress={() => void refetchAnnouncements()}
+          style={styles.retryButton}
+        >
           <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
         </TouchableOpacity>
       </RefreshableScrollView>
     );
   }
 
-  if (selected) {
-    return (
-      <RefreshableScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.detailsContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <ScreenBackButton
-          label="← Lista ogłoszeń"
-          onPress={() => {
-            setSelected(null);
-            setSelectedId(null);
-          }}
-        />
+  if (selectedItem) {
+    if (detailsLoading && !selected) {
+      return (
+        <RefreshableScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.centerStateScroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <ActivityIndicator color={ansColors.gold} />
+          <Text style={styles.stateText}>Wczytywanie szczegółów...</Text>
+        </RefreshableScrollView>
+      );
+    }
 
-        <View style={styles.detailsCard}>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Nadawca</Text>
-            <Text style={styles.metaValue} numberOfLines={2}>
-              {selected.authorName || '-'}
+    if (detailsError && !selected) {
+      return (
+        <RefreshableScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.centerStateScroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.errorText}>{detailsError}</Text>
+          <TouchableOpacity
+            onPress={() => void detailsQuery.refetch()}
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSelectedItem(null)}
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryButtonText}>← Lista ogłoszeń</Text>
+          </TouchableOpacity>
+        </RefreshableScrollView>
+      );
+    }
+
+    if (selected) {
+      return (
+        <RefreshableScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.detailsContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ScreenBackButton
+            label="← Lista ogłoszeń"
+            onPress={() => setSelectedItem(null)}
+          />
+
+          <View style={styles.detailsCard}>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Nadawca</Text>
+              <Text style={styles.metaValue} numberOfLines={2}>
+                {selected.authorName || '-'}
+              </Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaLabel}>Data</Text>
+              <Text style={styles.metaValue}>{selected.date || '-'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.contentCard}>
+            <Text style={styles.contentText}>
+              {selected.content ? normalizeContent(selected.content) : '-'}
             </Text>
           </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Data</Text>
-            <Text style={styles.metaValue}>{selected.date || '-'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.contentCard}>
-          <Text style={styles.contentText}>
-            {selected.content ? normalizeContent(selected.content) : '-'}
-          </Text>
-        </View>
-      </RefreshableScrollView>
-    );
+        </RefreshableScrollView>
+      );
+    }
   }
 
   return (
@@ -168,10 +172,12 @@ export default function AnnouncementsScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
         refreshControl={refreshControl}
         ListHeaderComponent={
-          error || detailsLoading ? (
+          detailsError || (detailsLoading && selectedItem) ? (
             <View style={styles.listHeader}>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              {detailsLoading ? (
+              {detailsError ? (
+                <Text style={styles.errorText}>{detailsError}</Text>
+              ) : null}
+              {detailsLoading && selectedItem ? (
                 <Text style={styles.infoText}>Wczytywanie szczegółów...</Text>
               ) : null}
             </View>
@@ -183,11 +189,12 @@ export default function AnnouncementsScreen({ navigation }: Props) {
           </View>
         }
         renderItem={({ item }) => {
-          const isFetching = detailsLoading && selectedId === item.id;
+          const isFetching =
+            detailsLoading && selectedItem?.id === item.id;
 
           return (
             <TouchableOpacity
-              onPress={() => fetchDetails(item)}
+              onPress={() => setSelectedItem(item)}
               disabled={isFetching}
               style={[styles.card, isFetching && styles.cardDisabled]}
               accessibilityRole="button"

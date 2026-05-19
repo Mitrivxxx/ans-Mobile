@@ -8,9 +8,15 @@ const LEGACY_STORAGE_KEY = "cookieJar";
 
 let cookieHeader = "";
 let writeChain: Promise<void> = Promise.resolve();
+let pendingCookieWrites = 0;
 
 function enqueueWrite(task: () => Promise<void>): Promise<void> {
-  const next = writeChain.then(task, task);
+  pendingCookieWrites += 1;
+  const next = writeChain
+    .then(task, task)
+    .finally(() => {
+      pendingCookieWrites -= 1;
+    });
   writeChain = next.catch(() => {});
   return next;
 }
@@ -75,8 +81,11 @@ async function persistHeaderToNative(header: string): Promise<void> {
   }
 }
 
-/** Czeka na zakończenie wszystkich zapisów do CookieManager. */
+/** Czeka na zakończenie zapisów do CookieManager tylko gdy są w toku. */
 export async function flushCookieWrites(): Promise<void> {
+  if (pendingCookieWrites === 0) {
+    return;
+  }
   await writeChain;
 }
 

@@ -21,12 +21,12 @@ export default function DashboardSchedulePanel() {
     isInitialLoading,
     isFatalError,
     syncStatus,
-    refetch,
+    refresh,
   } = useStudentPlanWeekLessons();
 
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
-  useRegisterScreenRefresh(refetch);
+  useRegisterScreenRefresh(refresh);
 
   const calendarWeek = useMemo(() => getCurrentWeek(), []);
   const [selectedDateKey, setSelectedDateKey] = useState(getDefaultWeekDateKey);
@@ -74,7 +74,7 @@ export default function DashboardSchedulePanel() {
       <View style={styles.wrap}>
         <View style={styles.centerState}>
           <Text style={styles.errorText}>Nie udało się pobrać harmonogramu</Text>
-          <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
+          <TouchableOpacity onPress={() => void refresh()} style={styles.retryButton}>
             <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
           </TouchableOpacity>
         </View>

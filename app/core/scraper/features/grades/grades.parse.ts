@@ -1,10 +1,12 @@
 import { parseHTML } from "linkedom";
 
+import { mapWithConcurrency } from "../../../utils/mapWithConcurrency";
 import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import {
   fetchGradesPage,
   fetchSemesterSubjects,
 } from "./grades.fetch";
+import { pickPrioritySemesterNumber } from "./pickPrioritySemester";
 import type {
   PartialGradeEntry,
   RawSubjectData,
@@ -12,6 +14,10 @@ import type {
   SubjectActivityDetails,
   SubjectGrade,
 } from "./grades.types";
+
+const SEMESTER_FETCH_CONCURRENCY = 4;
+
+export type GradesProgressCallback = (semesters: SemesterGrades[]) => void;
 
 export type {
   PartialGradeEntry,
@@ -230,6 +236,10 @@ function parseWocTable(wocTable: Element | null): PartialGradeEntry[] {
 export function parsePartialGradesHtml(
   html: string
 ): SubjectActivityDetails[] {
+  assertAuthenticatedHtml(
+    html,
+    "Sesja wygasła — nie można pobrać szczegółów ocen."
+  );
   const doc = parseDocument(html);
   const table = doc.querySelector("table");
   if (!table) return [];
@@ -294,12 +304,105 @@ export function extractSubjectsFromTable(
   return subjects;
 }
 
-export async function parseGrades(): Promise<SemesterGrades[]> {
-  const gradesHtml = await fetchGradesPage();
-  assertAuthenticatedHtml(gradesHtml);
-  const doc = parseDocument(gradesHtml);
+function buildSubjectGrades(rawSubjects: RawSubjectData[]): SubjectGrade[] {
+  return rawSubjects.map((subject) => ({
+    subject: subject.subject,
+    teacher: subject.teacher,
+    finalGrade: subject.finalGrade,
+    subjectWeight: 1,
+    weightedAverage: subject.finalGrade,
+    pplsId: subject.pplsId,
+    partialGrades: [],
+  }));
+}
 
+function computeSemesterAverage(subjects: SubjectGrade[]): string {
+  if (subjects.length === 0) {
+    return "0";
+  }
+
+  const average =
+    subjects.reduce(
+      (sum, subject) =>
+        sum + (parseFloat(subject.finalGrade.replace(",", ".")) || 0),
+      0
+    ) / subjects.length;
+
+  return average.toFixed(2);
+}
+
+function createSemesterEntry(
+  semesterInfo: NonNullable<ReturnType<typeof extractSemesterInfo>>,
+  semesterNumber: number
+): SemesterGrades {
+  return {
+    semester: semesterNumber,
+    semesterLabel: semesterInfo.label,
+    academicSemester: semesterInfo.academicSemester,
+    semesterType: semesterInfo.type,
+    semesterStatus: semesterInfo.status,
+    semesterAverage: "0",
+    subjects: [],
+  };
+}
+
+type SemesterFetchJob = {
+  semesterNumber: number;
+  path: string;
+};
+
+function snapshotSemesters(semesters: SemesterGrades[]): SemesterGrades[] {
+  return semesters.map((semester) => ({
+    ...semester,
+    subjects: [...semester.subjects],
+  }));
+}
+
+function applySemesterSubjects(
+  semesters: SemesterGrades[],
+  semesterNumber: number,
+  subjects: SubjectGrade[]
+): void {
+  const entry = semesters.find((semester) => semester.semester === semesterNumber);
+  if (!entry) {
+    return;
+  }
+
+  entry.subjects = subjects;
+  entry.semesterAverage = computeSemesterAverage(subjects);
+}
+
+async function fetchSemesterSubjectsJob(
+  job: SemesterFetchJob
+): Promise<{ semesterNumber: number; subjects: SubjectGrade[] }> {
+  const { semesterNumber, path } = job;
+
+  try {
+    const subjectsHtml = await fetchSemesterSubjects(path);
+    assertAuthenticatedHtml(
+      subjectsHtml,
+      `Sesja wygasła — nie można pobrać przedmiotów semestru ${semesterNumber}.`
+    );
+    return {
+      semesterNumber,
+      subjects: buildSubjectGrades(extractSubjectsFromTable(subjectsHtml)),
+    };
+  } catch (error) {
+    console.error(
+      `Błąd pobierania przedmiotów dla semestru ${semesterNumber}:`,
+      error
+    );
+    return { semesterNumber, subjects: [] };
+  }
+}
+
+function discoverGradesSemesters(gradesHtml: string): {
+  semesters: SemesterGrades[];
+  fetchJobs: Map<number, string>;
+} {
+  const doc = parseDocument(gradesHtml);
   const semesters: SemesterGrades[] = [];
+  const fetchJobs = new Map<number, string>();
   const cards = doc.querySelectorAll("div.card");
 
   for (const card of Array.from(cards)) {
@@ -307,82 +410,79 @@ export async function parseGrades(): Promise<SemesterGrades[]> {
     if (!semesterInfo) continue;
 
     const semesterNumber = parseInt(semesterInfo.number, 10);
-    const existing = semesters.find((s) => s.semester === semesterNumber);
+    let existing = semesters.find((entry) => entry.semester === semesterNumber);
 
     if (existing) {
       mergeSemesterMetadata(existing, semesterInfo);
       if (existing.subjects.length > 0) {
         continue;
       }
+    } else {
+      existing = createSemesterEntry(semesterInfo, semesterNumber);
+      semesters.push(existing);
     }
 
     const semesterRequestPath = extractSemesterRequestPath(card);
     if (!semesterRequestPath) {
-      if (!existing) {
-        console.warn(
-          `Nie znaleziono URL semestru dla semestru ${semesterInfo.number}`
-        );
-      }
+      console.warn(
+        `Nie znaleziono URL semestru dla semestru ${semesterInfo.number}`
+      );
       continue;
     }
 
-    let subjects: SubjectGrade[] = [];
+    fetchJobs.set(semesterNumber, semesterRequestPath);
+  }
 
-    try {
-      const subjectsHtml = await fetchSemesterSubjects(semesterRequestPath);
-      const rawSubjects = extractSubjectsFromTable(subjectsHtml);
+  return { semesters, fetchJobs };
+}
 
-      for (const subject of rawSubjects) {
-        subjects.push({
-          subject: subject.subject,
-          teacher: subject.teacher,
-          finalGrade: subject.finalGrade,
-          subjectWeight: 1,
-          weightedAverage: subject.finalGrade,
-          pplsId: subject.pplsId,
-          partialGrades: [],
-        });
-      }
-    } catch (error) {
-      console.error(
-        `Błąd pobierania przedmiotów dla semestru ${semesterInfo.number}:`,
-        error
-      );
+export async function parseGrades(
+  onProgress?: GradesProgressCallback
+): Promise<SemesterGrades[]> {
+  const gradesHtml = await fetchGradesPage();
+  assertAuthenticatedHtml(gradesHtml);
+
+  const { semesters, fetchJobs } = discoverGradesSemesters(gradesHtml);
+
+  const pendingFetches: SemesterFetchJob[] = Array.from(
+    fetchJobs.entries(),
+    ([semesterNumber, path]) => ({ semesterNumber, path })
+  );
+
+  if (pendingFetches.length === 0) {
+    return semesters;
+  }
+
+  const priority = pickPrioritySemesterNumber(semesters);
+  const priorityJob = pendingFetches.find(
+    (job) => job.semesterNumber === priority
+  );
+  const remainingJobs = pendingFetches.filter(
+    (job) => job.semesterNumber !== priority
+  );
+
+  if (priorityJob) {
+    const priorityResult = await fetchSemesterSubjectsJob(priorityJob);
+    applySemesterSubjects(
+      semesters,
+      priorityResult.semesterNumber,
+      priorityResult.subjects
+    );
+    onProgress?.(snapshotSemesters(semesters));
+  }
+
+  if (remainingJobs.length > 0) {
+    const fetchResults = await mapWithConcurrency(
+      remainingJobs,
+      SEMESTER_FETCH_CONCURRENCY,
+      fetchSemesterSubjectsJob
+    );
+
+    for (const result of fetchResults) {
+      applySemesterSubjects(semesters, result.semesterNumber, result.subjects);
     }
 
-    const semesterAverage =
-      subjects.length > 0
-        ? (
-            subjects.reduce(
-              (sum, s) =>
-                sum + (parseFloat(s.finalGrade.replace(",", ".")) || 0),
-              0
-            ) / subjects.length
-          ).toFixed(2)
-        : "0";
-
-    const entry: SemesterGrades = {
-      semester: semesterNumber,
-      semesterLabel: semesterInfo.label,
-      academicSemester: semesterInfo.academicSemester,
-      semesterType: semesterInfo.type,
-      semesterStatus: semesterInfo.status,
-      semesterAverage,
-      subjects,
-    };
-
-    if (existing) {
-      Object.assign(existing, {
-        ...entry,
-        academicSemester:
-          entry.academicSemester || existing.academicSemester,
-        semesterStatus: entry.semesterStatus || existing.semesterStatus,
-        semesterType: entry.semesterType || existing.semesterType,
-        semesterLabel: entry.semesterLabel || existing.semesterLabel,
-      });
-    } else {
-      semesters.push(entry);
-    }
+    onProgress?.(snapshotSemesters(semesters));
   }
 
   semesters.sort((a, b) => a.semester - b.semester);
