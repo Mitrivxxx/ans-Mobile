@@ -47,6 +47,7 @@ let authGuardRegistered = false;
 let ensureInFlight: Promise<void> | null = null;
 let loginInFlight: Promise<{ success: boolean; errorMessage?: string }> | null =
   null;
+let restoreRememberMeInFlight: Promise<RememberMeResolveResult> | null = null;
 
 let onSessionLostHandler: (() => void) | null = null;
 
@@ -89,16 +90,16 @@ export function shouldSkipAuthForRequest(
 export async function hasScraperSession(): Promise<boolean> {
   await initClient();
   await mergeAuthCookiesFromNativeIfNeeded();
+  const native = await getCookiesFromManager();
+  if (native) {
+    await mergeCookieHeaderIntoJar(native);
+  }
 
   if (hasAuthenticationCookie(getAxiosCookieHeader())) {
     return true;
   }
 
   if (await isSessionAuthenticated()) {
-    const native = await getCookiesFromManager();
-    if (native) {
-      await mergeCookieHeaderIntoJar(native);
-    }
     return true;
   }
 
@@ -223,31 +224,39 @@ export type RememberMeResolveResult = {
  * Przy starcie / foreground: probe lub silent login, aby sesja była aktywna.
  */
 export async function restoreRememberMeSession(): Promise<RememberMeResolveResult> {
-  const hasCookies = await hasScraperSession();
-  const pastTtl = await isSessionPastTtl();
+  if (!restoreRememberMeInFlight) {
+    restoreRememberMeInFlight = (async () => {
+      const hasCookies = await hasScraperSession();
+      const pastTtl = await isSessionPastTtl();
 
-  if (hasCookies && !pastTtl) {
-    try {
-      const alive = await probeWdSessionAlive();
-      if (alive) {
+      if (hasCookies && !pastTtl) {
+        try {
+          const alive = await probeWdSessionAlive();
+          if (alive) {
+            return { authenticated: true, sessionDegraded: false };
+          }
+        } catch {
+          /* probe failed — spróbuj silent login */
+        }
+      }
+
+      const outcome = await silentLoginOnce();
+
+      if (outcome.success || (await hasScraperSession())) {
         return { authenticated: true, sessionDegraded: false };
       }
-    } catch {
-      /* probe failed — spróbuj silent login */
-    }
+
+      return {
+        authenticated: false,
+        sessionDegraded: false,
+        errorMessage: outcome.errorMessage,
+      };
+    })().finally(() => {
+      restoreRememberMeInFlight = null;
+    });
   }
 
-  const outcome = await silentLoginOnce();
-
-  if (outcome.success || (await hasScraperSession())) {
-    return { authenticated: true, sessionDegraded: false };
-  }
-
-  return {
-    authenticated: false,
-    sessionDegraded: false,
-    errorMessage: outcome.errorMessage,
-  };
+  return restoreRememberMeInFlight;
 }
 
 export async function refreshSessionOnForeground(): Promise<RememberMeResolveResult> {

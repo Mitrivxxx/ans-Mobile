@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, type QueryKey } from '@tanstack/react-query';
 
+import { useNetworkReconnectEffect } from '../../hooks/useNetworkReconnect';
 import { isDataEqual } from './isDataEqual';
 import { BACKGROUND_SYNC_INTERVAL_MS } from './persistentQueryConstants';
 import type { SyncStatus } from './syncTypes';
@@ -35,6 +36,8 @@ export function createPersistentQueryHook<TData>({
 }: PersistentQueryConfig<TData>) {
   return function usePersistentQuery() {
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+    const syncStatusRef = useRef(syncStatus);
+    syncStatusRef.current = syncStatus;
 
     const query = useQuery<TData>({
       queryKey,
@@ -122,6 +125,15 @@ export function createPersistentQueryHook<TData>({
         maybeSyncInBackground();
       }, [maybeSyncInBackground])
     );
+
+    useNetworkReconnectEffect(() => {
+      if (!hasCachedData) {
+        return;
+      }
+      if (syncStatusRef.current === 'error' || syncStatusRef.current === 'idle') {
+        void syncInBackground();
+      }
+    });
 
     return {
       data: query.data,

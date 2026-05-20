@@ -4,7 +4,7 @@
     "slug": "WDMobile",
     "version": "0.1.2",
     "orientation": "portrait",
-    "icon": "./assets/icons/logo_mobile.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -20,7 +20,7 @@
     "android": {
       "versionCode": 102,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/logo_mobile.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
       "allowBackup": false,

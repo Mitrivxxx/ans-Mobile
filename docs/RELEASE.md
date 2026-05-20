@@ -1,6 +1,6 @@
 # Publikacja buildów na GitHub (Android + iOS)
 
-Projekt używa [EAS Build](https://docs.expo.dev/build/introduction/) do budowania gotowych plików **APK** (Android) i **IPA** (iOS), które trafiają na **GitHub Releases**.
+Projekt używa [EAS Build](https://docs.expo.dev/build/introduction/) do budowania **AAB** / **IPA** dla profili `github` / `preview` / `production` (wersje dystrybuowalne; lżej niż osobny build typu „development client”). Lokalnie: **Metro** (`npm start`) oraz natywna aplikacja debug z `npm run android` / `npm run ios`. Gotowe archiwa przy tagach mogą trafiać na **GitHub Releases**.
 
 ## Jednorazowa konfiguracja
 
@@ -64,7 +64,7 @@ git push origin main
 git push origin v0.1.2
 ```
 
-Push tagu `v*` uruchamia workflow **Release builds**, buduje APK + IPA i tworzy **GitHub Release** z oboma plikami.
+Push tagu `v*` uruchamia workflow **Release builds**, buduje AAB + IPA i tworzy **GitHub Release** z oboma plikami.
 
 ### Opcja B — ręcznie z Actions
 
@@ -75,7 +75,7 @@ Push tagu `v*` uruchamia workflow **Release builds**, buduje APK + IPA i tworzy 
 
 ```bash
 npm run build:github          # Android + iOS
-npm run build:github:android  # tylko APK
+npm run build:github:android  # Android (AAB, profil github)
 npm run build:github:ios      # tylko IPA
 ```
 
@@ -85,18 +85,26 @@ Po zakończeniu pobierz plik z linku w terminalu albo:
 eas build:list --platform android --limit 1
 ```
 
+## Rozwój lokalny (bez EAS)
+
+W repozytorium nie ma profilu EAS dla „development clientów” — unikasz ciężkich osobnych buildów EAS przeznaczonych tylko pod dev menu.
+
+1. Raz (albo po zmianach w paczkach natywnych): `npm run android` lub `npm run ios`.
+2. Na co dzień: `npm start` (Metro) — aplikacja z kroku 1 łączy się jak zwykle w trybie deweloperskim.
+
+Jeśli coś zostało nietrafione w `android/` / `ios/`, przywróć katalogi: `npx expo prebuild --clean`.
+
 ## Profile EAS
 
 | Profil | Cel |
 |--------|-----|
-| `github` | APK + IPA pod GitHub Releases (dystrybucja wewnętrzna) |
-| `preview` | APK testowy |
-| `development` | Dev client z `expo start --dev-client` |
+| `github` | AAB + IPA pod GitHub Releases (mniejszy Android niż APK; instalacja przez Play lub `bundletool`) |
+| `preview` | AAB testowy (wewnętrznie, jak wyżej) |
 | `production` | AAB pod Google Play (+ submit) |
 
 ## Instalacja przez użytkowników
 
-- **Android:** pobierz `.apk` z Releases → zezwól na instalację spoza sklepu → zainstaluj.
+- **Android (AAB z Releases):** plik `.aab` nie instaluje się „klik jak APK”. Typowo wgrywasz paczkę w [Google Play Console](https://play.google.com/console) (ścieżka wewnętrzna lub closed testing) i instalujesz ze sklepu. Albo na urządzeniu lub w CI wygenerujesz zestaw APK poleceniem [`bundletool build-apks`](https://developer.android.com/tools/bundletool), a potem zainstalujesz przez `bundletool install-apks`.
 - **iOS:** `.ipa` z Releases nie instaluje się jak APK; typowo używa się linku instalacyjnego EAS (*internal distribution*) lub TestFlight. Dla ad hoc urządzenie musi być zarejestrowane w Apple Developer / EAS.
 
 ## Rozwiązywanie problemów

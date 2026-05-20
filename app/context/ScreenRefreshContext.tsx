@@ -7,6 +7,8 @@ import React, {
   useState,
 } from 'react';
 
+import { useAuthSession } from './AuthSessionContext';
+
 type ScreenRefreshFn = () => void | Promise<unknown>;
 
 type ScreenRefreshContextValue = {
@@ -26,6 +28,7 @@ export function ScreenRefreshProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { sessionDegraded, retrySessionRestore } = useAuthSession();
   const handlerRef = useRef<ScreenRefreshFn | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -47,11 +50,14 @@ export function ScreenRefreshProvider({
 
     setRefreshing(true);
     try {
+      if (sessionDegraded) {
+        await retrySessionRestore();
+      }
       await refresh();
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [sessionDegraded, retrySessionRestore]);
 
   const value = useMemo(
     () => ({

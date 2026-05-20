@@ -12,7 +12,6 @@ npx expo start
 ------------
 npx expo prebuild
 
-npx eas build --platform android --profile development --local
 npx expo run:android
 //telefon na kom
 scrcpy

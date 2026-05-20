@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
@@ -27,6 +28,7 @@ import {
 } from '../core/scraper/auth/ensureAuthenticated';
 import { clearSession } from '../core/scraper/auth/session.store';
 import { probeWdSessionAlive } from '../core/scraper/auth/sessionValidation';
+import { onNetworkReconnect } from '../core/network/networkSubscription';
 import { initClient } from '../core/scraper/client/client';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated';
@@ -166,6 +168,10 @@ export function AuthSessionProvider({
   const [rememberMeEnabled, setRememberMeEnabled] = useState(false);
   const [sessionDegraded, setSessionDegraded] = useState(false);
   const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
+  const restoreRunIdRef = useRef(0);
+  const foregroundRefreshInFlightRef = useRef(false);
+  const authStatusRef = useRef(authStatus);
+  authStatusRef.current = authStatus;
 
   const applyResolvedSession = useCallback(
     (resolved: Awaited<ReturnType<typeof resolveAuthStatus>>) => {
@@ -179,11 +185,14 @@ export function AuthSessionProvider({
 
   const restoreSession = useCallback(
     async (options?: { showSplash?: boolean }) => {
+      const runId = ++restoreRunIdRef.current;
       if (options?.showSplash !== false) {
         setAuthStatus('unknown');
       }
       const resolved = await resolveAuthStatus();
-      applyResolvedSession(resolved);
+      if (runId === restoreRunIdRef.current) {
+        applyResolvedSession(resolved);
+      }
     },
     [applyResolvedSession]
   );
@@ -221,60 +230,81 @@ export function AuthSessionProvider({
       return;
     }
 
+    return onNetworkReconnect(() => {
+      if (authStatusRef.current !== 'authenticated') {
+        return;
+      }
+      void restoreSession({ showSplash: false });
+    });
+  }, [persistReady, restoreSession]);
+
+  useEffect(() => {
+    if (!persistReady) {
+      return;
+    }
+
     const onAppStateChange = (nextState: AppStateStatus) => {
       if (nextState !== 'active') {
         return;
       }
+      if (foregroundRefreshInFlightRef.current) {
+        return;
+      }
 
       void (async () => {
-        const rememberMe = await isRememberMeEnabled();
+        foregroundRefreshInFlightRef.current = true;
+        try {
+          const rememberMe = await isRememberMeEnabled();
 
-        if (rememberMe) {
-          const refreshed = await refreshSessionOnForeground();
+          if (rememberMe) {
+            const refreshed = await refreshSessionOnForeground();
 
-          if (refreshed.authenticated) {
-            setAuthStatus('authenticated');
-            setSessionDegraded(refreshed.sessionDegraded);
+            if (refreshed.authenticated) {
+              setAuthStatus('authenticated');
+              setSessionDegraded(refreshed.sessionDegraded);
+              setSessionDegradedMessage('');
+              setRememberMeEnabled(true);
+              return;
+            }
+
+            if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+              const degraded = resolveDegradedState();
+              setAuthStatus(degraded.status);
+              setSessionDegraded(true);
+              setSessionDegradedMessage(degraded.sessionDegradedMessage);
+              setRememberMeEnabled(true);
+              return;
+            }
+
+            setAuthStatus('unauthenticated');
+            setSessionDegraded(false);
             setSessionDegradedMessage('');
-            setRememberMeEnabled(true);
             return;
           }
 
-          if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+          const hadLoginBefore = await hasAppLoginRecord();
+
+          if (hadLoginBefore && (await hasScraperSession())) {
+            setAuthStatus('authenticated');
+            setSessionDegraded(false);
+            setSessionDegradedMessage('');
+            return;
+          }
+
+          if (hadLoginBefore && hasAnyUserCache()) {
             const degraded = resolveDegradedState();
             setAuthStatus(degraded.status);
             setSessionDegraded(true);
             setSessionDegradedMessage(degraded.sessionDegradedMessage);
-            setRememberMeEnabled(true);
             return;
           }
 
           setAuthStatus('unauthenticated');
           setSessionDegraded(false);
           setSessionDegradedMessage('');
-          return;
+        } finally {
+          foregroundRefreshInFlightRef.current = false;
         }
-
-        const hadLoginBefore = await hasAppLoginRecord();
-
-        if (hadLoginBefore && (await hasScraperSession())) {
-          setAuthStatus('authenticated');
-          setSessionDegraded(false);
-          setSessionDegradedMessage('');
-          return;
-        }
-
-        if (hadLoginBefore && hasAnyUserCache()) {
-          const degraded = resolveDegradedState();
-          setAuthStatus(degraded.status);
-          setSessionDegraded(true);
-          setSessionDegradedMessage(degraded.sessionDegradedMessage);
-          return;
-        }
-
-        setAuthStatus('unauthenticated');
-        setSessionDegraded(false);
-        setSessionDegradedMessage('');
       })();
     };
 

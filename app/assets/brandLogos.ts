@@ -1,5 +1,5 @@
-/** Logo okrągłe — ekran logowania (1024×1024). */
-export const logoLogin = require('../../assets/icons/logo_mobile.png');
+/** Logo okrągłe — ekran logowania (generowane: npm run generate-icons). */
+export const logoLogin = require('../../assets/icons/logo_login.png');
 
 /** Logo poziome — pasek nagłówka (204×65). */
 export const logoHeader = require('../../assets/icons/logov2.png');

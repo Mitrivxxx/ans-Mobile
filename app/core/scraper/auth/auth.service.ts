@@ -15,6 +15,7 @@ import {
 
 import type { LoginResult, LoginWdOptions } from "./auth.types";
 import {
+  buildLoginThrowableDiagnosticMessage,
   LOGIN_REQUEST_TIMEOUT_MS,
   classifyLoginHttpStatus,
   classifyLoginThrowable,
@@ -65,7 +66,11 @@ function loginFailureFromHttpStatus(status: number): LoginResult {
 
 function loginFailureFromThrowable(error: unknown): LoginResult {
   const errorCode = classifyLoginThrowable(error);
-  if (errorCode) return loginFailure(errorCode);
+  if (errorCode) {
+    return loginFailure(errorCode, {
+      error: buildLoginThrowableDiagnosticMessage(error),
+    });
+  }
   const message =
     error instanceof Error ? error.message : String(error ?? "Nieznany błąd");
   return { success: false, error: message };

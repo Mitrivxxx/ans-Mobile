@@ -23,6 +23,10 @@ export function getLoginErrorMessage(code: LoginErrorCode): string {
 }
 
 export function getLoginResultErrorMessage(result: LoginResult): string {
+  if (result.error?.trim()) {
+    return result.error;
+  }
+
   if (result.errorCode) {
     return getLoginErrorMessage(result.errorCode);
   }
