@@ -82,6 +82,8 @@ flowchart TD
 | Plik | Rola |
 |------|------|
 | `auth/auth.service.ts` | Logowanie, captcha, POST do WD |
+| `auth/contextSelection.ts` | Po logowaniu: `/WyborKontekstu` → auto GET `/WybierzKontekst?…&personType=1` (Student) |
+| `auth/userConsent.ts` | Ciasteczko `.user-consent` (wymagane przy wyborze kontekstu) |
 | `auth/ensureAuthenticated.ts` | Guard requestów, silent login, retry po wygaśnięciu sesji |
 | `auth/sessionValidation.ts` | `assertAuthenticatedHtml`, probe sesji, `SessionExpiredError` |
 | `auth/session.store.ts` / `sessionLifetime.ts` | Flagi sesji, TTL |
@@ -89,6 +91,8 @@ flowchart TD
 | `core/auth/performSignOut.ts` | Logout + czyszczenie cache i zdjęcia profilu |
 
 **Remember me:** przy wygaśnięciu sesji próba silent login; bez remember me — `notifySessionLost` → UI (`AuthSyncBanner`, degraded mode).
+
+**Bez remember me:** ciasteczka WD i tak trafiają do CookieManager, ale przy **cold start** nie są używane do auto-logowania (`ephemeralSession.ts` — flaga tylko w procesie; po restarcie `resolveAuthStatus` czyści jar i wymaga logowania lub trybu degraded z cache).
 
 **Degraded mode:** brak żywej sesji WD, ale jest cache w React Query → użytkownik widzi stare dane (`sessionDegraded` w `AuthSessionContext`).
 
@@ -209,6 +213,7 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 | Jak dodać ekran? | `App.tsx`, `navigationRef.ts`, `app/screen/` |
 | Jak pobrać oceny/plan? | `features/grades/hooks/*`, `features/plan/hooks/*` |
 | Błąd logowania / captcha | `features/login/`, `auth/login.parser.ts`, `login.errors.ts` |
+| Wybór kontekstu po logowaniu (inne wydziały) | `auth/contextSelection.ts`, `auth/contextSelection.parser.ts` |
 | Sesja wygasła | `ensureAuthenticated.ts`, `AuthSessionContext`, `AuthSyncBanner` |
 | Zdjęcie profilu | `hooks/useProfilePhoto.ts`, `profile.avatar.ts`, `profilePhotoSessionCache.ts` |
 | Dashboard kafelki | `features/dashboard/dashboard.features.ts`, panele `Dashboard*Panel` |

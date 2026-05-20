@@ -1,7 +1,7 @@
 Dev (uruchomienie na urządzeniu/emulatorze)
-- Odwróć port (dla fizycznego urządzenia): adb reverse tcp:8081 tcp:8081
-- Uruchom Metro: npx expo start
-- Uruchom na Androidzie: npx expo run:android lub npx expo start --android
+adb reverse tcp:8081 tcp:8081
+npx expo start
+- Uruchom na Androidzie: npx expo run:android
 
 Narzędzia
 - Pokaż podłączone urządzenia: adb devices

@@ -19,6 +19,10 @@ import { getLoginResultErrorMessage } from "../../../features/login/loginErrorDi
 
 import { AuthService } from "./auth.service";
 import {
+  ensureLoginContextResolved,
+  responseNeedsContextSelection,
+} from "./contextSelection";
+import {
   canAttemptSilentLogin,
   getSilentLoginBlockedMessage,
   recordSilentLoginAttempt,
@@ -295,6 +299,24 @@ export function setupScraperAuthGuard(): void {
         response.config._sessionRetried
       ) {
         return response;
+      }
+
+      if (responseNeedsContextSelection(response)) {
+        const contextOutcome = await ensureLoginContextResolved();
+        if (!contextOutcome.ok) {
+          notifySessionLost();
+          throw new SessionExpiredError(
+            contextOutcome.error ??
+              "Nie udało się wybrać kontekstu studenta na portalu WD."
+          );
+        }
+
+        const retryConfig: InternalAxiosRequestConfig = {
+          ...response.config,
+          _sessionRetried: true,
+        };
+
+        return client.request(retryConfig);
       }
 
       if (!responseIndicatesSessionExpired(response)) {

@@ -35,7 +35,7 @@ import { queryClient } from './app/core/queryClient/queryClient';
 import { queryPersister } from './app/core/queryClient/queryPersister';
 import { usePrefetchUserScraperData } from './app/hooks/usePrefetchUserScraperData';
 import { PERSIST_MAX_AGE_MS } from './app/core/queryClient/persistentQueryConfig';
-import { shouldPersistQuery } from './app/core/queryClient/shouldPersistQuery';
+import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
@@ -146,7 +146,7 @@ export default function App() {
               persister: queryPersister,
               maxAge: PERSIST_MAX_AGE_MS,
               dehydrateOptions: {
-                shouldDehydrateQuery: shouldPersistQuery,
+                shouldDehydrateQuery: shouldDehydratePersistedQuery,
               },
             }}
           >

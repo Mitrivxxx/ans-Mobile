@@ -35,6 +35,8 @@ import {
   isLoginFormHtml,
   loginPostLooksSuccessful,
 } from "./login.parser";
+import { ensureLoginContextResolved } from "./contextSelection";
+import { ensureWdUserConsentCookie } from "./userConsent";
 import { logout as performLogout } from "./logout";
 import { markSessionEstablished } from "./sessionLifetime";
 import {
@@ -275,7 +277,17 @@ async function loginWD(
       };
     }
 
+    await ensureWdUserConsentCookie();
     await setSessionCookies(getAxiosCookieHeader());
+
+    const contextOutcome = await ensureLoginContextResolved(postRes);
+    if (!contextOutcome.ok) {
+      return {
+        success: false,
+        error: contextOutcome.error,
+      };
+    }
+
     await markSessionEstablished();
 
     return {

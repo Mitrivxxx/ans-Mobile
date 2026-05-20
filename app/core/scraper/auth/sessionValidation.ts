@@ -2,7 +2,17 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 import { client, WD_BASE_URL } from "../client/client";
 
+import {
+  ensureLoginContextResolvedFromHtml,
+  getResponseFinalUrl,
+  responseNeedsContextSelection,
+} from "./contextSelection";
+import {
+  isContextSelectionPageHtml,
+  urlIndicatesContextSelection,
+} from "./contextSelection.parser";
 import { isLoginFormHtml } from "./login.parser";
+import { ensureWdUserConsentCookie } from "./userConsent";
 
 export class SessionExpiredError extends Error {
   constructor(message = "Sesja WD wygasła. Zaloguj się ponownie.") {
@@ -87,6 +97,14 @@ export function responseIndicatesSessionExpired(
     return false;
   }
 
+  if (isContextSelectionPageHtml(body)) {
+    return true;
+  }
+
+  if (urlIndicatesContextSelection(getResponseFinalUrl(response))) {
+    return true;
+  }
+
   return isLoginFormHtml(body);
 }
 
@@ -94,6 +112,13 @@ export function assertAuthenticatedHtml(
   html: string,
   message?: string
 ): void {
+  if (isContextSelectionPageHtml(html)) {
+    throw new SessionExpiredError(
+      message ??
+        "Wymagany wybór kontekstu logowania (Student) — odśwież sesję lub zaloguj się ponownie."
+    );
+  }
+
   if (isLoginFormHtml(html)) {
     throw new SessionExpiredError(
       message ?? "Sesja wygasła — serwer zwrócił stronę logowania."
@@ -111,6 +136,8 @@ const PROBE_HEADERS = {
 
 /** Lekki GET — czy serwer nadal honoruje ciasteczka (bez pełnego guarda). */
 export async function probeWdSessionAlive(): Promise<boolean> {
+  await ensureWdUserConsentCookie();
+
   const response = await client.get<string>("/", {
     responseType: "text",
     transformResponse: [(data) => data],
@@ -120,6 +147,25 @@ export async function probeWdSessionAlive(): Promise<boolean> {
     headers: PROBE_HEADERS,
   });
 
+  if (responseNeedsContextSelection(response)) {
+    const body = responseBody(response.data);
+    const resolved = await ensureLoginContextResolvedFromHtml(body);
+    if (!resolved.ok) {
+      return false;
+    }
+
+    const after = await client.get<string>("/", {
+      responseType: "text",
+      transformResponse: [(data) => data],
+      maxRedirects: 5,
+      skipSessionGuard: true,
+      skipSessionExpiryCheck: true,
+      headers: PROBE_HEADERS,
+    });
+
+    return !responseIndicatesSessionExpired(after);
+  }
+
   return !responseIndicatesSessionExpired(response);
 }
 
@@ -127,4 +173,9 @@ export function isSessionProbeConfig(
   config: Pick<InternalAxiosRequestConfig, "skipSessionGuard">
 ): boolean {
   return Boolean(config.skipSessionGuard);
+}
+
+/** Po udanym logowaniu — upewnij się, że WD honoruje ciasteczka zanim odpalisz prefetch. */
+export async function confirmWdSessionAfterLogin(): Promise<boolean> {
+  return probeWdSessionAlive();
 }

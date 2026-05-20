@@ -23,6 +23,7 @@ import { useAuthSession } from '../context/AuthSessionContext';
 import { isRememberMeEnabled } from '../core/auth/rememberMe.storage';
 import { saveLastUsername } from '../core/auth/sessionUser.storage';
 import { resetSilentLoginLimiter } from '../core/scraper/auth/silentLoginLimiter';
+import { confirmWdSessionAfterLogin } from '../core/scraper/auth/sessionValidation';
 import {
   getLoginErrorMessage,
   getLoginResultErrorMessage,
@@ -192,7 +193,16 @@ export default function LoginScreen() {
       await saveLastUsername(loginUsername);
       resetSilentLoginLimiter();
       resetCaptchaUi();
-      markAuthenticated();
+
+      const sessionReady = await confirmWdSessionAfterLogin();
+      if (!sessionReady) {
+        setFormError(
+          'Zalogowano, ale portal nie potwierdził sesji. Spróbuj ponownie za chwilę.'
+        );
+        return;
+      }
+
+      markAuthenticated({ ephemeral: !rememberMe });
     } catch (err: unknown) {
       const code = classifyLoginThrowable(err);
       if (code) {

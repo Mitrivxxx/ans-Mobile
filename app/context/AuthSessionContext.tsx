@@ -8,6 +8,11 @@ import React, {
   useState,
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
+import {
+  clearEphemeralSession,
+  isEphemeralSessionActive,
+  setEphemeralSessionActive,
+} from '../core/auth/ephemeralSession';
 import { performSignOut } from '../core/auth/performSignOut';
 import {
   clearRememberMe,
@@ -41,7 +46,7 @@ type AuthSessionContextValue = {
   sessionDegradedMessage: string;
   enableRememberMe: (username: string, password: string) => Promise<void>;
   disableRememberMe: () => Promise<void>;
-  markAuthenticated: () => void;
+  markAuthenticated: (options?: { ephemeral?: boolean }) => void;
   signOut: () => Promise<void>;
   retrySessionRestore: () => Promise<void>;
 };
@@ -126,7 +131,11 @@ async function resolveAuthStatus(): Promise<{
     };
   }
 
-  if (await hasLiveScraperSession()) {
+  if (!isEphemeralSessionActive()) {
+    if (await hasScraperSession()) {
+      await clearSession();
+    }
+  } else if (await hasLiveScraperSession()) {
     return {
       status: 'authenticated',
       sessionDegraded: false,
@@ -284,7 +293,11 @@ export function AuthSessionProvider({
 
           const hadLoginBefore = await hasAppLoginRecord();
 
-          if (hadLoginBefore && (await hasScraperSession())) {
+          if (
+            isEphemeralSessionActive() &&
+            hadLoginBefore &&
+            (await hasScraperSession())
+          ) {
             setAuthStatus('authenticated');
             setSessionDegraded(false);
             setSessionDegradedMessage('');
@@ -312,7 +325,12 @@ export function AuthSessionProvider({
     return () => subscription.remove();
   }, [persistReady]);
 
-  const markAuthenticated = useCallback(() => {
+  const markAuthenticated = useCallback((options?: { ephemeral?: boolean }) => {
+    if (options?.ephemeral === true) {
+      setEphemeralSessionActive(true);
+    } else if (options?.ephemeral === false) {
+      setEphemeralSessionActive(false);
+    }
     setAuthStatus('authenticated');
     setSessionDegraded(false);
     setSessionDegradedMessage('');
@@ -321,6 +339,7 @@ export function AuthSessionProvider({
   const enableRememberMe = useCallback(
     async (username: string, password: string) => {
       await saveRememberMeCredentials(username, password);
+      setEphemeralSessionActive(false);
       setRememberMeEnabled(true);
     },
     []
@@ -332,6 +351,7 @@ export function AuthSessionProvider({
   }, []);
 
   const signOut = useCallback(async () => {
+    clearEphemeralSession();
     await performSignOut();
     setAuthStatus('unauthenticated');
     setSessionDegraded(false);
