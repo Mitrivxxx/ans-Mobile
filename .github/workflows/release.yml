@@ -1,0 +1,139 @@
+# Buduje APK (Android) i IPA (iOS) przez EAS i publikuje na GitHub Releases.
+#
+# Wymagane sekrety repozytorium:
+#   EXPO_TOKEN — token z https://expo.dev/accounts/[account]/settings/access-tokens
+#
+# Pierwszy build iOS: skonfiguruj certyfikaty Apple w https://expo.dev (EAS Credentials).
+
+name: Release builds
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: "Utwórz GitHub Release z plikami APK/IPA"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: "22"
+  EAS_PROFILE: github
+
+jobs:
+  build:
+    name: EAS (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ github.ref }}-${{ matrix.platform }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [android, ios]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Validate EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::Brak sekretu EXPO_TOKEN. Zobacz docs/RELEASE.md"
+            exit 1
+          fi
+
+      - name: EAS Build (${{ matrix.platform }})
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile ${{ env.EAS_PROFILE }} \
+            --non-interactive \
+            --wait \
+            --json > "eas-${{ matrix.platform }}.json"
+
+      - name: Download artifact
+        run: node scripts/downloadEasArtifact.mjs "eas-${{ matrix.platform }}.json" "${{ matrix.platform }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wdmobile-${{ matrix.platform }}
+          path: dist/releases/*
+          if-no-files-found: error
+
+  github-release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish_release)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read app version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./app.json').expo.version")
+          echo "app=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve release tag
+        id: release_tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=release-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wdmobile-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: List release files
+        run: ls -la release-assets/
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.name }}
+          name: WDMobile ${{ steps.version.outputs.app }}
+          body: |
+            ## Instalacja
+
+            ### Android
+            Pobierz `WDMobile-*-android.apk`, włącz instalację z nieznanych źródeł i zainstaluj plik.
+
+            ### iOS
+            Build wewnętrzny (ad hoc). Wymaga konta Apple Developer i zarejestrowanego UDID urządzenia w profilu EAS.
+            Szczegóły: [docs/RELEASE.md](https://github.com/${{ github.repository }}/blob/main/docs/RELEASE.md)
+
+            Zbudowano profilem EAS `github` (wersja **${{ steps.version.outputs.app }}**).
+          files: release-assets/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

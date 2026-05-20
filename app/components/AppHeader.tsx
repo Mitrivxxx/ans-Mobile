@@ -9,6 +9,7 @@ import {
   createAppHeaderStyles,
 } from './AppHeader.styles';
 import AppHeaderAvatar from './AppHeaderAvatar';
+import { logoHeader } from '../assets/brandLogos';
 import AppLogo from './AppLogo';
 import SidebarMenuButton from './sidebar/SidebarMenuButton';
 
@@ -40,7 +41,12 @@ export default function AppHeader() {
         </View>
 
         <View style={styles.center}>
-          <AppLogo size={APP_HEADER_LOGO_SIZE} />
+          <AppLogo
+            size={APP_HEADER_LOGO_SIZE}
+            source={logoHeader}
+            variant="wide"
+            resizeMode="contain"
+          />
         </View>
 
         <View style={styles.sideRight}>

@@ -32,6 +32,7 @@ import {
   LOGIN_LOGO_SIZE,
   loginScreenStyles as styles,
 } from '../features/login/LoginScreen.styles';
+import { logoLogin } from '../assets/brandLogos';
 import AppLogo from '../components/AppLogo';
 import KeyboardDismissView from '../components/KeyboardDismissView';
 
@@ -250,7 +251,13 @@ export default function LoginScreen() {
         enableResetScrollToCoords={false}
       >
         <View style={styles.header}>
-          <AppLogo size={LOGIN_LOGO_SIZE} style={styles.logo} />
+          <AppLogo
+            size={LOGIN_LOGO_SIZE}
+            style={styles.logo}
+            source={logoLogin}
+            variant="circle"
+            resizeMode="contain"
+          />
           <Text style={styles.title}>WD-ANS Mobile</Text>
           <Text style={styles.subtitle}>Uczelnia w zasięgu ręki</Text>
           <LoginInfoButton />

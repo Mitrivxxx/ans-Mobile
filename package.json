@@ -9,7 +9,11 @@
     "prebuild:android": "expo prebuild --platform android --clean",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "generate-icons": "node scripts/generateAppIcons.mjs"
+    "generate-icons": "node scripts/generateAppIcons.mjs",
+    "build:ios": "eas build --platform ios --profile ios-simulator --non-interactive",
+    "build:github": "eas build --platform all --profile github --non-interactive",
+    "build:github:android": "eas build --platform android --profile github --non-interactive",
+    "build:github:ios": "eas build --platform ios --profile github --non-interactive"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
