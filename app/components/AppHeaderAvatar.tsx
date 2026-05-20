@@ -24,9 +24,7 @@ export default function AppHeaderAvatar() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createAppHeaderStyles);
   const { summary, loading } = useStudentProfile();
-  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
-    summary?.photo
-  );
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto();
 
   const goToProfile = useCallback(() => {
     navigateTo('Profile');

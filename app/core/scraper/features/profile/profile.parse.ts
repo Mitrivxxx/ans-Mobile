@@ -3,6 +3,10 @@ import { parseHTML } from "linkedom";
 import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import { fetchAvatarPhoto } from "./profile.avatar";
 import {
+  getCachedProfilePhoto,
+  setCachedProfilePhoto,
+} from "./profilePhotoSessionCache";
+import {
   fetchAccountDetailsPage,
   fetchStudiesPage,
 } from "./profile.fetch";
@@ -114,14 +118,27 @@ export async function parseProfileSummary(): Promise<ProfileSummary> {
   const account = parseAccountDetailsFromHtml(accountHtml);
   const studies = parseStudiesDataFromHtml(studiesHtml);
 
-  let photo = "";
-  try {
-    photo = await fetchAvatarPhoto();
-  } catch (error) {
-    console.warn("[PROFILE] Nie udało się pobrać zdjęcia profilu:", error);
-  }
+  const photo = await resolveProfilePhoto();
 
   return buildProfileSummary(account, studies, photo);
+}
+
+async function resolveProfilePhoto(): Promise<string> {
+  const cached = getCachedProfilePhoto();
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const photo = await fetchAvatarPhoto();
+    if (photo) {
+      setCachedProfilePhoto(photo);
+    }
+    return photo;
+  } catch (error) {
+    console.warn("[PROFILE] Nie udało się pobrać zdjęcia profilu:", error);
+    return "";
+  }
 }
 
 export async function parseProfileBundle(): Promise<{
@@ -131,7 +148,7 @@ export async function parseProfileBundle(): Promise<{
   const [accountHtml, studiesHtml, photo] = await Promise.all([
     fetchAccountDetailsPage(),
     fetchStudiesPage(),
-    fetchAvatarPhoto(),
+    resolveProfilePhoto(),
   ]);
 
   assertAuthenticatedHtml(accountHtml);

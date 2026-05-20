@@ -74,9 +74,7 @@ function getInitials(firstName: string, lastName: string): string {
 export default function ProfileDetailsView({ summary, profile }: Props) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createProfileDetailsStyles);
-  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
-    summary?.photo
-  );
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto();
 
   if (!summary || !profile) {
     return null;

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { ProfileSummary } from '../../../core/scraper/features/profile/profile.service';
+import { useProfilePhoto } from '../../../hooks/useProfilePhoto';
 import { useAppTheme } from '../../../context/AppThemeContext';
 import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
@@ -24,11 +25,7 @@ function getInitials(firstName: string, lastName: string): string {
 export default function DashboardMiniProfile({ summary, loading }: Props) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createDashboardMiniProfileStyles);
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [summary?.photo]);
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto();
 
   if (loading) {
     return (
@@ -49,7 +46,6 @@ export default function DashboardMiniProfile({ summary, loading }: Props) {
     );
   }
 
-  const showPhoto = Boolean(summary.photo) && !imageError;
   const initials = getInitials(summary.firstName, summary.lastName);
 
   return (
@@ -58,9 +54,10 @@ export default function DashboardMiniProfile({ summary, loading }: Props) {
         <View style={styles.avatarWrap}>
           {showPhoto ? (
             <Image
-              source={{ uri: summary.photo }}
+              key={imageKey}
+              source={{ uri: displayUri }}
               style={styles.avatar}
-              onError={() => setImageError(true)}
+              onError={onImageError}
             />
           ) : (
             <Text style={styles.avatarPlaceholder}>{initials}</Text>

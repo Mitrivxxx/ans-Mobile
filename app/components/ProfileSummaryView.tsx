@@ -12,9 +12,7 @@ type Props = {
 };
 
 export default function ProfileSummaryView({ summary, loading }: Props) {
-  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
-    summary?.photo
-  );
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto();
 
   if (loading) {
     return (

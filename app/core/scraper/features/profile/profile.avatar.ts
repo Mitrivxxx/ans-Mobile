@@ -1,6 +1,10 @@
 import { parseHTML } from "linkedom";
 
 import { fetchHtmlPage } from "./profile.fetch";
+import {
+  getCachedProfilePhoto,
+  setCachedProfilePhoto,
+} from "./profilePhotoSessionCache";
 
 const AVATAR_PAGE_PATHS = [
   "/",
@@ -101,6 +105,11 @@ function delay(ms: number): Promise<void> {
  * Próbuje kilka URL-i; przy samym „Loading…” ponawia GET /.
  */
 export async function fetchAvatarPhoto(): Promise<string> {
+  const cached = getCachedProfilePhoto();
+  if (cached) {
+    return cached;
+  }
+
   const triedPaths = new Set<string>();
 
   const tryHtml = (html: string): string => extractAvatarFromHtml(html);
@@ -110,6 +119,7 @@ export async function fetchAvatarPhoto(): Promise<string> {
     const html = await fetchHtmlPage(path);
     const photo = tryHtml(html);
     if (photo) {
+      setCachedProfilePhoto(photo);
       return photo;
     }
   }
@@ -130,9 +140,14 @@ export async function fetchAvatarPhoto(): Promise<string> {
       const html = await fetchHtmlPage(path);
       photo = tryHtml(html);
       if (photo) {
+        setCachedProfilePhoto(photo);
         return photo;
       }
     }
+  }
+
+  if (photo) {
+    setCachedProfilePhoto(photo);
   }
 
   if (!photo) {

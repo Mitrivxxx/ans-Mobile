@@ -23,9 +23,7 @@ export default function SidebarProfileHeader() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createSidebarProfileHeaderStyles);
   const { summary, loading, refetch } = useStudentProfile();
-  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto(
-    summary?.photo
-  );
+  const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto();
 
   return (
     <View style={styles.header}>

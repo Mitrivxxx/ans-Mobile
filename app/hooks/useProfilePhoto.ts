@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStudentProfile } from '../context/StudentProfileContext';
 import { profilePhotoDisplayUri } from '../core/scraper/features/profile/profile.photoUri';
 
-export function useProfilePhoto(photo: string | undefined) {
-  const { photoRevision } = useStudentProfile();
+/** Zdjęcie profilowe z cache sesji — bez ponownego pobierania przy nawigacji. */
+export function useProfilePhoto() {
+  const { photo, photoRevision } = useStudentProfile();
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
@@ -12,7 +13,7 @@ export function useProfilePhoto(photo: string | undefined) {
   }, [photo, photoRevision]);
 
   const displayUri = useMemo(
-    () => profilePhotoDisplayUri(photo ?? '', photoRevision),
+    () => profilePhotoDisplayUri(photo, photoRevision),
     [photo, photoRevision]
   );
 
@@ -22,6 +23,6 @@ export function useProfilePhoto(photo: string | undefined) {
     displayUri,
     showPhoto,
     onImageError: () => setImageError(true),
-    imageKey: `${displayUri}:${photoRevision}`,
+    imageKey: displayUri,
   };
 }

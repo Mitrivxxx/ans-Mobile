@@ -1,9 +1,13 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { queryClient } from '../../../core/queryClient/queryClient';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 import { useUserPersistentQuery } from '../../../core/queryClient/useUserPersistentQuery';
+import {
+  getCachedProfilePhoto,
+  setCachedProfilePhoto,
+} from '../../../core/scraper/features/profile/profilePhotoSessionCache';
 import {
   ProfileService,
   type ProfileSummary,
@@ -11,15 +15,29 @@ import {
 
 const profileService = new ProfileService();
 
+function resolveSummaryPhoto(
+  fresh: ProfileSummary,
+  previous: ProfileSummary | undefined
+): string {
+  const cached = getCachedProfilePhoto();
+  if (cached) {
+    return cached;
+  }
+
+  if (fresh.photo) {
+    setCachedProfilePhoto(fresh.photo);
+    return fresh.photo;
+  }
+
+  return previous?.photo ?? '';
+}
+
 function mergeProfileSummary(
   fresh: ProfileSummary,
   previous: ProfileSummary | undefined
 ): ProfileSummary {
-  if (fresh.photo || !previous?.photo) {
-    return fresh;
-  }
-
-  return { ...fresh, photo: previous.photo };
+  const photo = resolveSummaryPhoto(fresh, previous);
+  return { ...fresh, photo };
 }
 
 export function useStudentProfileQuery() {
@@ -38,14 +56,24 @@ export function useStudentProfileQuery() {
     syncOnMount: true,
   });
 
+  useEffect(() => {
+    if (query.data?.photo) {
+      setCachedProfilePhoto(query.data.photo);
+    }
+  }, [query.data?.photo]);
+
   const refreshProfile = useCallback(async () => {
+    const previousPhoto = queryClient.getQueryData<ProfileSummary>(
+      queryKeys.profile.summary(userKey)
+    )?.photo;
+
     await queryClient.invalidateQueries({
       queryKey: queryKeys.profile.summary(userKey),
     });
 
     const result = await query.refetch();
 
-    if (result.isSuccess) {
+    if (result.isSuccess && result.data?.photo !== previousPhoto) {
       setPhotoRevision((revision) => revision + 1);
     }
 
