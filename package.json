@@ -5,6 +5,7 @@
   "scripts": {
     "start": "expo start",
     "start:tunnel": "expo start --tunnel",
+    "preandroid": "adb reverse tcp:8081 tcp:8081",
     "android": "expo run:android",
     "prebuild:android": "npm run generate-icons && expo prebuild --platform android --clean",
     "ios": "expo run:ios",
