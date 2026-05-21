@@ -2,8 +2,8 @@ export const queryKeys = {
   studentPlan: {
     lessons: (userKey: string) =>
       ['studentPlan', userKey, 'lessons'] as const,
-    weekLessons: (userKey: string) =>
-      ['studentPlan', userKey, 'weekLessons'] as const,
+    weekLessons: (userKey: string, weekMondayKey: string) =>
+      ['studentPlan', userKey, 'weekLessons', weekMondayKey] as const,
   },
   grades: {
     index: (userKey: string) => ['grades', userKey, 'index'] as const,

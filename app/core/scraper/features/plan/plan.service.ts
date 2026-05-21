@@ -24,10 +24,10 @@ export class PlanService {
     }
   }
 
-  /** Bieżący tydzień (pon.–niedz.) — dashboard. */
-  async getWeekLessons(): Promise<Lesson[]> {
+  /** Tydzień kalendarzowy (pon.–niedz.) — dashboard; domyślnie bieżący. */
+  async getWeekLessons(referenceDate = new Date()): Promise<Lesson[]> {
     try {
-      return await this.getLessonsForParams(getCurrentWeekPlanParams());
+      return await this.getLessonsForParams(getCurrentWeekPlanParams(referenceDate));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       console.error('[PLAN] Error fetching week lessons:', message);

@@ -1,7 +1,10 @@
 import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../../theme/ansTheme';
-import { HARMONOGRAM_ACCENT_COLOR } from '../dashboard.quickActions';
+import {
+  HARMONOGRAM_ACCENT_COLOR,
+  HARMONOGRAM_TODAY_DAY_COLOR,
+} from '../dashboard.quickActions';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
 export function createDashboardSchedulePanelStyles(c: AnsColors) {
@@ -10,6 +13,30 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     paddingHorizontal: DASHBOARD_HORIZONTAL_PADDING,
     paddingTop: 8,
     paddingBottom: 24,
+  },
+  weekHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  weekNavButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.surface,
+    borderWidth: 1,
+    borderColor: c.grayBorder,
+  },
+  weekRangeLabel: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
+    color: c.charcoal,
+    paddingHorizontal: 8,
   },
   dayRow: {
     flexDirection: 'row',
@@ -26,6 +53,10 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     backgroundColor: c.surface,
     borderWidth: 1,
     borderColor: c.grayBorder,
+  },
+  dayButtonToday: {
+    backgroundColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
   },
   dayButtonSelected: {
     backgroundColor: HARMONOGRAM_ACCENT_COLOR,
@@ -47,6 +78,9 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     color: c.gray,
     marginBottom: 4,
   },
+  dayLabelToday: {
+    color: c.charcoal,
+  },
   dayLabelSelected: {
     color: c.surface,
   },
@@ -55,8 +89,14 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     fontWeight: '800',
     color: c.charcoal,
   },
+  dayNumberToday: {
+    color: c.charcoal,
+  },
   dayNumberSelected: {
     color: c.surface,
+  },
+  dayDotToday: {
+    backgroundColor: HARMONOGRAM_ACCENT_COLOR,
   },
   centerState: {
     alignItems: 'center',

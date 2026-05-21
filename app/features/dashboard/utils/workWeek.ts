@@ -43,6 +43,13 @@ export function getCurrentWorkWeek(referenceDate = new Date()): WeekDay[] {
   return getCurrentWeek(referenceDate);
 }
 
+/** Przesuwa `referenceDate` o `weeks` tygodni kalendarzowych (±7 dni na tydzień). */
+export function addCalendarWeeks(referenceDate: Date, weeks: number): Date {
+  const d = new Date(referenceDate);
+  d.setDate(d.getDate() + weeks * 7);
+  return d;
+}
+
 /** Domyślny dzień: dziś, jeśli jest w bieżącym tygodniu; w innym wypadku poniedziałek. */
 export function getDefaultWeekDateKey(referenceDate = new Date()): string {
   const week = getCurrentWeek(referenceDate);

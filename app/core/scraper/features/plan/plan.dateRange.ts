@@ -25,6 +25,15 @@ export function getMondayOfWeek(referenceDate = new Date()): Date {
   return monday;
 }
 
+/** Klucz `YYYY-MM-DD` poniedziałku tygodnia zawierającego `referenceDate` (cache React Query). */
+export function getWeekMondayDateKey(referenceDate = new Date()): string {
+  const monday = getMondayOfWeek(referenceDate);
+  const year = monday.getFullYear();
+  const month = String(monday.getMonth() + 1).padStart(2, '0');
+  const day = String(monday.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 /** Bieżący tydzień kalendarzowy (pon.–niedz.) — do dashboardu. */
 export function getCurrentWeekPlanParams(
   referenceDate = new Date()

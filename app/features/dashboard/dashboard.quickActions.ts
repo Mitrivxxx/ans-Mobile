@@ -3,6 +3,9 @@ import type { ImageSourcePropType } from 'react-native';
 /** Kolor akcentu harmonogramu — przycisk na dashboardzie i wybrane dni w panelu. */
 export const HARMONOGRAM_ACCENT_COLOR = '#548DF3';
 
+/** Tło kafelka „dziś” — ten sam żółty co wybrany dzień w planie zajęć. */
+export const HARMONOGRAM_TODAY_DAY_COLOR = '#F5D547';
+
 export type DashboardQuickAction = {
   title: string;
   image: ImageSourcePropType;

@@ -1,4 +1,5 @@
 import { AnnouncementsService } from "../scraper/features/announcements/announcements.service";
+import { getWeekMondayDateKey } from "../scraper/features/plan/plan.dateRange";
 import { PlanService } from "../scraper/features/plan/plan.service";
 import { ProfileService } from "../scraper/features/profile/profile.service";
 import { SessionExpiredError } from "../scraper/auth/sessionValidation";
@@ -29,8 +30,9 @@ export function prefetchUserScraperData(userKey: string): void {
   const staleTime = PERSISTENT_QUERY_STALE_TIME_MS;
 
   void (async () => {
+    const currentWeekMondayKey = getWeekMondayDateKey();
     await prefetchIgnoringSessionExpiry({
-      queryKey: queryKeys.studentPlan.weekLessons(userKey),
+      queryKey: queryKeys.studentPlan.weekLessons(userKey, currentWeekMondayKey),
       queryFn: () => planService.getWeekLessons(),
       staleTime,
     });
