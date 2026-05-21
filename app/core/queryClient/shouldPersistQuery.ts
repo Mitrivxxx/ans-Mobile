@@ -4,6 +4,7 @@ const PERSISTED_ROOT_KEYS = new Set([
   'studentPlan',
   'grades',
   'announcements',
+  'profile',
 ]);
 
 function isPersistedRootQuery(query: Query): boolean {

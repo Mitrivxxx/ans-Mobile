@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -9,12 +9,9 @@ import {
 import ProfileDetailsView from '../components/ProfileDetailsView';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useStudentProfile } from '../context/StudentProfileContext';
+import { useProfileDetailsQuery } from '../features/profile/hooks/useProfileDetailsQuery';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useAppTheme } from '../context/AppThemeContext';
-import {
-  ProfileService,
-  type CompleteProfileData,
-} from '../core/scraper/features/profile/profile.service';
 
 type Props = {
   navigation: {
@@ -24,89 +21,76 @@ type Props = {
 
 export default function ProfileScreen({ navigation }: Props) {
   const { colors } = useAppTheme();
-  const profileService = useMemo(() => new ProfileService(), []);
   const {
-    summary: cachedSummary,
+    summary,
     loading: summaryLoading,
     refetch: refetchSummary,
   } = useStudentProfile();
-  const [profile, setProfile] = useState<CompleteProfileData | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [error, setError] = useState('');
-
-  const fetchProfileDetails = useCallback(async () => {
-    try {
-      setLoadingProfile(true);
-      setError('');
-      const profileData = await profileService.getProfile();
-      setProfile(profileData);
-    } catch (err) {
-      console.error('[PROFILE SCREEN]', err);
-      setError('Nie udało się pobrać profilu');
-    } finally {
-      setLoadingProfile(false);
-    }
-  }, [profileService]);
-
-  useEffect(() => {
-    void fetchProfileDetails();
-  }, [fetchProfileDetails]);
+  const {
+    profile,
+    isInitialLoading: detailsLoading,
+    forceRefresh: forceRefreshDetails,
+    isFatalError: detailsFatalError,
+  } = useProfileDetailsQuery();
 
   const refreshProfile = useCallback(async () => {
-    await Promise.all([refetchSummary(), fetchProfileDetails()]);
-  }, [fetchProfileDetails, refetchSummary]);
+    await Promise.all([refetchSummary(), forceRefreshDetails()]);
+  }, [forceRefreshDetails, refetchSummary]);
 
   useRegisterScreenRefresh(refreshProfile);
 
-  const loading = summaryLoading || (loadingProfile && !profile);
-  const summary = cachedSummary;
+  const loading =
+    (summaryLoading && !summary) || (detailsLoading && !profile);
+  const summaryReady = summary;
+  const profileReady = profile;
 
-  const createDynamicStyles = () => ({
-    scrollContent: {
-      paddingHorizontal: 24,
-      paddingTop: 18,
-      paddingBottom: 36,
-      backgroundColor: colors.dashboardBg,
-    },
-    backText: {
-      fontSize: 16,
-      fontWeight: '700' as const,
-      color: colors.charcoal,
-    },
-    centerStateScroll: {
-      flexGrow: 1,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      padding: 24,
-      gap: 12,
-      backgroundColor: colors.dashboardBg,
-    },
-    stateText: {
-      fontSize: 15,
-      color: colors.gray,
-      textAlign: 'center' as const,
-    },
-    errorText: {
-      fontSize: 15,
-      color: colors.error,
-      textAlign: 'center' as const,
-      fontWeight: '700' as const,
-    },
-    retryButton: {
-      marginTop: 4,
-      backgroundColor: colors.black,
-      paddingHorizontal: 18,
-      paddingVertical: 12,
-      borderRadius: 14,
-    },
-    retryButtonText: {
-      color: colors.gold,
-      fontWeight: '800' as const,
-      fontSize: 15,
-    },
-  });
-
-  const dynamicStyles = createDynamicStyles();
+  const dynamicStyles = useMemo(
+    () => ({
+      scrollContent: {
+        paddingHorizontal: 24,
+        paddingTop: 18,
+        paddingBottom: 36,
+        backgroundColor: colors.dashboardBg,
+      },
+      backText: {
+        fontSize: 16,
+        fontWeight: '700' as const,
+        color: colors.charcoal,
+      },
+      centerStateScroll: {
+        flexGrow: 1,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        padding: 24,
+        gap: 12,
+        backgroundColor: colors.dashboardBg,
+      },
+      stateText: {
+        fontSize: 15,
+        color: colors.gray,
+        textAlign: 'center' as const,
+      },
+      errorText: {
+        fontSize: 15,
+        color: colors.error,
+        textAlign: 'center' as const,
+        fontWeight: '700' as const,
+      },
+      retryButton: {
+        marginTop: 4,
+        backgroundColor: colors.black,
+        paddingHorizontal: 18,
+        paddingVertical: 12,
+        borderRadius: 14,
+      },
+      retryButtonText: {
+        color: colors.gold,
+        fontWeight: '800' as const,
+        fontSize: 15,
+      },
+    }),
+    [colors]
+  );
 
   if (loading) {
     return (
@@ -117,12 +101,12 @@ export default function ProfileScreen({ navigation }: Props) {
     );
   }
 
-  if (error) {
+  if (detailsFatalError && !profileReady) {
     return (
       <RefreshableScrollView contentContainerStyle={dynamicStyles.centerStateScroll}>
-        <Text style={dynamicStyles.errorText}>{error}</Text>
+        <Text style={dynamicStyles.errorText}>Nie udało się pobrać profilu</Text>
         <TouchableOpacity
-          onPress={fetchProfileDetails}
+          onPress={() => void refreshProfile()}
           style={dynamicStyles.retryButton}
         >
           <Text style={dynamicStyles.retryButtonText}>Spróbuj ponownie</Text>
@@ -131,7 +115,7 @@ export default function ProfileScreen({ navigation }: Props) {
     );
   }
 
-  if (!profile || !summary) {
+  if (!profileReady || !summaryReady) {
     return (
       <RefreshableScrollView contentContainerStyle={dynamicStyles.centerStateScroll}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -144,7 +128,7 @@ export default function ProfileScreen({ navigation }: Props) {
 
   return (
     <RefreshableScrollView contentContainerStyle={dynamicStyles.scrollContent}>
-      <ProfileDetailsView summary={summary} profile={profile} />
+      <ProfileDetailsView summary={summaryReady} profile={profileReady} />
     </RefreshableScrollView>
   );
 }

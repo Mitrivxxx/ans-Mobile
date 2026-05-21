@@ -139,9 +139,9 @@ Opcjonalnie: `*.grid.ts`, `*.page.ts`, `merge*.ts` (np. oceny).
 
 ### Co jest persystowane na dysk
 
-`shouldPersistQuery.ts` — tylko root keys: **`studentPlan`**, **`grades`**, **`announcements`**.
+`shouldPersistQuery.ts` — root keys: **`studentPlan`**, **`grades`**, **`announcements`**, **`profile`** (summary + szczegóły ekranu Profil).
 
-Profil (`profile.summary`) jest prefetchowany, ale **nie** trafia do AsyncStorage persistera.
+Profil: prefetch summary po logowaniu; ekran Profil (`profile.details`) — przy cache brak auto-scrapu przy wejściu (tylko pull-to-refresh / `forceRefresh`).
 
 ### Prefetch po logowaniu
 

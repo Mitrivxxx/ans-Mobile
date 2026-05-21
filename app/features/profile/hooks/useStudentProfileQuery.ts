@@ -53,7 +53,7 @@ export function useStudentProfileQuery() {
       );
       return mergeProfileSummary(fresh, previous);
     },
-    syncOnMount: true,
+    syncOnMount: false,
   });
 
   useEffect(() => {

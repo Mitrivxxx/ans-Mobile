@@ -19,5 +19,6 @@ export const queryKeys = {
   },
   profile: {
     summary: (userKey: string) => ['profile', userKey, 'summary'] as const,
+    details: (userKey: string) => ['profile', userKey, 'details'] as const,
   },
 } as const;
