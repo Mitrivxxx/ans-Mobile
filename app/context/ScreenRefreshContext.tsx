@@ -44,16 +44,15 @@ export function ScreenRefreshProvider({
 
   const onRefresh = useCallback(async () => {
     const refresh = handlerRef.current;
-    if (!refresh) {
-      return;
-    }
 
     setRefreshing(true);
     try {
       if (sessionDegraded) {
         await retrySessionRestore();
       }
-      await refresh();
+      if (refresh) {
+        await refresh();
+      }
     } finally {
       setRefreshing(false);
     }

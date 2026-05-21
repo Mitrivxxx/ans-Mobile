@@ -27,6 +27,7 @@ const UI_ASSETS = [
   { file: 'school.png', maxDimension: QUICK_ACTION_MAX_PX },
   { file: 'bell.png', maxDimension: QUICK_ACTION_MAX_PX },
   { file: 'logov2.png', compressOnly: true },
+  { file: 'logov2_dark.png', compressOnly: true },
 ];
 
 export async function formatBytes(bytes) {

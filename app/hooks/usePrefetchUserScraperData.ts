@@ -21,6 +21,9 @@ export function usePrefetchUserScraperData(): void {
     }
 
     if (sessionDegraded || !userKey) {
+      if (sessionDegraded) {
+        prefetchedForKeyRef.current = null;
+      }
       return;
     }
 

@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -13,6 +14,19 @@ export default function AuthSyncBanner() {
     retrySessionRestore,
     signOut,
   } = useAuthSession();
+  const [restoring, setRestoring] = useState(false);
+
+  const handleRetry = async () => {
+    if (restoring) {
+      return;
+    }
+    setRestoring(true);
+    try {
+      await retrySessionRestore();
+    } finally {
+      setRestoring(false);
+    }
+  };
 
   const styles = useMemo(
     () =>
@@ -86,14 +100,20 @@ export default function AuthSyncBanner() {
       </View>
       <View style={styles.actions}>
         <Pressable
-          onPress={() => void retrySessionRestore()}
+          onPress={() => void handleRetry()}
+          disabled={restoring}
           accessibilityRole="button"
+          accessibilityState={{ disabled: restoring, busy: restoring }}
           style={({ pressed }) => [
             styles.actionButton,
-            pressed && styles.pressed,
+            pressed && !restoring && styles.pressed,
           ]}
         >
-          <Text style={styles.actionPrimary}>Spróbuj ponownie</Text>
+          {restoring ? (
+            <ActivityIndicator size="small" color={colors.gold} />
+          ) : (
+            <Text style={styles.actionPrimary}>Spróbuj ponownie</Text>
+          )}
         </Pressable>
         <Pressable
           onPress={() => void signOut()}

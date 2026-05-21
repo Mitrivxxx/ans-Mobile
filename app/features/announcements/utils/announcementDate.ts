@@ -70,20 +70,3 @@ function buildDate(
   }
   return date;
 }
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-/** Czy `dateText` mieści się w oknie ostatnich `days` dni od `reference`. */
-export function isWithinLastDays(
-  dateText: string,
-  days: number,
-  reference: Date = new Date()
-): boolean {
-  const parsed = parseAnnouncementDate(dateText);
-  if (!parsed) {
-    return false;
-  }
-
-  const cutoff = reference.getTime() - days * MS_PER_DAY;
-  return parsed.getTime() >= cutoff && parsed.getTime() <= reference.getTime();
-}

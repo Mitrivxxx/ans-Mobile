@@ -5,7 +5,7 @@
  * - assets/icon.png — 1024×1024, tło #000
  * - assets/adaptive-icon.png — foreground, safe zone ~66%
  *
- * UI: calendar / school / bell, logov2, logo_login.png
+ * UI: calendar / school / bell, logov2, logov2_dark, logo_login.png
  *
  * Uruchom: npm run generate-icons
  */
@@ -90,6 +90,9 @@ for (const [label, filePath] of [
 ]) {
   console.log(`  ${label}: ${path.relative(root, filePath)} (${await fileSizeLabel(filePath)})`);
 }
+
+console.log('\nLogo nagłówka (ciemny motyw — białe napisy):');
+await import('./generateLogoHeaderDark.mjs');
 
 console.log('\nIkony UI (dashboard, nagłówek, logowanie):');
 const { results, loginLogo } = await runOptimizeUiIcons();

@@ -14,6 +14,7 @@ import {
   setEphemeralSessionActive,
 } from '../core/auth/ephemeralSession';
 import { performSignOut } from '../core/auth/performSignOut';
+import { syncUserDataAfterSessionRestore } from '../core/auth/syncUserDataAfterSessionRestore';
 import {
   clearRememberMe,
   isRememberMeEnabled,
@@ -359,6 +360,76 @@ export function AuthSessionProvider({
     setRememberMeEnabled(false);
   }, []);
 
+  /** Ręczne odnowienie sesji (banner / pull-to-refresh) — bez czyszczenia ciasteczek jak przy cold start. */
+  const retrySessionRestore = useCallback(async () => {
+    try {
+      await initClient();
+    } catch {
+      /* proceed */
+    }
+
+    const rememberMe = await isRememberMeEnabled();
+
+    if (rememberMe) {
+      const restored = await restoreRememberMeSession();
+
+      if (restored.authenticated) {
+        setAuthStatus('authenticated');
+        setSessionDegraded(false);
+        setSessionDegradedMessage('');
+        setRememberMeEnabled(true);
+        await syncUserDataAfterSessionRestore();
+        return;
+      }
+
+      if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+        const degraded = resolveDegradedState();
+        const extra = restored.errorMessage?.trim();
+        setAuthStatus(degraded.status);
+        setSessionDegraded(true);
+        setSessionDegradedMessage(
+          extra
+            ? `${degraded.sessionDegradedMessage} ${extra}`
+            : degraded.sessionDegradedMessage
+        );
+        setRememberMeEnabled(true);
+        return;
+      }
+
+      setAuthStatus('unauthenticated');
+      setSessionDegraded(false);
+      setSessionDegradedMessage('');
+      setRememberMeEnabled(true);
+      return;
+    }
+
+    if (await hasLiveScraperSession()) {
+      if (!isEphemeralSessionActive()) {
+        setEphemeralSessionActive(true);
+      }
+      setAuthStatus('authenticated');
+      setSessionDegraded(false);
+      setSessionDegradedMessage('');
+      setRememberMeEnabled(false);
+      await syncUserDataAfterSessionRestore();
+      return;
+    }
+
+    if ((await hasAppLoginRecord()) && hasAnyUserCache()) {
+      const degraded = resolveDegradedState();
+      setAuthStatus(degraded.status);
+      setSessionDegraded(true);
+      setSessionDegradedMessage(degraded.sessionDegradedMessage);
+      setRememberMeEnabled(false);
+      return;
+    }
+
+    setAuthStatus('unauthenticated');
+    setSessionDegraded(false);
+    setSessionDegradedMessage('');
+    setRememberMeEnabled(false);
+  }, []);
+
   const value = useMemo<AuthSessionContextValue>(
     () => ({
       authStatus,
@@ -369,7 +440,7 @@ export function AuthSessionProvider({
       disableRememberMe,
       markAuthenticated,
       signOut,
-      retrySessionRestore: () => restoreSession({ showSplash: false }),
+      retrySessionRestore,
     }),
     [
       authStatus,
@@ -380,7 +451,7 @@ export function AuthSessionProvider({
       disableRememberMe,
       markAuthenticated,
       signOut,
-      restoreSession,
+      retrySessionRestore,
     ]
   );
 

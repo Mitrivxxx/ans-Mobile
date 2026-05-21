@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useThemedStyles } from '../../../theme/useThemedStyles';
 import {
   ActivityIndicator,
   Text,
@@ -8,89 +7,158 @@ import {
 } from 'react-native';
 
 import { useAppTheme } from '../../../context/AppThemeContext';
+import { useThemedStyles } from '../../../theme/useThemedStyles';
+import AnnouncementDetailsView from '../../announcements/components/AnnouncementDetailsView';
+import { createAnnouncementsUiStyles } from '../../announcements/announcementsUi.styles';
+import { useAnnouncementSelection } from '../../announcements/hooks/useAnnouncementSelection';
 import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
-import { isWithinLastDays } from '../utils/announcementDate';
-import { createDashboardAnnouncementsPanelStyles } from './DashboardAnnouncementsPanel.styles';
+import { takeLatestAnnouncements } from '../../announcements/utils/takeLatestAnnouncements';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
+import { createDashboardAnnouncementsPanelStyles } from './DashboardAnnouncementsPanel.styles';
 
-const RECENT_WINDOW_DAYS = 7;
+const DASHBOARD_ANNOUNCEMENTS_LIMIT = 5;
 
 export default function DashboardAnnouncementsPanel() {
   const { colors } = useAppTheme();
-  const styles = useThemedStyles(createDashboardAnnouncementsPanelStyles);
+  const panelStyles = useThemedStyles(createDashboardAnnouncementsPanelStyles);
+  const uiStyles = useThemedStyles(createAnnouncementsUiStyles);
   const { announcements, isInitialLoading, isFatalError, refetch } =
     useAnnouncementsQuery();
 
-  useRegisterScreenRefresh(async () => {
-    await refetch();
-  });
+  const {
+    selectedItem,
+    setSelectedItem,
+    selected,
+    detailsLoading,
+    detailsError,
+    detailsQuery,
+    refreshSelection,
+    clearSelection,
+  } = useAnnouncementSelection(refetch);
 
-  const recentAnnouncements = useMemo(
-    () =>
-      announcements.filter((item) =>
-        isWithinLastDays(item.date, RECENT_WINDOW_DAYS)
-      ),
+  useRegisterScreenRefresh(refreshSelection);
+
+  const latestAnnouncements = useMemo(
+    () => takeLatestAnnouncements(announcements, DASHBOARD_ANNOUNCEMENTS_LIMIT),
     [announcements]
   );
 
   if (isInitialLoading) {
     return (
-      <View style={styles.wrap}>
-        <View style={styles.centerState}>
+      <View style={panelStyles.wrap}>
+        <View style={uiStyles.centerState}>
           <ActivityIndicator color={colors.gold} />
-          <Text style={styles.stateText}>Wczytywanie ogłoszeń...</Text>
+          <Text style={uiStyles.stateText}>Wczytywanie ogłoszeń...</Text>
         </View>
       </View>
     );
   }
 
-  if (isFatalError) {
+  if (isFatalError && announcements.length === 0 && !selectedItem) {
     return (
-      <View style={styles.wrap}>
-        <View style={styles.centerState}>
-          <Text style={styles.errorText}>Nie udało się pobrać ogłoszeń</Text>
+      <View style={panelStyles.wrap}>
+        <View style={uiStyles.centerState}>
+          <Text style={uiStyles.errorText}>Nie udało się pobrać ogłoszeń</Text>
           <TouchableOpacity
             onPress={() => void refetch()}
-            style={styles.retryButton}
+            style={uiStyles.retryButton}
           >
-            <Text style={styles.retryButtonText}>Spróbuj ponownie</Text>
+            <Text style={uiStyles.retryButtonText}>Spróbuj ponownie</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
 
-  if (recentAnnouncements.length === 0) {
-    return (
-      <View style={styles.wrap}>
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>
-            Brak nowych ogłoszeń w ciągu ostatnich 7 dni
-          </Text>
+  if (selectedItem) {
+    if (detailsLoading && !selected) {
+      return (
+        <View style={panelStyles.wrap}>
+          <View style={uiStyles.centerState}>
+            <ActivityIndicator color={colors.gold} />
+            <Text style={uiStyles.stateText}>Wczytywanie szczegółów...</Text>
+          </View>
         </View>
-      </View>
-    );
+      );
+    }
+
+    if (detailsError && !selected) {
+      return (
+        <View style={panelStyles.wrap}>
+          <View style={uiStyles.centerState}>
+            <Text style={uiStyles.errorText}>{detailsError}</Text>
+            <TouchableOpacity
+              onPress={() => void detailsQuery.refetch()}
+              style={uiStyles.retryButton}
+            >
+              <Text style={uiStyles.retryButtonText}>Spróbuj ponownie</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={clearSelection}
+              style={uiStyles.retryButton}
+            >
+              <Text style={uiStyles.retryButtonText}>← Lista ogłoszeń</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    if (selected) {
+      return (
+        <View style={panelStyles.wrap}>
+          <AnnouncementDetailsView
+            selected={selected}
+            styles={uiStyles}
+            onBack={clearSelection}
+          />
+        </View>
+      );
+    }
   }
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.list}>
-        {recentAnnouncements.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Text style={styles.cardTitle} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaAuthor} numberOfLines={1}>
-                {item.authorName}
-              </Text>
-              {item.date ? (
-                <Text style={styles.metaDate}>{item.date}</Text>
-              ) : null}
-            </View>
-          </View>
-        ))}
-      </View>
+    <View style={panelStyles.wrap}>
+      {detailsError ? (
+        <Text style={uiStyles.errorText}>{detailsError}</Text>
+      ) : null}
+      {detailsLoading && selectedItem ? (
+        <Text style={uiStyles.infoText}>Wczytywanie szczegółów...</Text>
+      ) : null}
+
+      {latestAnnouncements.length === 0 ? (
+        <View style={uiStyles.emptyState}>
+          <Text style={uiStyles.stateText}>Brak ogłoszeń</Text>
+        </View>
+      ) : (
+        <View style={uiStyles.list}>
+          {latestAnnouncements.map((item) => {
+            const isFetching = detailsLoading && selectedItem?.id === item.id;
+
+            return (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => setSelectedItem(item)}
+                disabled={isFetching}
+                style={[uiStyles.card, isFetching && uiStyles.cardDisabled]}
+                accessibilityRole="button"
+              >
+                <Text style={uiStyles.cardTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+
+                <Text style={uiStyles.cardAuthor} numberOfLines={1}>
+                  {item.authorName}
+                </Text>
+
+                <Text style={uiStyles.cardAction}>
+                  {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }

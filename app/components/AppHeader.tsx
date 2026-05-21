@@ -9,11 +9,13 @@ import {
   createAppHeaderStyles,
 } from './AppHeader.styles';
 import AppHeaderAvatar from './AppHeaderAvatar';
-import { logoHeader } from '../assets/brandLogos';
+import { logoHeaderForTheme } from '../assets/brandLogos';
+import { useAppTheme } from '../context/AppThemeContext';
 import AppLogo from './AppLogo';
 import SidebarMenuButton from './sidebar/SidebarMenuButton';
 
 export default function AppHeader() {
+  const { isDarkMode } = useAppTheme();
   const styles = useThemedStyles(createAppHeaderStyles);
   const insets = useSafeAreaInsets();
   const [routeName, setRouteName] = useState(getCurrentRouteName);
@@ -43,7 +45,7 @@ export default function AppHeader() {
         <View style={styles.center}>
           <AppLogo
             size={APP_HEADER_LOGO_SIZE}
-            source={logoHeader}
+            source={logoHeaderForTheme(isDarkMode)}
             variant="wide"
             resizeMode="contain"
           />
