@@ -5,6 +5,8 @@ export const lessonTypeColors = {
   proj: '#548DF3',
   lab: '#E879A8',
   cwiczenia: '#4CAF50',
+  lek: '#9E7B4E',
+  zwf: '#8E6BC1',
 } as const;
 
 export type LessonTypeColorKey = keyof typeof lessonTypeColors;
@@ -23,12 +25,14 @@ const LESSON_TYPE_RULES: {
   { key: 'wyk', abbreviation: 'W', patterns: ['wyk', 'wykład', 'wyklad'] },
   { key: 'sem', abbreviation: 'S', patterns: ['sem', 'seminarium'] },
   { key: 'proj', abbreviation: 'P', patterns: ['proj', 'projekt'] },
+  { key: 'lek', abbreviation: 'Le', patterns: ['lek'] },
   { key: 'lab', abbreviation: 'L', patterns: ['lab', 'laboratorium'] },
   {
     key: 'cwiczenia',
     abbreviation: 'Ć',
     patterns: ['ćw', 'cw', 'cwiczenia', 'ćwiczenia', 'ca'],
   },
+  { key: 'zwf', abbreviation: 'Z', patterns: ['zwf', 'z wf'] },
 ];
 
 function normalizeType(value: string): string {
