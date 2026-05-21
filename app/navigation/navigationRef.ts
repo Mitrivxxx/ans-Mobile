@@ -12,6 +12,7 @@ export type AppRouteName =
   | 'Profile'
   | 'FindLecturer'
   | 'LecturerPlan'
+  | 'Finanse'
   | 'Settings';
 
 export type LecturerPlanParams = {
@@ -30,6 +31,7 @@ export type RootParamList = {
   Profile: undefined;
   FindLecturer: undefined;
   LecturerPlan: LecturerPlanParams;
+  Finanse: undefined;
   Settings: undefined;
 };
 

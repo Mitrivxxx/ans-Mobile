@@ -30,6 +30,7 @@ import AnnouncementsScreen from './app/screen/AnnouncementsScreen';
 import ProfileScreen from './app/screen/ProfileScreen';
 import FindLecturerScreen from './app/screen/FindLecturerScreen';
 import LecturerPlanScreen from './app/screen/LecturerPlanScreen';
+import FinanseScreen from './app/screen/FinanseScreen';
 import SettingsScreen from './app/screen/SettingsScreen';
 import { queryClient } from './app/core/queryClient/queryClient';
 import { queryPersister } from './app/core/queryClient/queryPersister';
@@ -70,6 +71,7 @@ function MainNavigator() {
       <AppStack.Screen name="Profile" component={ProfileScreen} />
       <AppStack.Screen name="FindLecturer" component={FindLecturerScreen} />
       <AppStack.Screen name="LecturerPlan" component={LecturerPlanScreen} />
+      <AppStack.Screen name="Finanse" component={FinanseScreen} />
       <AppStack.Screen name="Settings" component={SettingsScreen} />
     </AppStack.Navigator>
   );

@@ -1,5 +1,8 @@
 import type { DashboardFeature } from './dashboard.types';
 
+/** Kolor akcentu finansów — sidebar i baner sync na ekranie opłat. */
+export const FINANCE_ACCENT_COLOR = '#2D8C6E';
+
 export const DASHBOARD_FEATURES: DashboardFeature[] = [
   {
     icon: 'plan',
@@ -35,5 +38,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: 'Wyszukaj prowadzącego i jego plan zajęć',
     route: 'FindLecturer',
     accentColor: '#E8A838',
+  },
+  {
+    icon: 'finance',
+    title: 'Finanse',
+    description: 'Opłaty i informacje finansowe',
+    route: 'Finanse',
+    accentColor: FINANCE_ACCENT_COLOR,
   },
 ];
