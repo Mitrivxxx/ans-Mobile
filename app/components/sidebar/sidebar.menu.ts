@@ -4,7 +4,7 @@ import type { DashboardFeature } from '../../features/dashboard/dashboard.types'
 export const SIDEBAR_MENU_ITEMS: DashboardFeature[] = [
   {
     icon: 'dashboard',
-    title: 'Dashboard',
+    title: 'Panel główny',
     description: 'Panel główny aplikacji',
     route: 'Dashboard',
     accentColor: '#4A5568',

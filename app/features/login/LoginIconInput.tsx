@@ -32,6 +32,9 @@ export type LoginIconInputProps = {
   rightIconA11yLabel?: string;
   onRightIconPress?: () => void;
   rightIconDisabled?: boolean;
+  textContentType?: TextInputProps['textContentType'];
+  autoComplete?: TextInputProps['autoComplete'];
+  importantForAutofill?: TextInputProps['importantForAutofill'];
 };
 
 const LoginIconInput = forwardRef<TextInput, LoginIconInputProps>(
@@ -57,6 +60,9 @@ const LoginIconInput = forwardRef<TextInput, LoginIconInputProps>(
       rightIconA11yLabel,
       onRightIconPress,
       rightIconDisabled = false,
+      textContentType,
+      autoComplete,
+      importantForAutofill,
     },
     ref
   ) {
@@ -86,6 +92,9 @@ const LoginIconInput = forwardRef<TextInput, LoginIconInputProps>(
             returnKeyType={returnKeyType}
             onSubmitEditing={onSubmitEditing}
             blurOnSubmit={blurOnSubmit}
+            textContentType={textContentType}
+            autoComplete={autoComplete}
+            importantForAutofill={importantForAutofill}
           />
           {rightIcon ? (
             <TouchableOpacity

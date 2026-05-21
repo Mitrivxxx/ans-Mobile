@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ActivityIndicator,
+  Keyboard,
   Text,
   TextInput,
   TouchableOpacity,
@@ -118,6 +119,7 @@ export default function LoginScreen() {
       return;
     }
 
+    Keyboard.dismiss();
     clearAllErrors();
 
     const passwordAttempt = password;
@@ -256,7 +258,7 @@ export default function LoginScreen() {
         enableOnAndroid
         extraScrollHeight={80}
         extraHeight={80}
-        keyboardShouldPersistTaps="never"
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         enableResetScrollToCoords={false}
       >
@@ -290,6 +292,9 @@ export default function LoginScreen() {
               resetCaptchaUi();
             }}
             editable={!loading}
+            textContentType="username"
+            autoComplete="username"
+            importantForAutofill="yes"
           />
 
           <LoginIconInput
@@ -315,6 +320,9 @@ export default function LoginScreen() {
             onRightIconPress={() => setPasswordVisible((value) => !value)}
             rightIconDisabled={loading}
             editable={!loading}
+            textContentType="password"
+            autoComplete="password"
+            importantForAutofill="yes"
           />
 
           <TouchableOpacity
