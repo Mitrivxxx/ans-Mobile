@@ -12,6 +12,6 @@ Prebuild (native)
 - npx expo run:android
 
 Budowanie release (Android)
-- cd android
-- gradlew assembleRelease
+cd android
+gradlew assembleRelease
 ------------
