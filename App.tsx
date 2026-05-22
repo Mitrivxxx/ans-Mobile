@@ -35,7 +35,10 @@ import SettingsScreen from './app/screen/SettingsScreen';
 import { queryClient } from './app/core/queryClient/queryClient';
 import { queryPersister } from './app/core/queryClient/queryPersister';
 import { usePrefetchUserScraperData } from './app/hooks/usePrefetchUserScraperData';
-import { PERSIST_MAX_AGE_MS } from './app/core/queryClient/persistentQueryConfig';
+import {
+  PERSIST_MAX_AGE_MS,
+  PERSIST_QUERY_BUSTER,
+} from './app/core/queryClient/persistentQueryConfig';
 import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
 
@@ -147,6 +150,7 @@ export default function App() {
             persistOptions={{
               persister: queryPersister,
               maxAge: PERSIST_MAX_AGE_MS,
+              buster: PERSIST_QUERY_BUSTER,
               dehydrateOptions: {
                 shouldDehydrateQuery: shouldDehydratePersistedQuery,
               },

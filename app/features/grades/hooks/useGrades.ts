@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { mergeSyncStatuses } from '../../../core/queryClient/mergeSyncStatuses';
 import type { GradesSemesterMeta } from '../../../core/scraper/features/grades/grades.service';
 import type { SemesterGrades } from '../../../core/scraper/features/grades/grades.service';
+import type { SyncStatus } from '../../../core/queryClient/syncTypes';
 import { useGradesIndexQuery } from './useGradesIndexQuery';
 import { useSemesterGradesQuery } from './useSemesterGradesQuery';
 
@@ -18,9 +20,11 @@ function indexOfSemester(
 export function useGrades() {
   const {
     index,
+    syncStatus: indexSyncStatus,
     isInitialLoading: indexLoading,
     isFatalError: indexError,
     refetch: refetchIndex,
+    forceRefresh: forceRefreshIndex,
   } = useGradesIndexQuery();
 
   const semestersMeta = index?.semesters ?? [];
@@ -51,11 +55,21 @@ export function useGrades() {
 
   const {
     semesterGrades,
+    syncStatus: semesterSyncStatus,
     isInitialLoading: semesterLoading,
     hasCachedSemester,
     isFatalError: semesterError,
     refetch: refetchSemester,
+    forceRefresh: forceRefreshSemester,
   } = useSemesterGradesQuery(currentMeta, semestersMeta.length > 0);
+
+  const syncStatus: SyncStatus = useMemo(
+    () =>
+      currentMeta != null
+        ? mergeSyncStatuses(indexSyncStatus, semesterSyncStatus)
+        : indexSyncStatus,
+    [currentMeta, indexSyncStatus, semesterSyncStatus]
+  );
 
   const semesters: SemesterGrades[] = useMemo(() => {
     if (!index) {
@@ -106,6 +120,13 @@ export function useGrades() {
     }
   }, [refetchIndex, refetchSemester, currentMeta]);
 
+  const forceRefresh = useCallback(async () => {
+    await forceRefreshIndex();
+    if (currentMeta) {
+      await forceRefreshSemester();
+    }
+  }, [forceRefreshIndex, forceRefreshSemester, currentMeta]);
+
   return {
     semesters,
     currentSemester,
@@ -117,6 +138,8 @@ export function useGrades() {
     goToPreviousSemester,
     goToNextSemester,
     isSemesterLoading: semesterLoading && !hasCachedSemester,
+    syncStatus,
     refetch,
+    forceRefresh,
   };
 }

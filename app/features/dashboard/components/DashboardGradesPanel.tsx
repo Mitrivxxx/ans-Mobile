@@ -7,18 +7,24 @@ import {
   View,
 } from 'react-native';
 
+import SyncBanner from '../../../components/SyncBanner';
 import GradesSubjectCard from '../../grades/components/GradesSubjectCard';
 import { useGrades } from '../../grades/hooks/useGrades';
 import { useGradesColors } from '../../grades/useGradesColors';
-import { createDashboardGradesPanelStyles } from './DashboardGradesPanel.styles';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
+import { useSyncBanner } from '../../../hooks/useSyncBanner';
+import { GRADES_ACCENT_COLOR } from '../dashboard.quickActions';
+import { createDashboardGradesPanelStyles } from './DashboardGradesPanel.styles';
 
 export default function DashboardGradesPanel() {
   const gradesColors = useGradesColors();
   const styles = useThemedStyles(createDashboardGradesPanelStyles);
-  const { currentSemester, loading, error, refetch } = useGrades();
+  const { currentSemester, loading, error, refetch, forceRefresh, syncStatus } =
+    useGrades();
 
-  useRegisterScreenRefresh(refetch);
+  const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
+
+  useRegisterScreenRefresh(forceRefresh);
 
   if (loading) {
     return (
@@ -59,6 +65,13 @@ export default function DashboardGradesPanel() {
 
   return (
     <View style={styles.wrap}>
+      <SyncBanner
+        status={bannerStatus}
+        loadingText="Aktualizowanie ocen…"
+        errorText="Nie udało się zaktualizować ocen"
+        accentColor={GRADES_ACCENT_COLOR}
+        onDismissUpToDate={dismissUpToDate}
+      />
       <View style={styles.subjectList}>
         {currentSemester.subjects.map((subject) => (
           <GradesSubjectCard

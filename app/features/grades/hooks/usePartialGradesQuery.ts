@@ -4,7 +4,10 @@ import {
   GradesService,
   type SubjectActivityDetails,
 } from '../../../core/scraper/features/grades/grades.service';
-import { PERSISTENT_QUERY_STALE_TIME_MS } from '../../../core/queryClient/persistentQueryConfig';
+import {
+  EPHEMERAL_QUERY_GC_TIME_MS,
+  PERSISTENT_QUERY_STALE_TIME_MS,
+} from '../../../core/queryClient/persistentQueryConfig';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 
@@ -21,6 +24,6 @@ export function usePartialGradesQuery(
     queryFn: () => gradesService.getPartialGrades(pplsId!),
     enabled: enabled && pplsId != null,
     staleTime: PERSISTENT_QUERY_STALE_TIME_MS,
-    gcTime: Number.POSITIVE_INFINITY,
+    gcTime: EPHEMERAL_QUERY_GC_TIME_MS,
   });
 }

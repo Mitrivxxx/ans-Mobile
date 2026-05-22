@@ -1,27 +1,71 @@
 import type { Query } from '@tanstack/react-query';
 
-const PERSISTED_ROOT_KEYS = new Set([
-  'studentPlan',
-  'grades',
-  'announcements',
-  'profile',
-]);
+import { getWeekMondayDateKey } from '../scraper/features/plan/plan.dateRange';
 
-function isPersistedRootQuery(query: Query): boolean {
-  const root = query.queryKey[0];
-  return typeof root === 'string' && PERSISTED_ROOT_KEYS.has(root);
+/**
+ * Zapytania zapisywane na dysk (offline / degraded).
+ * Bez: partial, detail, semester, lessons, stare weekLessons.
+ */
+const OFFLINE_QUERY_SEGMENTS = {
+  studentPlan: new Set(['weekLessons']),
+  grades: new Set(['index']),
+  announcements: new Set(['list']),
+  profile: new Set(['summary', 'details']),
+} as const;
+
+type OfflineRoot = keyof typeof OFFLINE_QUERY_SEGMENTS;
+
+function isOfflineRoot(root: unknown): root is OfflineRoot {
+  return typeof root === 'string' && root in OFFLINE_QUERY_SEGMENTS;
 }
 
+function isCurrentWeekLessonsKey(queryKey: readonly unknown[]): boolean {
+  if (queryKey.length < 4) {
+    return false;
+  }
+  const weekMondayKey = queryKey[3];
+  if (typeof weekMondayKey !== 'string') {
+    return false;
+  }
+  return weekMondayKey === getWeekMondayDateKey();
+}
+
+/** Czy zapytanie wchodzi do małego „offline bundle” (AsyncStorage). */
+export function isOfflinePersistQuery(query: Query): boolean {
+  const key = query.queryKey;
+  if (!Array.isArray(key) || key.length < 3) {
+    return false;
+  }
+
+  const root = key[0];
+  const segment = key[2];
+
+  if (!isOfflineRoot(root) || typeof segment !== 'string') {
+    return false;
+  }
+
+  if (!OFFLINE_QUERY_SEGMENTS[root].has(segment)) {
+    return false;
+  }
+
+  if (root === 'studentPlan' && segment === 'weekLessons') {
+    return isCurrentWeekLessonsKey(key);
+  }
+
+  return true;
+}
+
+/** Ta sama logika co {@link isOfflinePersistQuery}. */
 export function shouldPersistQuery(query: Query): boolean {
-  return isPersistedRootQuery(query);
+  return isOfflinePersistQuery(query);
 }
 
 /**
- * Tylko udane zapytania z danymi — nigdy pending/fetching/error.
+ * Tylko udane zapytania z whitelisty — nigdy pending/fetching/error.
  * Zapobiega błędom persist: „dehydrated as pending ended up rejecting”.
  */
 export function shouldDehydratePersistedQuery(query: Query): boolean {
-  if (!isPersistedRootQuery(query)) {
+  if (!isOfflinePersistQuery(query)) {
     return false;
   }
 

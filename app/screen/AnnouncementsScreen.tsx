@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import RefreshableScrollView from '../components/RefreshableScrollView';
+import SyncBanner from '../components/SyncBanner';
 import { useAppTheme } from '../context/AppThemeContext';
 import AnnouncementDetailsView from '../features/announcements/components/AnnouncementDetailsView';
 import { createAnnouncementsUiStyles } from '../features/announcements/announcementsUi.styles';
@@ -16,6 +17,7 @@ import { useAnnouncementsQuery } from '../features/announcements/hooks/useAnnoun
 import { createAnnouncementsScreenStyles } from '../features/announcements/AnnouncementsScreen.styles';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useRefreshControlProps } from '../hooks/useRefreshControlProps';
+import { useSyncBanner } from '../hooks/useSyncBanner';
 import { useThemedStyles } from '../theme/useThemedStyles';
 
 type Props = {
@@ -33,6 +35,8 @@ export default function AnnouncementsScreen(_props: Props) {
     isInitialLoading,
     isFatalError,
     refetch: refetchAnnouncements,
+    forceRefresh,
+    syncStatus,
   } = useAnnouncementsQuery();
 
   const {
@@ -44,10 +48,22 @@ export default function AnnouncementsScreen(_props: Props) {
     detailsQuery,
     refreshSelection,
     clearSelection,
-  } = useAnnouncementSelection(refetchAnnouncements);
+  } = useAnnouncementSelection(refetchAnnouncements, forceRefresh);
+
+  const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
   useRegisterScreenRefresh(refreshSelection);
   const { refreshControl } = useRefreshControlProps();
+
+  const syncBanner = (
+    <SyncBanner
+      status={bannerStatus}
+      loadingText="Aktualizowanie ogłoszeń…"
+      errorText="Nie udało się zaktualizować ogłoszeń"
+      accentColor={colors.gold}
+      onDismissUpToDate={dismissUpToDate}
+    />
+  );
 
   if (isInitialLoading) {
     return (
@@ -144,16 +160,15 @@ export default function AnnouncementsScreen(_props: Props) {
         showsVerticalScrollIndicator={false}
         refreshControl={refreshControl}
         ListHeaderComponent={
-          detailsError || (detailsLoading && selectedItem) ? (
-            <View style={screenStyles.listHeader}>
-              {detailsError ? (
-                <Text style={uiStyles.errorText}>{detailsError}</Text>
-              ) : null}
-              {detailsLoading && selectedItem ? (
-                <Text style={uiStyles.infoText}>Wczytywanie szczegółów...</Text>
-              ) : null}
-            </View>
-          ) : null
+          <View style={screenStyles.listHeader}>
+            {syncBanner}
+            {detailsError ? (
+              <Text style={uiStyles.errorText}>{detailsError}</Text>
+            ) : null}
+            {detailsLoading && selectedItem ? (
+              <Text style={uiStyles.infoText}>Wczytywanie szczegółów...</Text>
+            ) : null}
+          </View>
         }
         ListEmptyComponent={
           <View style={uiStyles.emptyState}>

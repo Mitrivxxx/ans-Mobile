@@ -15,7 +15,7 @@ Ten plik opisuje architekturę, konwencje i miejsca, w których szukać informac
 | HTTP | Axios + własny store ciasteczek |
 | HTML | `linkedom` (`parseHTML`) |
 | Cache / sync | TanStack Query v5 + persystencja AsyncStorage |
-| Sekrety | `expo-secure-store` (remember me), cookies natywne |
+| Sekrety | `react-native-keychain` (zapamiętaj mnie), cookies natywne |
 
 Wejście: `index.ts` → `App.tsx`.
 
@@ -87,7 +87,7 @@ flowchart TD
 | `auth/ensureAuthenticated.ts` | Guard requestów, silent login, retry po wygaśnięciu sesji |
 | `auth/sessionValidation.ts` | `assertAuthenticatedHtml`, probe sesji, `SessionExpiredError` |
 | `auth/session.store.ts` / `sessionLifetime.ts` | Flagi sesji, TTL |
-| `core/auth/rememberMe.storage.ts` | Zapamiętaj mnie (SecureStore) |
+| `core/auth/rememberMe.storage.ts`, `SecureStorageService.ts` | Zapamiętaj mnie (Keychain / Keystore) |
 | `core/auth/performSignOut.ts` | Logout + czyszczenie cache i zdjęcia profilu |
 
 **Remember me:** przy wygaśnięciu sesji próba silent login; offline / brak sieci → **tryb offline** (panel główny + `sessionDegraded`, bez wymogu cache). Polityka: `authSessionPolicy.ts`.
@@ -134,18 +134,23 @@ Opcjonalnie: `*.grid.ts`, `*.page.ts`, `merge*.ts` (np. oceny).
 ### Hooki danych
 
 - **`useUserPersistentQuery`** — główny wzorzec: stale cache, sync na focus/reconnect, `syncStatus` (`idle` | `syncing` | …).
-- **`useQuery`** (bez persystencji) — dane jednorazowe: `usePartialGradesQuery`, `useAnnouncementDetailsQuery`.
+- **`useQuery`** (cache sesji, `gcTime` ~1h) — `usePartialGradesQuery`, `useAnnouncementDetailsQuery` (nie trafiają na dysk).
 - **`createPersistentQueryHook`** — starszy wariant fabryki hooków (sprawdź, czy feature już go używa).
 
-### Co jest persystowane na dysk
+### Co jest persystowane na dysk (offline bundle)
 
-`shouldPersistQuery.ts` — root keys: **`studentPlan`**, **`grades`**, **`announcements`**, **`profile`** (summary + szczegóły ekranu Profil).
+`shouldPersistQuery.ts` — **whitelist** (nie cały root): `weekLessons` tylko bieżący tydzień, `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, `lessons`, stare tygodnie planu. **RAM:** `pruneWeekLessonsQueries` — co najwyżej jeden `weekLessons` na użytkownika (aktywny tydzień; rotacja poniedziałku usuwa stary klucz).
+
+- `buster`: `PERSIST_QUERY_BUSTER` (`v2-offline-bundle`) — migracja starego przepełnionego cache.
+- Awatar: `profilePhotoSessionCache` (RAM) + `profilePhotoPersist.storage.ts` (AsyncStorage); nie w blobie React Query (`profileSummaryPhoto.ts`, `persistClientTransform.ts`).
 
 Profil: prefetch summary po logowaniu; ekran Profil (`profile.details`) — przy cache brak auto-scrapu przy wejściu (tylko pull-to-refresh / `forceRefresh`).
 
 ### Prefetch po logowaniu
 
-`prefetchUserScraperData.ts` — najpierw `weekLessons`, potem równolegle announcements + profile.
+`prefetchUserScraperData.ts` — kolejno: `weekLessons` (bieżący tydzień) → `grades.index` + `grades.semester` (semestr początkowy) → równolegle `announcements.list` + `profile.summary`.
+
+Dashboard i ekrany sidebar (Ogłoszenia, Oceny): `useUserPersistentQuery` (`staleTime` 6h, `syncOnMount`), `SyncBanner`, pull-to-refresh przez `forceRefresh` (jak harmonogram).
 
 ### Czyszczenie
 
@@ -213,9 +218,10 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 | Jak dodać ekran? | `App.tsx`, `navigationRef.ts`, `app/screen/` |
 | Jak pobrać oceny/plan? | `features/grades/hooks/*`, `features/plan/hooks/*` |
 | Błąd logowania / captcha | `features/login/`, `auth/login.parser.ts`, `login.errors.ts` |
+| Zapis loginu / autofill | `SecureStorageService.ts`, `useLoginStoredCredentials`, `LoginScreen.tsx` |
 | Wybór kontekstu po logowaniu (inne wydziały) | `auth/contextSelection.ts`, `auth/contextSelection.parser.ts` |
 | Sesja wygasła | `ensureAuthenticated.ts`, `AuthSessionContext`, `AuthSyncBanner` |
-| Zdjęcie profilu | `hooks/useProfilePhoto.ts`, `profile.avatar.ts`, `profilePhotoSessionCache.ts` |
+| Zdjęcie profilu | `profilePhotoSessionCache.ts`, `profileSummaryPhoto.ts`, `useProfilePhoto.ts`, `profile.avatar.ts` |
 | Dashboard kafelki | `features/dashboard/dashboard.features.ts`, panele `Dashboard*Panel` |
 | Test równoległych requestów | `core/utils/mapWithConcurrency.ts` |
 | Ciemny motyw | `preferences/darkMode.storage.ts`, `SettingsScreen` |
@@ -252,11 +258,11 @@ Release Android: `docs/RELEASE.md`, lokalnie `android/gradlew assembleRelease`.
 
 Śledź zmiany poza `queryKeys` (często untracked w git):
 
-- Profil: `StudentProfileContext`, `useStudentProfileQuery`, `useProfilePhoto`, avatar/cache zdjęć
+- Profil: `StudentProfileContext`, `useStudentProfileQuery`, `useProfilePhoto`; awatar — `profilePhotoSessionCache` + `profileSummaryPhoto.ts` (nie duplikować w RQ)
 - `performSignOut` czyści `profilePhotoSessionCache`
 - Komponenty: `AppHeaderAvatar`, `ProfileSummaryView`, `DashboardMiniProfile`, `SidebarProfileHeader`
 
-Przy pracy nad profilem — sprawdź **oba** źródła: dane tekstowe (scraper parse) i blob zdjęcia (osobny fetch + cache sesyjny).
+**Zdjęcie profilu:** jedna kopia w RAM — `profilePhotoSessionCache` (czyszczone przy wylogowaniu). `profile.summary` w React Query i na dysku **bez** pola `photo` (puste `photo`); scraper zapisuje base64 tylko do cache sesji (`profileSummaryPhoto.ts`). Po restarcie awatar pobierany ponownie przy sync profilu.
 
 ---
 

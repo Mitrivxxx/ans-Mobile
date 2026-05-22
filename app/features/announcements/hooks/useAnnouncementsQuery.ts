@@ -20,6 +20,7 @@ export function useAnnouncementsQuery() {
     isInitialLoading: query.isInitialLoading,
     hasCachedAnnouncements: query.hasCachedData,
     refetch: query.refetch,
+    forceRefresh: query.forceRefresh,
     isFatalError: query.isFatalError,
   };
 }

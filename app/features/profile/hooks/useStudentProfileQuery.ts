@@ -6,8 +6,13 @@ import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 import { useUserPersistentQuery } from '../../../core/queryClient/useUserPersistentQuery';
 import {
   getCachedProfilePhoto,
-  setCachedProfilePhoto,
 } from '../../../core/scraper/features/profile/profilePhotoSessionCache';
+import {
+  hydrateProfilePhotoSessionFromDisk,
+  profilePhotoChangedSince,
+  profileSummaryForQueryCache,
+  sanitizePersistedProfileSummary,
+} from '../../../core/scraper/features/profile/profileSummaryPhoto';
 import {
   ProfileService,
   type ProfileSummary,
@@ -15,79 +20,69 @@ import {
 
 const profileService = new ProfileService();
 
-function resolveSummaryPhoto(
-  fresh: ProfileSummary,
-  previous: ProfileSummary | undefined
-): string {
-  const cached = getCachedProfilePhoto();
-  if (cached) {
-    return cached;
-  }
-
-  if (fresh.photo) {
-    setCachedProfilePhoto(fresh.photo);
-    return fresh.photo;
-  }
-
-  return previous?.photo ?? '';
-}
-
-function mergeProfileSummary(
-  fresh: ProfileSummary,
-  previous: ProfileSummary | undefined
-): ProfileSummary {
-  const photo = resolveSummaryPhoto(fresh, previous);
-  return { ...fresh, photo };
-}
-
 export function useStudentProfileQuery() {
   const userKey = useQueryUserKey();
   const [photoRevision, setPhotoRevision] = useState(0);
 
-  const query = useUserPersistentQuery<ProfileSummary>({
+  const {
+    data: summary,
+    refetch,
+    ...queryRest
+  } = useUserPersistentQuery<ProfileSummary>({
     queryKey: queryKeys.profile.summary,
     queryFn: async () => {
       const fresh = await profileService.getProfileSummary();
-      const previous = queryClient.getQueryData<ProfileSummary>(
-        queryKeys.profile.summary(userKey)
-      );
-      return mergeProfileSummary(fresh, previous);
+      return profileSummaryForQueryCache(fresh, userKey);
     },
     syncOnMount: false,
   });
 
+  const [photo, setPhoto] = useState(() => getCachedProfilePhoto() ?? '');
+
   useEffect(() => {
-    if (query.data?.photo) {
-      setCachedProfilePhoto(query.data.photo);
+    const key = queryKeys.profile.summary(userKey);
+    const data = queryClient.getQueryData<ProfileSummary>(key);
+    const sanitized = sanitizePersistedProfileSummary(data);
+    if (sanitized && sanitized !== data) {
+      queryClient.setQueryData(key, sanitized);
     }
-  }, [query.data?.photo]);
+  }, [userKey]);
+
+  useEffect(() => {
+    void hydrateProfilePhotoSessionFromDisk(userKey).then(() => {
+      setPhoto(getCachedProfilePhoto() ?? '');
+    });
+  }, [userKey]);
+
+  useEffect(() => {
+    setPhoto(getCachedProfilePhoto() ?? '');
+  }, [summary, photoRevision]);
 
   const refreshProfile = useCallback(async () => {
-    const previousPhoto = queryClient.getQueryData<ProfileSummary>(
-      queryKeys.profile.summary(userKey)
-    )?.photo;
+    const previousPhoto = getCachedProfilePhoto();
 
     await queryClient.invalidateQueries({
       queryKey: queryKeys.profile.summary(userKey),
     });
 
-    const result = await query.refetch();
+    const result = await refetch();
 
-    if (result.isSuccess && result.data?.photo !== previousPhoto) {
+    if (result.isSuccess && profilePhotoChangedSince(previousPhoto)) {
       setPhotoRevision((revision) => revision + 1);
     }
 
     return result;
-  }, [query, userKey]);
+  }, [refetch, userKey]);
 
   return {
-    summary: query.data ?? null,
-    syncStatus: query.syncStatus,
-    isInitialLoading: query.isInitialLoading,
-    hasCachedSummary: query.hasCachedData,
+    summary: summary ?? null,
+    photo,
+    syncStatus: queryRest.syncStatus,
+    isInitialLoading: queryRest.isInitialLoading,
+    hasCachedSummary: queryRest.hasCachedData,
     refetch: refreshProfile,
-    forceRefresh: query.forceRefresh,
-    isFatalError: query.isFatalError,
+    forceRefresh: queryRest.forceRefresh,
+    isFatalError: queryRest.isFatalError,
     photoRevision,
   };
 }

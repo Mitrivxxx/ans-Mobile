@@ -3,9 +3,11 @@ import {
   type Lesson,
 } from '../../../core/scraper/features/plan/plan.service';
 import { getWeekMondayDateKey } from '../../../core/scraper/features/plan/plan.dateRange';
+import { pruneWeekLessonsQueries } from '../../../core/queryClient/pruneWeekLessonsQueries';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
+import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 import { useUserPersistentQuery } from '../../../core/queryClient/useUserPersistentQuery';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 const planService = new PlanService();
 
@@ -15,11 +17,19 @@ function referenceDateFromWeekMondayKey(weekMondayKey: string): Date {
 }
 
 export function useStudentPlanWeekLessons(weekMondayKey?: string) {
+  const userKey = useQueryUserKey();
   const resolvedWeekMondayKey = weekMondayKey ?? getWeekMondayDateKey();
   const referenceDate = useMemo(
     () => referenceDateFromWeekMondayKey(resolvedWeekMondayKey),
     [resolvedWeekMondayKey]
   );
+
+  useEffect(() => {
+    if (!userKey) {
+      return;
+    }
+    pruneWeekLessonsQueries(userKey, resolvedWeekMondayKey);
+  }, [userKey, resolvedWeekMondayKey]);
 
   const query = useUserPersistentQuery<Lesson[]>({
     queryKey: (userKey) =>

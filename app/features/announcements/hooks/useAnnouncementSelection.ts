@@ -4,7 +4,8 @@ import { type Announcement } from '../../../core/scraper/features/announcements/
 import { useAnnouncementDetailsQuery } from './useAnnouncementDetailsQuery';
 
 export function useAnnouncementSelection(
-  refetchAnnouncements: () => Promise<unknown>
+  refetchAnnouncements: () => Promise<unknown>,
+  forceRefreshAnnouncements: () => Promise<unknown>
 ) {
   const [selectedItem, setSelectedItem] = useState<Announcement | null>(null);
 
@@ -25,8 +26,8 @@ export function useAnnouncementSelection(
       await detailsQuery.refetch();
       return;
     }
-    await refetchAnnouncements();
-  }, [detailsQuery, refetchAnnouncements, selectedItem]);
+    await forceRefreshAnnouncements();
+  }, [detailsQuery, forceRefreshAnnouncements, selectedItem]);
 
   const clearSelection = useCallback(() => setSelectedItem(null), []);
 

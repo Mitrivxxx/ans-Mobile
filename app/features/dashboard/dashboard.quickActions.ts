@@ -3,6 +3,12 @@ import type { ImageSourcePropType } from 'react-native';
 /** Kolor akcentu harmonogramu — przycisk na dashboardzie i wybrane dni w panelu. */
 export const HARMONOGRAM_ACCENT_COLOR = '#548DF3';
 
+/** Akcent panelu ocen na dashboardzie (zgodny z kafelkiem quick action). */
+export const GRADES_ACCENT_COLOR = '#2EAAA0';
+
+/** Akcent panelu ogłoszeń na dashboardzie. */
+export const ANNOUNCEMENTS_ACCENT_COLOR = '#F2703F';
+
 /** Tło kafelka „dziś” — ten sam żółty co wybrany dzień w planie zajęć. */
 export const HARMONOGRAM_TODAY_DAY_COLOR = '#F5D547';
 

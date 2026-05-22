@@ -74,6 +74,8 @@ export default function LoginCaptchaSection({
         onSubmitEditing={onSubmitEditing}
         blurOnSubmit
         editable={!loading}
+        importantForAutofill="no"
+        autoComplete="off"
       />
     </View>
   );

@@ -20,6 +20,7 @@ export function useGradesIndexQuery() {
     isInitialLoading: query.isInitialLoading,
     hasCachedIndex: query.hasCachedData,
     refetch: query.refetch,
+    forceRefresh: query.forceRefresh,
     isFatalError: query.isFatalError,
   };
 }

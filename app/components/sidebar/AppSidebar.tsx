@@ -44,7 +44,7 @@ export default function AppSidebar() {
   }, [isOpen]);
 
   useEffect(() => {
-    Animated.parallel([
+    const animation = Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: isOpen ? 0 : -SIDEBAR_WIDTH,
         duration: 260,
@@ -55,7 +55,9 @@ export default function AppSidebar() {
         duration: 260,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    animation.start();
+    return () => animation.stop();
   }, [fadeAnim, isOpen, slideAnim]);
 
   const routeName = getCurrentRouteName();

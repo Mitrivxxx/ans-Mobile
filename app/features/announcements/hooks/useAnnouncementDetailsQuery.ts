@@ -4,6 +4,10 @@ import {
   AnnouncementsService,
   type AnnouncementDetails,
 } from '../../../core/scraper/features/announcements/announcements.service';
+import {
+  EPHEMERAL_QUERY_GC_TIME_MS,
+  PERSISTENT_QUERY_STALE_TIME_MS,
+} from '../../../core/queryClient/persistentQueryConfig';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 
@@ -20,7 +24,7 @@ export function useAnnouncementDetailsQuery(
     queryFn: () =>
       announcementsService.getAnnouncementDetails(requestPath ?? ''),
     enabled: Boolean(announcementId && requestPath),
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: Number.POSITIVE_INFINITY,
+    staleTime: PERSISTENT_QUERY_STALE_TIME_MS,
+    gcTime: EPHEMERAL_QUERY_GC_TIME_MS,
   });
 }

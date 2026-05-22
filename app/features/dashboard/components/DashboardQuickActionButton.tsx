@@ -30,24 +30,27 @@ export default function DashboardQuickActionButton({
     if (isSelected) {
       setTextOnFill(true);
       fillProgress.setValue(0);
-      Animated.spring(fillProgress, {
+      const animation = Animated.spring(fillProgress, {
         toValue: 1,
         useNativeDriver: true,
         friction: 7,
         tension: 90,
-      }).start();
-      return;
+      });
+      animation.start();
+      return () => animation.stop();
     }
 
-    Animated.timing(fillProgress, {
+    const animation = Animated.timing(fillProgress, {
       toValue: 0,
       duration: 240,
       useNativeDriver: true,
-    }).start(({ finished }) => {
+    });
+    animation.start(({ finished }) => {
       if (finished) {
         setTextOnFill(false);
       }
     });
+    return () => animation.stop();
   }, [fillProgress, isSelected]);
 
   return (

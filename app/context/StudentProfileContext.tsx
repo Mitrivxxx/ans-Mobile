@@ -8,13 +8,12 @@ import React, {
 import { queryClient } from '../core/queryClient/queryClient';
 import { queryKeys } from '../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../core/queryClient/useQueryUserKey';
-import { getCachedProfilePhoto } from '../core/scraper/features/profile/profilePhotoSessionCache';
 import type { ProfileSummary } from '../core/scraper/features/profile/profile.service';
 import { useStudentProfileQuery } from '../features/profile/hooks/useStudentProfileQuery';
 
 type StudentProfileContextValue = {
   summary: ProfileSummary | null;
-  /** URI zdjęcia z cache sesji (pamięć + React Query). */
+  /** URI zdjęcia — wyłącznie profilePhotoSessionCache (nie w React Query). */
   photo: string;
   loading: boolean;
   photoRevision: number;
@@ -34,16 +33,12 @@ export function StudentProfileProvider({
   const userKey = useQueryUserKey();
   const {
     summary,
+    photo,
     isInitialLoading,
     hasCachedSummary,
     refetch: refreshProfile,
     photoRevision,
   } = useStudentProfileQuery();
-
-  const photo = useMemo(
-    () => getCachedProfilePhoto() ?? summary?.photo ?? '',
-    [summary?.photo]
-  );
 
   const clear = useCallback(() => {
     queryClient.removeQueries({

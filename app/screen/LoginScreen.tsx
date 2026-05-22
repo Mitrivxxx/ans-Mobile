@@ -21,7 +21,7 @@ import LoginCaptchaSection from '../features/login/LoginCaptchaSection';
 import LoginIconInput from '../features/login/LoginIconInput';
 import LoginInfoButton from '../features/login/LoginInfoButton';
 import { useAuthSession } from '../context/AuthSessionContext';
-import { isRememberMeEnabled } from '../core/auth/rememberMe.storage';
+import { useLoginStoredCredentials } from '../features/login/hooks/useLoginStoredCredentials';
 import { saveLastUsername } from '../core/auth/sessionUser.storage';
 import { resetSilentLoginLimiter } from '../core/scraper/auth/silentLoginLimiter';
 import { confirmWdSessionAfterLogin } from '../core/scraper/auth/sessionValidation';
@@ -65,19 +65,7 @@ export default function LoginScreen() {
 
   const captchaVisible = captchaContinuationHtml !== null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void isRememberMeEnabled().then((enabled) => {
-      if (!cancelled) {
-        setRememberMe(enabled);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  useLoginStoredCredentials({ setUsername, setPassword, setRememberMe });
 
   useEffect(() => {
     if (!captchaVisible) {
@@ -123,7 +111,6 @@ export default function LoginScreen() {
     clearAllErrors();
 
     const passwordAttempt = password;
-    setPassword('');
 
     let hasFieldError = false;
 
@@ -204,6 +191,7 @@ export default function LoginScreen() {
         return;
       }
 
+      setPassword('');
       markAuthenticated({ ephemeral: !rememberMe });
     } catch (err: unknown) {
       const code = classifyLoginThrowable(err);

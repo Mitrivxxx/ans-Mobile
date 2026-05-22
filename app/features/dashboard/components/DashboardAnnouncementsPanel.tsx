@@ -13,7 +13,10 @@ import { createAnnouncementsUiStyles } from '../../announcements/announcementsUi
 import { useAnnouncementSelection } from '../../announcements/hooks/useAnnouncementSelection';
 import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
 import { takeLatestAnnouncements } from '../../announcements/utils/takeLatestAnnouncements';
+import SyncBanner from '../../../components/SyncBanner';
 import { useRegisterScreenRefresh } from '../../../hooks/useRegisterScreenRefresh';
+import { useSyncBanner } from '../../../hooks/useSyncBanner';
+import { ANNOUNCEMENTS_ACCENT_COLOR } from '../dashboard.quickActions';
 import { createDashboardAnnouncementsPanelStyles } from './DashboardAnnouncementsPanel.styles';
 
 const DASHBOARD_ANNOUNCEMENTS_LIMIT = 5;
@@ -22,8 +25,14 @@ export default function DashboardAnnouncementsPanel() {
   const { colors } = useAppTheme();
   const panelStyles = useThemedStyles(createDashboardAnnouncementsPanelStyles);
   const uiStyles = useThemedStyles(createAnnouncementsUiStyles);
-  const { announcements, isInitialLoading, isFatalError, refetch } =
-    useAnnouncementsQuery();
+  const {
+    announcements,
+    isInitialLoading,
+    isFatalError,
+    refetch,
+    forceRefresh,
+    syncStatus,
+  } = useAnnouncementsQuery();
 
   const {
     selectedItem,
@@ -34,7 +43,9 @@ export default function DashboardAnnouncementsPanel() {
     detailsQuery,
     refreshSelection,
     clearSelection,
-  } = useAnnouncementSelection(refetch);
+  } = useAnnouncementSelection(refetch, forceRefresh);
+
+  const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
   useRegisterScreenRefresh(refreshSelection);
 
@@ -119,6 +130,13 @@ export default function DashboardAnnouncementsPanel() {
 
   return (
     <View style={panelStyles.wrap}>
+      <SyncBanner
+        status={bannerStatus}
+        loadingText="Aktualizowanie ogłoszeń…"
+        errorText="Nie udało się zaktualizować ogłoszeń"
+        accentColor={ANNOUNCEMENTS_ACCENT_COLOR}
+        onDismissUpToDate={dismissUpToDate}
+      />
       {detailsError ? (
         <Text style={uiStyles.errorText}>{detailsError}</Text>
       ) : null}

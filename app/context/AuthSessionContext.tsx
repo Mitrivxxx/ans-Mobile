@@ -193,10 +193,18 @@ export function AuthSessionProvider({
   const [rememberMeEnabled, setRememberMeEnabled] = useState(false);
   const [sessionDegraded, setSessionDegraded] = useState(false);
   const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
-  const restoreRunIdRef = useRef(0);
-  const foregroundRefreshInFlightRef = useRef(false);
+  const sessionResolveRunIdRef = useRef(0);
   const authStatusRef = useRef(authStatus);
   authStatusRef.current = authStatus;
+
+  const bumpSessionResolve = useCallback(() => {
+    sessionResolveRunIdRef.current += 1;
+  }, []);
+
+  const isSessionResolveCurrent = useCallback(
+    (runId: number) => runId === sessionResolveRunIdRef.current,
+    []
+  );
 
   const applyResolvedSession = useCallback(
     (resolved: Awaited<ReturnType<typeof resolveAuthStatus>>) => {
@@ -210,19 +218,21 @@ export function AuthSessionProvider({
 
   const restoreSession = useCallback(
     async (options?: { showSplash?: boolean }) => {
-      const runId = ++restoreRunIdRef.current;
+      const runId = ++sessionResolveRunIdRef.current;
       if (options?.showSplash !== false) {
         setAuthStatus('unknown');
       }
       const resolved = await resolveAuthStatus();
-      if (runId === restoreRunIdRef.current) {
+      if (isSessionResolveCurrent(runId)) {
         applyResolvedSession(resolved);
       }
     },
-    [applyResolvedSession]
+    [applyResolvedSession, isSessionResolveCurrent]
   );
 
   const handleSessionLost = useCallback(() => {
+    const runId = ++sessionResolveRunIdRef.current;
+
     void (async () => {
       const rememberMe = await isRememberMeEnabled();
       if (rememberMe) {
@@ -230,6 +240,9 @@ export function AuthSessionProvider({
         const degraded = await resolveRememberMeDegradedSession({
           offline,
         });
+        if (!isSessionResolveCurrent(runId)) {
+          return;
+        }
         if (degraded) {
           setAuthStatus(degraded.status);
           setSessionDegraded(true);
@@ -238,11 +251,15 @@ export function AuthSessionProvider({
         }
       }
 
+      if (!isSessionResolveCurrent(runId)) {
+        return;
+      }
+
       setAuthStatus('unauthenticated');
       setSessionDegraded(false);
       setSessionDegradedMessage('');
     })();
-  }, []);
+  }, [isSessionResolveCurrent]);
 
   useEffect(() => {
     return registerSessionLostHandler(handleSessionLost);
@@ -275,82 +292,99 @@ export function AuthSessionProvider({
     }
 
     const onAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'background') {
+        bumpSessionResolve();
+        return;
+      }
       if (nextState !== 'active') {
         return;
       }
-      if (foregroundRefreshInFlightRef.current) {
-        return;
-      }
+
+      const runId = ++sessionResolveRunIdRef.current;
 
       void (async () => {
-        foregroundRefreshInFlightRef.current = true;
-        try {
-          const rememberMe = await isRememberMeEnabled();
+        const rememberMe = await isRememberMeEnabled();
 
-          if (rememberMe) {
-            const offline = await isDeviceOffline();
-            if (offline) {
-              const degraded = await resolveRememberMeDegradedSession({
-                offline: true,
-              });
-              if (degraded) {
-                setAuthStatus(degraded.status);
-                setSessionDegraded(true);
-                setSessionDegradedMessage(degraded.sessionDegradedMessage);
-                setRememberMeEnabled(true);
-                return;
-              }
-            } else {
-              const refreshed = await refreshSessionOnForeground();
+        if (rememberMe) {
+          const offline = await isDeviceOffline();
+          if (offline) {
+            const degraded = await resolveRememberMeDegradedSession({
+              offline: true,
+            });
+            if (!isSessionResolveCurrent(runId)) {
+              return;
+            }
+            if (degraded) {
+              setAuthStatus(degraded.status);
+              setSessionDegraded(true);
+              setSessionDegradedMessage(degraded.sessionDegradedMessage);
+              setRememberMeEnabled(true);
+              return;
+            }
+          } else {
+            const refreshed = await refreshSessionOnForeground();
 
-              if (refreshed.authenticated) {
-                setAuthStatus('authenticated');
-                setSessionDegraded(false);
-                setSessionDegradedMessage('');
-                setRememberMeEnabled(true);
-                return;
-              }
-
-              const degraded = await resolveRememberMeDegradedSession();
-              if (degraded) {
-                setAuthStatus(degraded.status);
-                setSessionDegraded(true);
-                setSessionDegradedMessage(degraded.sessionDegradedMessage);
-                setRememberMeEnabled(true);
-                return;
-              }
+            if (!isSessionResolveCurrent(runId)) {
+              return;
+            }
+            if (refreshed.authenticated) {
+              setAuthStatus('authenticated');
+              setSessionDegraded(false);
+              setSessionDegradedMessage('');
+              setRememberMeEnabled(true);
+              return;
             }
 
-            setAuthStatus('unauthenticated');
-            setSessionDegraded(false);
-            setSessionDegradedMessage('');
-            return;
+            const degraded = await resolveRememberMeDegradedSession();
+            if (!isSessionResolveCurrent(runId)) {
+              return;
+            }
+            if (degraded) {
+              setAuthStatus(degraded.status);
+              setSessionDegraded(true);
+              setSessionDegradedMessage(degraded.sessionDegradedMessage);
+              setRememberMeEnabled(true);
+              return;
+            }
           }
 
-          if (
-            isEphemeralSessionActive() &&
-            (await hasScraperSession())
-          ) {
-            setAuthStatus('authenticated');
-            setSessionDegraded(false);
-            setSessionDegradedMessage('');
+          if (!isSessionResolveCurrent(runId)) {
             return;
           }
 
           setAuthStatus('unauthenticated');
           setSessionDegraded(false);
           setSessionDegradedMessage('');
-        } finally {
-          foregroundRefreshInFlightRef.current = false;
+          return;
         }
+
+        if (!isSessionResolveCurrent(runId)) {
+          return;
+        }
+
+        if (isEphemeralSessionActive() && (await hasScraperSession())) {
+          setAuthStatus('authenticated');
+          setSessionDegraded(false);
+          setSessionDegradedMessage('');
+          return;
+        }
+
+        if (!isSessionResolveCurrent(runId)) {
+          return;
+        }
+
+        setAuthStatus('unauthenticated');
+        setSessionDegraded(false);
+        setSessionDegradedMessage('');
       })();
     };
 
     const subscription = AppState.addEventListener('change', onAppStateChange);
     return () => subscription.remove();
-  }, [persistReady]);
+  }, [bumpSessionResolve, isSessionResolveCurrent, persistReady]);
 
   const markAuthenticated = useCallback((options?: { ephemeral?: boolean }) => {
+    bumpSessionResolve();
     if (options?.ephemeral === true) {
       setEphemeralSessionActive(true);
     } else if (options?.ephemeral === false) {
@@ -359,7 +393,7 @@ export function AuthSessionProvider({
     setAuthStatus('authenticated');
     setSessionDegraded(false);
     setSessionDegradedMessage('');
-  }, []);
+  }, [bumpSessionResolve]);
 
   const enableRememberMe = useCallback(
     async (username: string, password: string) => {
@@ -376,16 +410,19 @@ export function AuthSessionProvider({
   }, []);
 
   const signOut = useCallback(async () => {
+    bumpSessionResolve();
     clearEphemeralSession();
     await performSignOut();
     setAuthStatus('unauthenticated');
     setSessionDegraded(false);
     setSessionDegradedMessage('');
     setRememberMeEnabled(false);
-  }, []);
+  }, [bumpSessionResolve]);
 
   /** Ręczne odnowienie sesji (banner / pull-to-refresh) — bez czyszczenia ciasteczek jak przy cold start. */
   const retrySessionRestore = useCallback(async () => {
+    const runId = ++sessionResolveRunIdRef.current;
+
     try {
       await initClient();
     } catch {
@@ -402,6 +439,9 @@ export function AuthSessionProvider({
       if (!offline) {
         restored = await restoreRememberMeSession();
 
+        if (!isSessionResolveCurrent(runId)) {
+          return;
+        }
         if (restored.authenticated) {
           setAuthStatus('authenticated');
           setSessionDegraded(false);
@@ -415,6 +455,9 @@ export function AuthSessionProvider({
       const degraded = await resolveRememberMeDegradedSession({
         offline: offline || undefined,
       });
+      if (!isSessionResolveCurrent(runId)) {
+        return;
+      }
       if (degraded) {
         const extra = restored?.errorMessage?.trim();
         setAuthStatus(degraded.status);
@@ -435,6 +478,10 @@ export function AuthSessionProvider({
       return;
     }
 
+    if (!isSessionResolveCurrent(runId)) {
+      return;
+    }
+
     if (await hasLiveScraperSession()) {
       if (!isEphemeralSessionActive()) {
         setEphemeralSessionActive(true);
@@ -447,11 +494,15 @@ export function AuthSessionProvider({
       return;
     }
 
+    if (!isSessionResolveCurrent(runId)) {
+      return;
+    }
+
     setAuthStatus('unauthenticated');
     setSessionDegraded(false);
     setSessionDegradedMessage('');
     setRememberMeEnabled(false);
-  }, []);
+  }, [isSessionResolveCurrent]);
 
   const value = useMemo<AuthSessionContextValue>(
     () => ({

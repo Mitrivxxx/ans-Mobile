@@ -8,7 +8,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RefreshableScrollView from '../components/RefreshableScrollView';
+import SyncBanner from '../components/SyncBanner';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
+import { useSyncBanner } from '../hooks/useSyncBanner';
 import GradesSemesterPanel from '../features/grades/components/GradesSemesterPanel';
 import GradesSubjectCard from '../features/grades/components/GradesSubjectCard';
 import { createGradesScreenStyles } from '../features/grades/GradesScreen.styles';
@@ -37,9 +39,13 @@ export default function GradesScreen({ navigation }: Props) {
     goToPreviousSemester,
     goToNextSemester,
     refetch,
+    forceRefresh,
+    syncStatus,
   } = useGrades();
 
-  useRegisterScreenRefresh(refetch);
+  const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
+
+  useRegisterScreenRefresh(forceRefresh);
 
   const swipeHandlers = useSemesterSwipe({
     canGoPrevious,
@@ -89,6 +95,13 @@ export default function GradesScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <SyncBanner
+          status={bannerStatus}
+          loadingText="Aktualizowanie ocen…"
+          errorText="Nie udało się zaktualizować ocen"
+          accentColor={gradesColors.primary}
+          onDismissUpToDate={dismissUpToDate}
+        />
         {semesters.length === 0 || !currentSemester ? (
           <Text style={styles.emptyText}>Brak danych o ocenach</Text>
         ) : (
@@ -117,8 +130,9 @@ export default function GradesScreen({ navigation }: Props) {
               ) : (
                 currentSemester.subjects.map((subject) => (
                   <GradesSubjectCard
-                    key={`${currentSemester.semester}-${subject.subject}`}
+                    key={`${currentSemester.semester}-${subject.subject}-${subject.pplsId ?? 'na'}`}
                     subject={subject}
+                    expandable
                   />
                 ))
               )}

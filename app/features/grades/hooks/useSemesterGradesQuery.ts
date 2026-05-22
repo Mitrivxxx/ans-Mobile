@@ -27,6 +27,7 @@ export function useSemesterGradesQuery(
     isInitialLoading: query.isInitialLoading,
     hasCachedSemester: query.hasCachedData,
     refetch: query.refetch,
+    forceRefresh: query.forceRefresh,
     isFatalError: query.isFatalError,
   };
 }

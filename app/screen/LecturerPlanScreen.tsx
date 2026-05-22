@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppTheme } from '../context/AppThemeContext';
 import { useThemedStyles } from '../theme/useThemedStyles';
 import { createLecturerPlanScreenStyles } from '../features/lecturer/LecturerPlanScreen.styles';
@@ -90,22 +90,36 @@ export default function LecturerPlanScreen() {
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
 
+  const fetchRunIdRef = useRef(0);
+
   const fetchLessons = useCallback(async () => {
+    const runId = ++fetchRunIdRef.current;
     try {
       setLoading(true);
       setError('');
       const data = await lecturerPlanService.getLessons(scheduleId);
+      if (runId !== fetchRunIdRef.current) {
+        return;
+      }
       setLessons(data);
     } catch (err) {
+      if (runId !== fetchRunIdRef.current) {
+        return;
+      }
       console.error('[LECTURER PLAN SCREEN]', err);
       setError('Nie udało się pobrać harmonogramu prowadzącego');
     } finally {
-      setLoading(false);
+      if (runId === fetchRunIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [lecturerPlanService, scheduleId]);
 
   useEffect(() => {
-    fetchLessons();
+    void fetchLessons();
+    return () => {
+      fetchRunIdRef.current += 1;
+    };
   }, [fetchLessons]);
 
   useRegisterScreenRefresh(fetchLessons);
