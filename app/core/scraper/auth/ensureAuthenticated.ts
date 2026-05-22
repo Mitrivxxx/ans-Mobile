@@ -1,5 +1,6 @@
 import type { InternalAxiosRequestConfig } from "axios";
 
+import { isDeviceOffline } from "../../auth/authSessionPolicy";
 import {
   getSavedCredentials,
   isRememberMeEnabled,
@@ -172,6 +173,10 @@ async function sessionNeedsRefresh(): Promise<boolean> {
 }
 
 async function ensureRememberMeSessionAlive(): Promise<void> {
+  if (await isDeviceOffline()) {
+    return;
+  }
+
   if (!(await sessionNeedsRefresh())) {
     return;
   }
@@ -230,6 +235,13 @@ export type RememberMeResolveResult = {
 export async function restoreRememberMeSession(): Promise<RememberMeResolveResult> {
   if (!restoreRememberMeInFlight) {
     restoreRememberMeInFlight = (async () => {
+      if (await isDeviceOffline()) {
+        return {
+          authenticated: false,
+          sessionDegraded: true,
+        };
+      }
+
       const hasCookies = await hasScraperSession();
       const pastTtl = await isSessionPastTtl();
 
@@ -246,7 +258,7 @@ export async function restoreRememberMeSession(): Promise<RememberMeResolveResul
 
       const outcome = await silentLoginOnce();
 
-      if (outcome.success || (await hasScraperSession())) {
+      if (outcome.success) {
         return { authenticated: true, sessionDegraded: false };
       }
 

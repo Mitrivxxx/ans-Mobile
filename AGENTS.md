@@ -90,11 +90,11 @@ flowchart TD
 | `core/auth/rememberMe.storage.ts` | Zapamiętaj mnie (SecureStore) |
 | `core/auth/performSignOut.ts` | Logout + czyszczenie cache i zdjęcia profilu |
 
-**Remember me:** przy wygaśnięciu sesji próba silent login; bez remember me — `notifySessionLost` → UI (`AuthSyncBanner`, degraded mode).
+**Remember me:** przy wygaśnięciu sesji próba silent login; offline / brak sieci → **tryb offline** (panel główny + `sessionDegraded`, bez wymogu cache). Polityka: `authSessionPolicy.ts`.
 
-**Bez remember me:** ciasteczka WD i tak trafiają do CookieManager, ale przy **cold start** nie są używane do auto-logowania (`ephemeralSession.ts` — flaga tylko w procesie; po restarcie `resolveAuthStatus` czyści jar i wymaga logowania lub trybu degraded z cache).
+**Bez remember me:** ciasteczka WD przy **cold start** są czyszczone (`ephemeralSession.ts`); użytkownik trafia na ekran logowania — **bez** trybu offline z cache po restarcie aplikacji.
 
-**Degraded mode:** brak żywej sesji WD, ale jest cache w React Query → użytkownik widzi stare dane (`sessionDegraded` w `AuthSessionContext`).
+**Degraded mode:** tylko przy włączonym remember me — brak żywej sesji WD, wyświetlane dane z cache (`sessionDegraded`, `AuthSyncBanner`).
 
 ### Wzorzec feature scrapera
 

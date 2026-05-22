@@ -62,8 +62,17 @@ export function getDegradedCacheKinds(): DegradedCacheKind[] {
   return Array.from(kinds);
 }
 
-export function formatDegradedCacheMessage(kinds: DegradedCacheKind[]): string {
+export const OFFLINE_NO_NETWORK_MESSAGE =
+  'Brak połączenia z internetem. Wyświetlane są zapisane dane — mogą być nieaktualne. Po przywróceniu sieci użyj „Spróbuj ponownie”, aby odświeżyć sesję WD.';
+
+export function formatDegradedCacheMessage(
+  kinds: DegradedCacheKind[],
+  options?: { offline?: boolean }
+): string {
   if (kinds.length === 0) {
+    if (options?.offline) {
+      return OFFLINE_NO_NETWORK_MESSAGE;
+    }
     return 'Sesja WD wygasła. Wyświetlane są zapisane dane — mogą być nieaktualne.';
   }
 
