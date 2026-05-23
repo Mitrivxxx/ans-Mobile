@@ -34,6 +34,12 @@ export function getWeekMondayDateKey(referenceDate = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+/** Data odniesienia dla scrapera z klucza poniedziałku (`YYYY-MM-DD`). */
+export function referenceDateFromWeekMondayKey(weekMondayKey: string): Date {
+  const [year, month, day] = weekMondayKey.split('-').map(Number);
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+}
+
 /** Bieżący tydzień kalendarzowy (pon.–niedz.) — do dashboardu. */
 export function getCurrentWeekPlanParams(
   referenceDate = new Date()

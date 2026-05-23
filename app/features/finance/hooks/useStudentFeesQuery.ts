@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 
+import { cacheUntilReplaceQueryOptions } from '../../../core/queryClient/cacheUntilReplace';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import type { SyncStatus } from '../../../core/queryClient/syncTypes';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
@@ -12,7 +13,7 @@ import {
 
 const financeService = new FinanceService();
 
-/** Opłaty — bez persystencji; baner sync jak w harmonogramie. */
+/** Opłaty — bez persystencji na dysku; cache w RAM do kolejnego scrape. */
 export function useStudentFeesQuery() {
   const userKey = useQueryUserKey();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
@@ -20,15 +21,12 @@ export function useStudentFeesQuery() {
   const query = useQuery<StudentFee[]>({
     queryKey: queryKeys.finance.fees(userKey),
     queryFn: () => financeService.getStudentFees(),
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    ...cacheUntilReplaceQueryOptions<StudentFee[]>(),
   });
 
   const { refetch, isLoading, isFetching, isError, error, data } = query;
   const fees = data ?? [];
+  const hasCachedData = data !== undefined;
 
   const runSync = useCallback(
     async (options?: { minLoadingMs?: number }) => {
@@ -66,8 +64,12 @@ export function useStudentFeesQuery() {
 
   useFocusEffect(
     useCallback(() => {
-      void runSync({ minLoadingMs: 400 });
-    }, [runSync])
+      if (hasCachedData) {
+        setSyncStatus('upToDate');
+        return;
+      }
+      void runSync();
+    }, [hasCachedData, runSync])
   );
 
   return {

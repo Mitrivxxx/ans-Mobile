@@ -139,7 +139,7 @@ Opcjonalnie: `*.grid.ts`, `*.page.ts`, `merge*.ts` (np. oceny).
 
 ### Co jest persystowane na dysk (offline bundle)
 
-`shouldPersistQuery.ts` — **whitelist** (nie cały root): `weekLessons` tylko bieżący tydzień, `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, `lessons`, stare tygodnie planu. **RAM:** `pruneWeekLessonsQueries` — co najwyżej jeden `weekLessons` na użytkownika (aktywny tydzień; rotacja poniedziałku usuwa stary klucz).
+`shouldPersistQuery.ts` — **whitelist** (nie cały root): `weekLessons` — bieżący tydzień + 3 do przodu (`planWeekWindow.ts`), `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, `lessons`, tygodnie planu poza oknem prefetch. **RAM:** `pruneWeekLessonsQueries` — okno prefetch + aktywnie oglądany tydzień (np. po nawigacji w przód).
 
 - `buster`: `PERSIST_QUERY_BUSTER` (`v2-offline-bundle`) — migracja starego przepełnionego cache.
 - Awatar: `profilePhotoSessionCache` (RAM) + `profilePhotoPersist.storage.ts` (AsyncStorage); nie w blobie React Query (`profileSummaryPhoto.ts`, `persistClientTransform.ts`).
@@ -148,7 +148,7 @@ Profil: prefetch summary po logowaniu; ekran Profil (`profile.details`) — przy
 
 ### Prefetch po logowaniu
 
-`prefetchUserScraperData.ts` — kolejno: `weekLessons` (bieżący tydzień) → `grades.index` + `grades.semester` (semestr początkowy) → równolegle `announcements.list` + `profile.summary`.
+`prefetchUserScraperData.ts` — po logowaniu: `profile.summary`. Plan tygodniowy (bieżący + 3 do przodu): `prefetchStudentPlanWeeks.ts` + `usePrefetchPlanWeekWindow` na panelu harmonogramu dashboardu; kolejne tygodnie — lazy przy nawigacji (`useStudentPlanWeekLessons`).
 
 Dashboard i ekrany sidebar (Ogłoszenia, Oceny): `useUserPersistentQuery` (`staleTime` 6h, `syncOnMount`), `SyncBanner`, pull-to-refresh przez `forceRefresh` (jak harmonogram).
 

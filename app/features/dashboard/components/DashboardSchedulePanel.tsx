@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SyncBanner from '../../../components/SyncBanner';
 import ScheduleLessonCard from '../../../components/schedule/ScheduleLessonCard';
 import { HARMONOGRAM_ACCENT_COLOR } from '../dashboard.quickActions';
+import { usePrefetchPlanWeekWindow } from '../../plan/hooks/usePrefetchPlanWeekWindow';
 import { useStudentPlanWeekLessons } from '../../plan/hooks/useStudentPlanWeekLessons';
 import { useSyncBanner } from '../../../hooks/useSyncBanner';
 import { getWeekMondayDateKey } from '../../../core/scraper/features/plan/plan.dateRange';
@@ -52,6 +53,7 @@ function formatWeekRangeLabel(week: WeekDay[]): string {
 export default function DashboardSchedulePanel() {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createDashboardSchedulePanelStyles);
+  usePrefetchPlanWeekWindow();
   const [weekOffset, setWeekOffset] = useState(0);
 
   const weekReferenceDate = useMemo(

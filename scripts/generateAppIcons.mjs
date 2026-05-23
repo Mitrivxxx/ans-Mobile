@@ -5,7 +5,7 @@
  * - assets/icon.png — 1024×1024, tło #000
  * - assets/adaptive-icon.png — foreground, safe zone ~66%
  *
- * UI: calendar / school / bell, logov2, logov2_dark, logo_login.png
+ * UI: calendar / school / bell, logov2, logov2_dark, anslogo.png (logowanie)
  *
  * Uruchom: npm run generate-icons
  */
@@ -23,8 +23,6 @@ const root = path.join(__dirname, '..');
 const source = path.join(root, 'assets/icons/logo_mobile.png');
 
 const SIZE = 1024;
-/** Safe zone adaptive icon (Google: środkowe ~66% kwadratu). */
-const ADAPTIVE_SAFE_PX = Math.round(SIZE * 0.66);
 
 /** Zgodne z expo.android.adaptiveIcon.backgroundColor w app.json */
 const LAUNCHER_BG = { r: 0, g: 0, b: 0, alpha: 1 };
@@ -49,27 +47,13 @@ async function writeExpoIcon() {
     .toFile(outputs.icon);
 }
 
-/** Foreground adaptive: logo w safe zone, reszta przezroczysta (tło z app.json). */
+/**
+ * Android adaptive foreground — ten sam artwork co icon.png (pełne 1024×1024).
+ * Wcześniejsze skalowanie do ~66% safe zone dawało inną ikonę na pulpicie niż logo_mobile.
+ */
 async function writeAdaptiveForeground() {
-  const { data, info } = await sharp(source)
-    .resize(ADAPTIVE_SAFE_PX, ADAPTIVE_SAFE_PX, {
-      fit: 'contain',
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .toBuffer({ resolveWithObject: true });
-
-  const left = Math.round((SIZE - info.width) / 2);
-  const top = Math.round((SIZE - info.height) / 2);
-
-  await sharp({
-    create: {
-      width: SIZE,
-      height: SIZE,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    },
-  })
-    .composite([{ input: data, left, top }])
+  await sharp(source)
+    .resize(SIZE, SIZE, { fit: 'contain', background: LAUNCHER_BG })
     .png(pngOptions)
     .toFile(outputs.adaptive);
 }

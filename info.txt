@@ -15,3 +15,5 @@ Budowanie release (Android)
 cd android
 gradlew assembleRelease
 ------------
+release install
+adb install -r app\build\outputs\apk\release\app-release.apk

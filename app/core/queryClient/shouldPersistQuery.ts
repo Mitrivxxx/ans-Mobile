@@ -1,10 +1,10 @@
 import type { Query } from '@tanstack/react-query';
 
-import { getWeekMondayDateKey } from '../scraper/features/plan/plan.dateRange';
+import { isWeekInDefaultPrefetchWindow } from './planWeekWindow';
 
 /**
  * Zapytania zapisywane na dysk (offline / degraded).
- * Bez: partial, detail, semester, lessons, stare weekLessons.
+ * Bez: partial, detail, semester, lessons, weekLessons poza oknem prefetch.
  */
 const OFFLINE_QUERY_SEGMENTS = {
   studentPlan: new Set(['weekLessons']),
@@ -19,7 +19,7 @@ function isOfflineRoot(root: unknown): root is OfflineRoot {
   return typeof root === 'string' && root in OFFLINE_QUERY_SEGMENTS;
 }
 
-function isCurrentWeekLessonsKey(queryKey: readonly unknown[]): boolean {
+function isPrefetchWindowWeekLessonsKey(queryKey: readonly unknown[]): boolean {
   if (queryKey.length < 4) {
     return false;
   }
@@ -27,7 +27,7 @@ function isCurrentWeekLessonsKey(queryKey: readonly unknown[]): boolean {
   if (typeof weekMondayKey !== 'string') {
     return false;
   }
-  return weekMondayKey === getWeekMondayDateKey();
+  return isWeekInDefaultPrefetchWindow(weekMondayKey);
 }
 
 /** Czy zapytanie wchodzi do małego „offline bundle” (AsyncStorage). */
@@ -49,7 +49,7 @@ export function isOfflinePersistQuery(query: Query): boolean {
   }
 
   if (root === 'studentPlan' && segment === 'weekLessons') {
-    return isCurrentWeekLessonsKey(key);
+    return isPrefetchWindowWeekLessonsKey(key);
   }
 
   return true;

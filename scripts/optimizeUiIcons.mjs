@@ -1,5 +1,5 @@
 /**
- * Optymalizuje PNG używane w UI (w miejscu + logo logowania z logo_mobile).
+ * Optymalizuje PNG używane w UI (w miejscu + logo logowania z anslogo).
  * Wywoływane z generateAppIcons.mjs lub: node scripts/optimizeUiIcons.mjs
  */
 import { stat, writeFile } from 'node:fs/promises';
@@ -95,26 +95,17 @@ export async function optimizePngInPlace(absPath, options = {}) {
   };
 }
 
-/** Lżejsze logo na ekranie logowania — źródło nadal logo_mobile.png. */
+/** Lżejsze logo na ekranie logowania — źródło anslogo.png. */
 export async function writeLoginLogo() {
-  const source = path.join(iconsDir, 'logo_mobile.png');
-  const target = path.join(iconsDir, 'logo_login.png');
-
-  await sharp(source)
-    .resize(LOGIN_LOGO_MAX_PX, LOGIN_LOGO_MAX_PX, {
-      fit: 'inside',
-      withoutEnlargement: true,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .png(PNG_OPTS)
-    .toFile(target);
-
+  const target = path.join(iconsDir, 'anslogo.png');
+  const optimized = await optimizePngInPlace(target, {
+    maxDimension: LOGIN_LOGO_MAX_PX,
+  });
   const { size } = await stat(target);
-  const meta = await sharp(target).metadata();
   return {
-    rel: path.relative(root, target),
+    rel: optimized.rel,
     size,
-    dims: `${meta.width}×${meta.height}`,
+    dims: optimized.dims,
   };
 }
 
