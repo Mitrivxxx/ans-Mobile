@@ -12,7 +12,6 @@ function isProfileSummaryQueryKey(queryKey: unknown): boolean {
   );
 }
 
-/** Ostatnia linia obrony: nigdy nie zapisuj base64 w podsumowaniu profilu. */
 export function stripProfilePhotoFromDehydratedState(
   clientState: DehydratedState
 ): DehydratedState {

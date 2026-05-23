@@ -67,10 +67,7 @@ function MainNavigator() {
       <AppStack.Screen name="Dashboard" component={DashboardScreen} />
       <AppStack.Screen name="Plan" component={PlanScreen} />
       <AppStack.Screen name="Grades" component={GradesScreen} />
-      <AppStack.Screen
-        name="Announcements"
-        component={AnnouncementsScreen}
-      />
+      <AppStack.Screen name="Announcements" component={AnnouncementsScreen}/>
       <AppStack.Screen name="Profile" component={ProfileScreen} />
       <AppStack.Screen name="FindLecturer" component={FindLecturerScreen} />
       <AppStack.Screen name="LecturerPlan" component={LecturerPlanScreen} />
