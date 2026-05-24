@@ -19,19 +19,15 @@ export interface SubjectGrade {
   partialGrades: SubjectActivityDetails[];
 }
 
-/** Metadane semestru z listy ocen (bez przedmiotów). */
 export interface GradesSemesterMeta {
   semester: number;
   semesterLabel: string;
-  /** Np. „2025/2026 zimowy” z pola Semestr akademicki. */
   academicSemester: string;
   semesterType: string;
-  /** Np. „Zaliczony” ze Stan semestru. */
   semesterStatus: string;
   requestPath: string;
 }
 
-/** Lista semestrów z HTML + pierwszy semestr w kolejności dokumentu. */
 export interface GradesIndex {
   semesters: GradesSemesterMeta[];
   initialSemesterNumber: number;
@@ -40,10 +36,8 @@ export interface GradesIndex {
 export interface SemesterGrades {
   semester: number;
   semesterLabel: string;
-  /** Np. „2025/2026 zimowy” z pola Semestr akademicki. */
   academicSemester: string;
   semesterType: string;
-  /** Np. „Zaliczony” ze Stan semestru. */
   semesterStatus: string;
   semesterAverage: string;
   subjects: SubjectGrade[];

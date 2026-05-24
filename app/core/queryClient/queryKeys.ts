@@ -24,4 +24,7 @@ export const queryKeys = {
   finance: {
     fees: (userKey: string) => ['finance', userKey, 'fees'] as const,
   },
+  events: {
+    list: (userKey: string) => ['events', userKey, 'list'] as const,
+  },
 } as const;

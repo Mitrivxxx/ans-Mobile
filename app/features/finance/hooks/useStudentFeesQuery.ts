@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 
 import { cacheUntilReplaceQueryOptions } from '../../../core/queryClient/cacheUntilReplace';
+import { runWithManualRefreshCooldown } from '../../../core/queryClient/manualRefreshCooldown';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import type { SyncStatus } from '../../../core/queryClient/syncTypes';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
@@ -58,7 +59,8 @@ export function useStudentFeesQuery() {
   );
 
   const forceRefresh = useCallback(
-    () => runSync({ minLoadingMs: 400 }),
+    () =>
+      runWithManualRefreshCooldown(() => runSync({ minLoadingMs: 400 })),
     [runSync]
   );
 

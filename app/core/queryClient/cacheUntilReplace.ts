@@ -5,7 +5,6 @@ import { isDataEqual } from './isDataEqual';
 /** Dane w cache uznawane za aktualne do ręcznego odświeżenia lub udanego scrape. */
 export const CACHE_UNTIL_REPLACE_STALE_TIME = Number.POSITIVE_INFINITY;
 
-/** Wspólne opcje React Query: trzymaj w pamięci do zastąpienia nowymi danymi. */
 export function cacheUntilReplaceQueryOptions<TData>(): Pick<
   UseQueryOptions<TData>,
   | 'staleTime'

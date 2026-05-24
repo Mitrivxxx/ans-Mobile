@@ -10,23 +10,28 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.WDMobile",
+      "bundleIdentifier": "pl.matsma.WDMobile",
       "buildNumber": "105"
     },
     "android": {
       "versionCode": 105,
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      },
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/logo_mobile.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
       "allowBackup": false,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.WDMobile"
+      "package": "pl.matsma.WDMobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"

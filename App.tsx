@@ -10,6 +10,7 @@ import AppInitGate from './app/components/AppInitGate';
 import AuthSyncBanner from './app/components/AuthSyncBanner';
 import AppHeader from './app/components/AppHeader';
 import AppSidebar from './app/components/sidebar/AppSidebar';
+import SidebarBackHandler from './app/components/sidebar/SidebarBackHandler';
 import { SidebarProvider } from './app/components/sidebar/SidebarContext';
 import {
   AppThemeProvider,
@@ -115,6 +116,7 @@ function AppShell() {
         <ScreenRefreshProvider>
           <StudentProfileProvider>
             <SidebarProvider>
+              <SidebarBackHandler />
               <View style={{ flex: 1, backgroundColor: colors.background }}>
                 <AppHeader />
                 <AuthSyncBanner />

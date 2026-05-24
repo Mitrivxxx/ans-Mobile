@@ -13,7 +13,6 @@ import { useStudentProfileQuery } from '../features/profile/hooks/useStudentProf
 
 type StudentProfileContextValue = {
   summary: ProfileSummary | null;
-  /** URI zdjęcia — wyłącznie profilePhotoSessionCache (nie w React Query). */
   photo: string;
   loading: boolean;
   photoRevision: number;

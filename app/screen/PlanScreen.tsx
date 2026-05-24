@@ -17,6 +17,10 @@ import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import ScheduleLessonCard from '../components/schedule/ScheduleLessonCard';
 import type { Lesson } from '../core/scraper/features/plan/plan.service';
 import { HARMONOGRAM_ACCENT_COLOR } from '../features/dashboard/dashboard.quickActions';
+import {
+  useCalendarToday,
+  useSyncSelectedDateToToday,
+} from '../features/plan/hooks/useCalendarToday';
 import { useStudentPlanLessons } from '../features/plan/hooks/useStudentPlanLessons';
 import { useSyncBanner } from '../hooks/useSyncBanner';
 
@@ -96,11 +100,12 @@ export default function PlanScreen({ navigation }: Props) {
 
   useRegisterScreenRefresh(forceRefresh);
 
-  const today = useMemo(() => new Date(), []);
-  const [selectedDate, setSelectedDate] = useState(() => dateKey(today));
+  const { today, todayKey } = useCalendarToday();
+  const [selectedDate, setSelectedDate] = useState(() => todayKey);
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
+  useSyncSelectedDateToToday(todayKey, setSelectedDate);
 
   const lessonsByDate = useMemo(() => {
     const map = new Map<string, Lesson[]>();
@@ -145,7 +150,6 @@ export default function PlanScreen({ navigation }: Props) {
     return cells;
   }, [visibleMonth]);
 
-  const todayKey = dateKey(today);
   const monthLabel = `${MONTH_LABELS[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
 
   const goToPrevMonth = () => {

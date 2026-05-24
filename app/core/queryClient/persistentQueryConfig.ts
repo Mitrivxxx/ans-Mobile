@@ -1,5 +1,5 @@
-/** Zapis persist w AsyncStorage — bez limitu czasu (tylko logout / buster). */
-export const PERSIST_MAX_AGE_MS = Number.POSITIVE_INFINITY;
+/** Maks. wiek wpisu w AsyncStorage (~90 dni); starsze są odrzucane przy restore. */
+export const PERSIST_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 /**
  * Wymusza odrzucenie starego cache po zmianie polityki persystencji.

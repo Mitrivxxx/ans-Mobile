@@ -7,7 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import DashboardAnnouncementsPanel from '../features/dashboard/components/DashboardAnnouncementsPanel';
 import DashboardGradesPanel from '../features/dashboard/components/DashboardGradesPanel';
-import DashboardInfoBanner from '../features/dashboard/components/DashboardInfoBanner';
+import DashboardEventsSection from '../features/dashboard/components/DashboardEventsSection';
 import DashboardQuickActions from '../features/dashboard/components/DashboardQuickActions';
 import DashboardSchedulePanel from '../features/dashboard/components/DashboardSchedulePanel';
 import { createDashboardScreenStyles } from '../features/dashboard/DashboardScreen.styles';
@@ -54,7 +54,7 @@ export default function DashboardScreen(_props: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <DashboardInfoBanner />
+        <DashboardEventsSection />
         <DashboardQuickActions
           selectedTitle={selectedQuickAction}
           onSelect={setSelectedQuickAction}

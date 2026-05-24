@@ -38,7 +38,6 @@ function normalizeText(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-/** Wartość z <b> w <span>, np. „Semestr akademicki: <b>2025/2026 letni</b>”. */
 function extractBoldLabeledValue(root: Element, label: string): string {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const labelRegex = new RegExp(`${escaped}\\s*:`, "i");

@@ -22,6 +22,10 @@ import {
   type Lesson,
 } from '../core/scraper/features/lecturers/lecturer-plan.service';
 import { HARMONOGRAM_ACCENT_COLOR } from '../features/dashboard/dashboard.quickActions';
+import {
+  useCalendarToday,
+  useSyncSelectedDateToToday,
+} from '../features/plan/hooks/useCalendarToday';
 import type { RootParamList } from '../navigation/navigationRef';
 
 const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
@@ -84,11 +88,12 @@ export default function LecturerPlanScreen() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const today = useMemo(() => new Date(), []);
-  const [selectedDate, setSelectedDate] = useState(() => dateKey(today));
+  const { today, todayKey } = useCalendarToday();
+  const [selectedDate, setSelectedDate] = useState(() => todayKey);
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
   );
+  useSyncSelectedDateToToday(todayKey, setSelectedDate);
 
   const fetchRunIdRef = useRef(0);
 
@@ -159,7 +164,6 @@ export default function LecturerPlanScreen() {
     return cells;
   }, [visibleMonth]);
 
-  const todayKey = dateKey(today);
   const monthLabel = `${MONTH_LABELS[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
 
   const goToPrevMonth = () => {

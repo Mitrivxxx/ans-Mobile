@@ -1,6 +1,6 @@
 {
   "name": "wdmobile",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -10,11 +10,9 @@
     "prebuild:android": "npm run generate-icons && expo prebuild --platform android --clean",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "generate-icons": "node scripts/generateAppIcons.mjs",
     "build:ios": "eas build --platform ios --profile ios-simulator --non-interactive",
-    "build:github": "eas build --platform all --profile github --non-interactive",
-    "build:github:android": "eas build --platform android --profile github --non-interactive",
-    "build:github:ios": "eas build --platform ios --profile github --non-interactive"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -43,8 +41,8 @@
     "@types/qs": "^6.15.1",
     "@types/react": "~19.1.0",
     "@types/react-native": "^0.72.8",
-    "sharp": "^0.34.5",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^3.2.4"
   },
   "private": true
 }

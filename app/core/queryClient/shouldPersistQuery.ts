@@ -4,13 +4,14 @@ import { isWeekInDefaultPrefetchWindow } from './planWeekWindow';
 
 /**
  * Zapytania zapisywane na dysk (offline / degraded).
- * Bez: partial, detail, semester, lessons, weekLessons poza oknem prefetch.
+ * Bez: partial, detail, semester, lessons, weekLessons poza 3-miesięcznym oknem.
  */
 const OFFLINE_QUERY_SEGMENTS = {
   studentPlan: new Set(['weekLessons']),
   grades: new Set(['index']),
   announcements: new Set(['list']),
   profile: new Set(['summary', 'details']),
+  events: new Set(['list']),
 } as const;
 
 type OfflineRoot = keyof typeof OFFLINE_QUERY_SEGMENTS;

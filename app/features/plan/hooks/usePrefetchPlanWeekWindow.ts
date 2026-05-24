@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 
-import { getWeekMondayDateKey } from '../../../core/scraper/features/plan/plan.dateRange';
+import { getPlanPrefetchWindowAnchorKey } from '../../../core/queryClient/planWeekWindow';
 import { prefetchStudentPlanWeeks } from '../../../core/queryClient/prefetchStudentPlanWeeks';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 
 /**
- * Jednorazowy prefetch bieżącego tygodnia + 3 do przodu (dashboard).
- * Po rotacji poniedziałku okno jest prefetchowane ponownie.
+ * Jednorazowy prefetch 3 miesięcy planu (poprzedni + bieżący + następny) na dashboardzie.
+ * Po zmianie miesiąca kalendarzowego okno jest prefetchowane ponownie.
  */
 export function usePrefetchPlanWeekWindow(): void {
   const userKey = useQueryUserKey();
@@ -18,7 +18,7 @@ export function usePrefetchPlanWeekWindow(): void {
       return;
     }
 
-    const windowKey = `${userKey}:${getWeekMondayDateKey()}`;
+    const windowKey = `${userKey}:${getPlanPrefetchWindowAnchorKey()}`;
     if (prefetchedWindowRef.current === windowKey) {
       return;
     }

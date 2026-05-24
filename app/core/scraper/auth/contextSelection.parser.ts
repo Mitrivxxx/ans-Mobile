@@ -3,7 +3,6 @@ import { parseHTML } from "linkedom";
 import { WD_BASE_URL } from "../client/client";
 
 export type LoginContextOption = {
-  /** Ścieżka z query, np. `/WybierzKontekst?id=63184&personType=1` */
   href: string;
   personType: number;
   id?: string;

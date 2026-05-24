@@ -39,11 +39,7 @@ import { ensureLoginContextResolved } from "./contextSelection";
 import { ensureWdUserConsentCookie } from "./userConsent";
 import { logout as performLogout } from "./logout";
 import { markSessionEstablished } from "./sessionLifetime";
-import {
-  clearSession,
-  getNativeCookieHeader,
-  isSessionAuthenticated,
-} from "./session.store";
+import { clearSession } from "./session.store";
 
 const LOGIN_URL = `${WD_BASE_URL}/Logowanie`;
 
@@ -314,13 +310,5 @@ export class AuthService {
 
   async logout(): Promise<void> {
     return performLogout();
-  }
-
-  async getCookies(): Promise<string | null> {
-    return getNativeCookieHeader();
-  }
-
-  async isAuthenticated(): Promise<boolean> {
-    return isSessionAuthenticated();
   }
 }

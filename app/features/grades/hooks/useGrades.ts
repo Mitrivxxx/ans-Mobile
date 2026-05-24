@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { runWithManualRefreshCooldown } from '../../../core/queryClient/manualRefreshCooldown';
 import { mergeSyncStatuses } from '../../../core/queryClient/mergeSyncStatuses';
 import type { GradesSemesterMeta } from '../../../core/scraper/features/grades/grades.service';
 import type { SemesterGrades } from '../../../core/scraper/features/grades/grades.service';
@@ -120,12 +121,16 @@ export function useGrades() {
     }
   }, [refetchIndex, refetchSemester, currentMeta]);
 
-  const forceRefresh = useCallback(async () => {
-    await forceRefreshIndex();
-    if (currentMeta) {
-      await forceRefreshSemester();
-    }
-  }, [forceRefreshIndex, forceRefreshSemester, currentMeta]);
+  const forceRefresh = useCallback(
+    () =>
+      runWithManualRefreshCooldown(async () => {
+        await forceRefreshIndex();
+        if (currentMeta) {
+          await forceRefreshSemester();
+        }
+      }),
+    [forceRefreshIndex, forceRefreshSemester, currentMeta]
+  );
 
   return {
     semesters,

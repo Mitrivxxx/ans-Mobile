@@ -17,3 +17,8 @@ gradlew assembleRelease
 ------------
 release install
 adb install -r app\build\outputs\apk\release\app-release.apk
+
+----------
+testy
+npm test          
+npm run test:watch

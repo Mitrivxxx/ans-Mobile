@@ -1,8 +1,6 @@
 /**
- * Grafiki wewnątrz aplikacji (React Native <Image />).
- * NIE sterują ikoną na pulpicie — launcher bierze z app.json:
- * assets/icons/logo_mobile.png (+ npm run generate-icons → assets/icon.png dla EAS).
- */
+  *ikonki uzywane w aplikacji
+*/
 /** Logo na ekran logowania. */
 export const logoLogin = require('../../assets/icons/anslogo.png');
 

@@ -39,7 +39,6 @@ app/
     network/           # reconnect
     preferences/       # dark mode storage
 assets/                # ikony, logo
-docs/RELEASE.md        # release (jedyny istniejący doc)
 info.txt               # komendy dev (adb, expo)
 app/version.ts         # APP_VERSION — sync z package.json i app.json
 ```
@@ -139,16 +138,18 @@ Opcjonalnie: `*.grid.ts`, `*.page.ts`, `merge*.ts` (np. oceny).
 
 ### Co jest persystowane na dysk (offline bundle)
 
-`shouldPersistQuery.ts` — **whitelist** (nie cały root): `weekLessons` — bieżący tydzień + 3 do przodu (`planWeekWindow.ts`), `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, `lessons`, tygodnie planu poza oknem prefetch. **RAM:** `pruneWeekLessonsQueries` — okno prefetch + aktywnie oglądany tydzień (np. po nawigacji w przód).
+`shouldPersistQuery.ts` — **whitelist** (nie cały root): `weekLessons` — poprzedni + bieżący + następny miesiąc kalendarzowy (`planWeekWindow.ts`), `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, `lessons`, tygodnie planu poza tym oknem.
 
+- `maxAge`: `PERSIST_MAX_AGE_MS` (~90 dni) — stary blob AsyncStorage wygasa przy restore.
 - `buster`: `PERSIST_QUERY_BUSTER` (`v2-offline-bundle`) — migracja starego przepełnionego cache.
+- Przy zapisie: tygodnie planu poza 3-miesięcznym oknem są obcinane (`persistClientTransform.ts`).
 - Awatar: `profilePhotoSessionCache` (RAM) + `profilePhotoPersist.storage.ts` (AsyncStorage); nie w blobie React Query (`profileSummaryPhoto.ts`, `persistClientTransform.ts`).
 
 Profil: prefetch summary po logowaniu; ekran Profil (`profile.details`) — przy cache brak auto-scrapu przy wejściu (tylko pull-to-refresh / `forceRefresh`).
 
 ### Prefetch po logowaniu
 
-`prefetchUserScraperData.ts` — po logowaniu: `profile.summary`. Plan tygodniowy (bieżący + 3 do przodu): `prefetchStudentPlanWeeks.ts` + `usePrefetchPlanWeekWindow` na panelu harmonogramu dashboardu; kolejne tygodnie — lazy przy nawigacji (`useStudentPlanWeekLessons`).
+`prefetchUserScraperData.ts` — po logowaniu: `profile.summary`. Plan tygodniowy (3 miesiące): `prefetchStudentPlanWeeks.ts` + `usePrefetchPlanWeekWindow` na panelu harmonogramu dashboardu; tygodnie poza oknem — lazy przy nawigacji (`useStudentPlanWeekLessons`, bez zapisu na dysk).
 
 Dashboard i ekrany sidebar (Ogłoszenia, Oceny): `useUserPersistentQuery` (`staleTime` 6h, `syncOnMount`), `SyncBanner`, pull-to-refresh przez `forceRefresh` (jak harmonogram).
 
@@ -238,9 +239,6 @@ adb reverse tcp:8081 tcp:8081   # fizyczne urządzenie
 npx expo run:android
 npm run prebuild:android          # ikony + expo prebuild --clean
 ```
-
-Release Android: `docs/RELEASE.md`, lokalnie `android/gradlew assembleRelease`.
-
 ---
 
 ## Pułapki i konwencje kodu

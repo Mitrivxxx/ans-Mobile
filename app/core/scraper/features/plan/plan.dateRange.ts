@@ -6,7 +6,6 @@ export function formatWdPlanDate(date: Date): string {
 export type PlanFetchParams = {
   dateFrom: string;
   dateTo: string;
-  /** 2 = widok tygodnia, 3 = widok semestru (wg parametrów WD). */
   planType: string;
 };
 
@@ -25,7 +24,6 @@ export function getMondayOfWeek(referenceDate = new Date()): Date {
   return monday;
 }
 
-/** Klucz `YYYY-MM-DD` poniedziałku tygodnia zawierającego `referenceDate` (cache React Query). */
 export function getWeekMondayDateKey(referenceDate = new Date()): string {
   const monday = getMondayOfWeek(referenceDate);
   const year = monday.getFullYear();
@@ -34,13 +32,11 @@ export function getWeekMondayDateKey(referenceDate = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-/** Data odniesienia dla scrapera z klucza poniedziałku (`YYYY-MM-DD`). */
 export function referenceDateFromWeekMondayKey(weekMondayKey: string): Date {
   const [year, month, day] = weekMondayKey.split('-').map(Number);
   return new Date(year, (month ?? 1) - 1, day ?? 1);
 }
 
-/** Bieżący tydzień kalendarzowy (pon.–niedz.) — do dashboardu. */
 export function getCurrentWeekPlanParams(
   referenceDate = new Date()
 ): PlanFetchParams {
@@ -55,7 +51,6 @@ export function getCurrentWeekPlanParams(
   };
 }
 
-/** Zakres semestru akademicznego — do pełnego planu w sidebarze. */
 export function getSemesterPlanParams(referenceDate = new Date()): PlanFetchParams {
   const year = referenceDate.getFullYear();
   const month = referenceDate.getMonth();

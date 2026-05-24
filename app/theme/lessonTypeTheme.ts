@@ -4,7 +4,7 @@ export const lessonTypeColors = {
   sem: '#E5B800',
   proj: '#548DF3',
   lab: '#E879A8',
-  cwiczenia: '#4CAF50',
+  ca: '#4CAF50',
   lek: '#9E7B4E',
   zwf: '#8E6BC1',
 } as const;
@@ -22,17 +22,13 @@ const LESSON_TYPE_RULES: {
   abbreviation: string;
   patterns: string[];
 }[] = [
-  { key: 'wyk', abbreviation: 'W', patterns: ['wyk', 'wykład', 'wyklad'] },
+  { key: 'wyk', abbreviation: 'W', patterns: ['wyk', 'wykład'] },
   { key: 'sem', abbreviation: 'S', patterns: ['sem', 'seminarium'] },
   { key: 'proj', abbreviation: 'P', patterns: ['proj', 'projekt'] },
-  { key: 'lek', abbreviation: 'Le', patterns: ['lek'] },
+  { key: 'lek', abbreviation: 'Le', patterns: ['lek', 'lektorat'] },
   { key: 'lab', abbreviation: 'L', patterns: ['lab', 'laboratorium'] },
-  {
-    key: 'cwiczenia',
-    abbreviation: 'Ć',
-    patterns: ['ćw', 'cw', 'cwiczenia', 'ćwiczenia', 'ca'],
-  },
-  { key: 'zwf', abbreviation: 'Z', patterns: ['zwf', 'z wf'] },
+  { key: 'ca', abbreviation: 'Ca', patterns: ['ca', 'ćwiczenia'] },
+  { key: 'zwf', abbreviation: 'Z', patterns: ['zwf', 'wf'] },
 ];
 
 function normalizeType(value: string): string {
