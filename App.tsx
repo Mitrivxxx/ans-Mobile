@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import AppErrorBoundary from './app/components/AppErrorBoundary';
 import AppInitGate from './app/components/AppInitGate';
+import AppUpdatesBanner from './app/components/AppUpdatesBanner';
+import { AppUpdatesProvider } from './app/context/AppUpdatesContext';
 import AuthSyncBanner from './app/components/AuthSyncBanner';
 import AppHeader from './app/components/AppHeader';
 import AppSidebar from './app/components/sidebar/AppSidebar';
@@ -102,6 +104,7 @@ function AppShell() {
     return (
       <>
         <StatusBar style="dark" />
+        <AppUpdatesBanner />
         <NavigationContainer ref={navigationRef}>
           <AuthNavigator />
         </NavigationContainer>
@@ -119,6 +122,7 @@ function AppShell() {
               <SidebarBackHandler />
               <View style={{ flex: 1, backgroundColor: colors.background }}>
                 <AppHeader />
+                <AppUpdatesBanner />
                 <AuthSyncBanner />
                 <View style={{ flex: 1 }}>
                   <MainNavigator />
@@ -143,6 +147,7 @@ export default function App() {
     <AppThemeProvider>
       <AppErrorBoundary>
         <AppInitGate>
+          <AppUpdatesProvider>
           <PersistQueryClientProvider
             client={queryClient}
             onSuccess={onPersistSuccess}
@@ -161,6 +166,7 @@ export default function App() {
               </AuthSessionProvider>
             </SafeAreaProvider>
           </PersistQueryClientProvider>
+          </AppUpdatesProvider>
         </AppInitGate>
       </AppErrorBoundary>
     </AppThemeProvider>

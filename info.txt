@@ -22,3 +22,14 @@ adb install -r app\build\outputs\apk\release\app-release.apk
 testy
 npm test          
 npm run test:watch
+
+----------
+Aktualizacje OTA (expo-updates / EAS Update)
+- Działa tylko w buildzie release z EAS (nie w `expo start` / Expo Go).
+- Po pierwszej konfiguracji: przebuduj natywnie (nowy APK/AAB z expo-updates):
+  eas build --platform android --profile production
+- Poprawki JS/UI bez sklepu (ten sam runtimeVersion = app.json "version"):
+  npm run update:production -- --message "opis fixa"
+  (preview: npm run update:preview -- --message "...")
+- Nowy build do sklepu (native moduły, zmiana SDK): podbij "version" w app.json i zrób eas build.
+- Kanały: production (sklep), preview (testy wewnętrzne) — muszą zgadzać się z profilem eas build.

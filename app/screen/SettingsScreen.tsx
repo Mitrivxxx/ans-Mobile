@@ -16,6 +16,7 @@ import { useStudentProfile } from '../context/StudentProfileContext';
 import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { useAppUpdates } from '../context/AppUpdatesContext';
 import { APP_VERSION } from '../version';
 
 export default function SettingsScreen() {
@@ -23,6 +24,8 @@ export default function SettingsScreen() {
   const { refetch } = useStudentProfile();
   const { rememberMeEnabled, disableRememberMe } = useAuthSession();
   const { isOffline } = useNetworkStatus();
+  const { supported, checking, checkForUpdate, runningUpdateId } =
+    useAppUpdates();
   const [cacheClearing, setCacheClearing] = useState(false);
 
   const refreshScreen = useCallback(async () => {
@@ -80,6 +83,39 @@ export default function SettingsScreen() {
       ]
     );
   }, [cacheClearing]);
+
+  const handleCheckAppUpdate = useCallback(async () => {
+    if (checking) {
+      return;
+    }
+
+    const result = await checkForUpdate({ userInitiated: true });
+
+    switch (result.status) {
+      case 'dev':
+        Alert.alert(
+          'Aktualizacje OTA',
+          'W trybie deweloperskim aktualizacje z EAS nie są dostępne. Użyj builda release (EAS Build lub APK release).'
+        );
+        break;
+      case 'disabled':
+        Alert.alert(
+          'Aktualizacje OTA',
+          'Ta instalacja nie obsługuje aktualizacji w tle (np. stary build bez expo-updates). Zbuduj aplikację ponownie przez EAS.'
+        );
+        break;
+      case 'upToDate':
+        Alert.alert('Aktualizacje', 'Masz najnowszą wersję aplikacji.');
+        break;
+      case 'downloaded':
+        break;
+      case 'error':
+        Alert.alert('Błąd aktualizacji', result.message);
+        break;
+      default:
+        break;
+    }
+  }, [checkForUpdate, checking]);
 
   return (
     <SafeAreaView
@@ -187,8 +223,32 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
 
+        {supported ? (
+          <TouchableOpacity
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.grayBorder,
+                opacity: checking ? 0.6 : 1,
+              },
+            ]}
+            onPress={() => void handleCheckAppUpdate()}
+            disabled={checking || isOffline}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
+              Sprawdź aktualizacje aplikacji
+            </Text>
+            <Text style={[styles.cardDescription, { color: colors.gray }]}>
+              Pobiera poprawki bez instalacji z sklepu (wymaga internetu).
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
+          {runningUpdateId ? `\nPakiet OTA: ${runningUpdateId.slice(0, 8)}…` : ''}
         </Text>
       </RefreshableScrollView>
     </SafeAreaView>

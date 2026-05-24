@@ -229,6 +229,16 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 
 ---
 
+## Aktualizacje OTA (expo-updates)
+
+- **EAS Update** — poprawki JS/UI bez nowej instalacji ze sklepu (`npm run update:production`).
+- **runtimeVersion** — `app.json` → `policy: "appVersion"` (zgodność z polem `version`). Przy OTA **nie podbijaj** `version` w `app.json`; podbij tylko przy nowym buildzie natywnym do sklepu.
+- **Kanały** — `production` / `preview` w `eas.json` (muszą pasować do profilu `eas build`).
+- **W aplikacji** — `AppUpdatesProvider`, baner + „Sprawdź aktualizacje” w Ustawieniach; OTA **nie działa** w `__DEV__` / Expo Go.
+- Po pierwszej instalacji `expo-updates` wymagany **nowy** build natywny (APK/AAB z EAS).
+
+---
+
 ## Komendy dev (skrót)
 
 Z `info.txt` / `package.json`:

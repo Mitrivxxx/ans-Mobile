@@ -5,12 +5,14 @@
   },
   "build": {
     "preview": {
+      "channel": "preview",
       "distribution": "internal",
       "android": {
         "buildType": "app-bundle"
       }
     },
     "github": {
+      "channel": "preview",
       "distribution": "internal",
       "android": {
         "buildType": "app-bundle"
@@ -25,10 +27,19 @@
       }
     },
     "production": {
+      "channel": "production",
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
       }
+    }
+  },
+  "update": {
+    "production": {
+      "channel": "production"
+    },
+    "preview": {
+      "channel": "preview"
     }
   },
   "submit": {
