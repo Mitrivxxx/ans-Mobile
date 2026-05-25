@@ -10,21 +10,21 @@ describe('parsePublicEvents', () => {
     expect(events).toHaveLength(2);
 
     expect(events[0]).toMatchObject({
-      id: 'wydarzenie-dni-otwarte',
-      title: 'Dni otwarte',
-      url: 'https://www.ans-ns.edu.pl/aktualnosci/wydarzenie-dni-otwarte',
-      day: 15,
-      monthLabel: 'MARCA',
-      dateLabel: '15.03.2026',
-    });
-
-    expect(events[1]).toMatchObject({
       id: 'zew',
       title: 'Zewnętrzne',
       url: 'https://example.org/zew',
       day: 1,
       monthLabel: 'GRUDNIA',
       dateLabel: '01.12.2025',
+    });
+
+    expect(events[1]).toMatchObject({
+      id: 'wydarzenie-dni-otwarte',
+      title: 'Dni otwarte',
+      url: 'https://www.ans-ns.edu.pl/aktualnosci/wydarzenie-dni-otwarte',
+      day: 15,
+      monthLabel: 'MARCA',
+      dateLabel: '15.03.2026',
     });
   });
 

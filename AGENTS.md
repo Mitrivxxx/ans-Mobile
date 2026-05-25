@@ -47,6 +47,63 @@ app/version.ts         # APP_VERSION — sync z package.json i app.json
 
 ---
 
+## Środowiska (development / presentation / production)
+
+Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`). To **nie są osobne gałęzie git** — ten sam kod na `main`, a środowisko wybiera się przy **buildzie EAS** (profil w `eas.json`) lub lokalnie przez `APP_ENV` / Metro.
+
+Źródła konfiguracji: `eas.json` (profil build + kanał OTA), `app.config.ts` (nazwa, `package`, `updates.channel`), `app/config/env.ts` (odczyt w runtime: kanał z APK, badge DEV).
+
+### Tabela warstw
+
+| Warstwa | Nazwa w launcherze | Package Android / iOS | Kanał EAS Update | Profil `eas build` | Typowy cel |
+|---------|-------------------|------------------------|------------------|-------------------|------------|
+| **development** | WDMobile Dev | `pl.matsma.WDMobile.dev` | `development` | `development` | Dev na urządzeniu, APK wewnętrzny |
+| **presentation** | WDMobile (Prezentacja) | `pl.matsma.WDMobile.presentation` | `presentation` | `presentation`, `preview`* | Test wewnętrzny, osobna instalacja obok prod |
+| **production** | WDMobile | `pl.matsma.WDMobile` | `production` | `production`, `github`** | Użytkownicy: sklep (AAB) lub APK z GitHub |
+
+\* `preview` w `eas.json` dziedziczy po `presentation` (ten sam kanał).  
+\** `github` = `extends: production` — to samo `APP_ENV` i kanał `production`, ale **APK** + `distribution: internal` (GitHub Releases / workflow `.github/workflows/build-github-apk.yml`).
+
+### Jak ustawiane jest środowisko
+
+**Przy buildzie natywnym (EAS / prebuild):** `app.config.ts` → `resolveAppEnv()`:
+
+1. `EAS_BUILD_PROFILE` — mapowanie: `github` \| `production` → production; `presentation` \| `preview` → presentation; `development` → development.
+2. W przeciwnym razie zmienna `APP_ENV` z profilu `eas.json` (`env.APP_ENV`).
+3. Domyślnie: `development` (np. lokalny prebuild bez `APP_ENV=production`).
+
+**W działającej aplikacji (JS):** `app/config/env.ts` → `getAppEnv()`:
+
+1. W release: `Updates.channel` z wbudowanego APK (najpewniejsze).
+2. Potem `Constants.expoConfig.extra.appEnv`.
+3. W `__DEV__` (Metro / Expo Go): zawsze traktowane jak development.
+
+**Metro (`npx expo start`):** nie buduje warstwy presentation/prod — to development z bundlerem; OTA wyłączone (`__DEV__`).
+
+### Komendy per środowisko
+
+| Akcja | development | presentation | production (GitHub / sklep) |
+|-------|-------------|--------------|----------------------------|
+| EAS build Android | `npm run build:development` | `npm run build:presentation` | `npm run build:github` (APK) lub `build:production` (AAB) |
+| EAS Update | `npm run update:development` | `npm run update:presentation` | `npm run update:production` (alias: `update:github`) |
+| Lokalny APK release | — | — | `npm run build:apk:local` (`APP_ENV=production` + `prebuild:prod`) |
+
+Kanał przy `eas update` **musi** zgadzać się z kanałem wbudowanym w APK (patrz tabela). Update z gałęzi `dev` po merge na `main` jest OK — liczy się commit/kod i **niezmieniony** `runtimeVersion`, nie historia gałęzi.
+
+### Git i `main`
+
+Na **jednej** gałęzi `main` trzymaj: kod + pełne `eas.json` + `app.config.ts`. Nie trzymaj osobnych branchy „pod środowisko”. Sekrety (`EXPO_TOKEN`, keystore) — GitHub Secrets / expo.dev, nie w repo (`.env` w `.gitignore`).
+
+### Pułapki środowisk
+
+- **Nie mieszaj** APK `development` z `npm run update:production` — inny package i kanał OTA.
+- **GitHub / użytkownicy:** build `github` lub `production`, update tylko `--channel production`.
+- **Prezentacja** instaluje się **równolegle** z prod (inny `package`) — cache i dane na dysku są oddzielne per aplikacja.
+- Profil **`ios-simulator`** w `eas.json` jest minimalny (brak `APP_ENV` / kanału) — główna ścieżka projektu to Android; przed poważnym iOS uzupełnij profil jak `development`.
+- Zmiana **natywnej** konfiguracji (`app.config.ts`, pluginy, nowe moduły Expo) po wydaniu APK wymaga **nowego buildu**, nie samego OTA (komunikaty w `app/core/updates/appUpdates.ts`).
+
+---
+
 ## Przepływ aplikacji (bootstrap)
 
 ```mermaid
@@ -226,17 +283,22 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 | Dashboard kafelki | `features/dashboard/dashboard.features.ts`, panele `Dashboard*Panel` |
 | Test równoległych requestów | `core/utils/mapWithConcurrency.ts` |
 | Ciemny motyw | `preferences/darkMode.storage.ts`, `SettingsScreen` |
+| Środowiska / package / kanał OTA | `eas.json`, `app.config.ts`, `app/config/env.ts` — sekcja **Środowiska** powyżej |
+| Sprawdzenie kanału na urządzeniu | `app/core/updates/appUpdates.ts` (`getOtaChannel`), błąd po „Sprawdź teraz” w Ustawieniach |
+| Build APK GitHub (CI) | `.github/workflows/build-github-apk.yml`, profil `github` |
 
 ---
 
 ## Aktualizacje OTA (expo-updates)
 
-- **EAS Update** — poprawki JS/UI bez nowej instalacji ze sklepu (`npm run update:production`).
-- **runtimeVersion** — `app.json` → `policy: "appVersion"` (zgodność z polem `version`). Przy OTA **nie podbijaj** `version` w `app.json`; podbij tylko przy nowym buildzie natywnym do sklepu.
-- **Warstwy** — `development` (Metro), `presentation` (wewnętrzny test, `.presentation`), `production` (prod: `pl.matsma.WDMobile`, bez sufiksu). **GitHub APK** — profil `github` w `eas.json` (`extends production`, APK, kanał `production`).
-- **Kanały OTA** — `channel` w profilu `build` + `updates.channel` w `app.config.ts` (lokalny `gradlew` wymaga `APP_ENV=production` przy prebuild). Publikacja dla GitHub/telefonów użytkownika: `npm run update:production` (kanał `production`).
-- **Konfig** — `app.config.ts`, runtime: `app/config/env.ts`, logi dev: `app/config/devLog.ts` (tylko dev).
-- **W aplikacji** — `AppUpdatesProvider`, baner + „Sprawdź aktualizacje” w Ustawieniach; OTA **nie działa** w `__DEV__` / Expo Go.
+Szczegóły warstw i kanałów: sekcja **Środowiska** powyżej.
+
+- **EAS Update** — poprawki JS/UI bez nowej instalacji (`npm run update:production` dla APK GitHub / sklep prod).
+- **runtimeVersion** — `app.json` → `policy: "appVersion"` (zgodność z polem `version`). Przy samym OTA **nie podbijaj** `version` w `app.json` / `package.json` / `app/version.ts`; podbij przy **nowym** buildzie natywnym (wtedy nowy `runtimeVersion` → stare APK nie wezmą bundla).
+- **Kanał** — musi pasować do profilu build (`eas.json` ↔ `updates.channel` w `app.config.ts`). Prod użytkowników: kanał `production` (profile `github` i `production`).
+- **Konfig** — `app.config.ts` (`checkAutomatically: 'NEVER'` w config — sprawdzanie z JS), runtime w aplikacji: `app/config/env.ts`, logi: `app/config/devLog.ts` (tylko dev).
+- **W aplikacji** — `AppUpdatesContext`, `AppUpdatesBanner`, Ustawienia → „Sprawdź teraz” / auto-check; OTA **nie działa** w `__DEV__` / Expo Go (`isAppUpdatesSupported()`).
+- **Nowy natyw** — zmiana pluginów, zależności natywnych, istotna zmiana `app.config` po buildzie APK → `build:github` + ponowny `update:production`; fingerprint opisany w `appUpdates.ts`.
 - Po pierwszej instalacji `expo-updates` wymagany **nowy** build natywny (APK/AAB z EAS).
 
 ---
@@ -246,14 +308,19 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 Z `info.txt` / `package.json`:
 
 ```bash
-npx expo start                    # warstwa dev (Metro)
+npx expo start                  # Metro — środowisko logiczne: development
 adb reverse tcp:8081 tcp:8081   # fizyczne urządzenie
 npx expo run:android
-npm run build:github          # APK prod (GitHub / internal)
-npm run build:production      # AAB sklep
-npm run build:apk:local       # lokalny release APK (APP_ENV=production)
-npm run update:production     # OTA dla APK z GitHub
-npm run prebuild:android          # ikony + expo prebuild --clean
+npm run prebuild:prod           # prebuild Android, APP_ENV=production
+npm run build:development       # EAS APK, .dev, kanał development
+npm run build:presentation      # EAS AAB, .presentation
+npm run build:github            # EAS APK prod (GitHub / internal)
+npm run build:production        # EAS AAB sklep
+npm run build:apk:local         # lokalny release APK (production)
+npm run update:development
+npm run update:presentation
+npm run update:production       # OTA prod (to samo co update:github)
+npm run prebuild:android        # ikony + expo prebuild --clean (domyślnie dev)
 ```
 ---
 
@@ -290,8 +357,12 @@ parseHTML
 ensureAuthenticated
 WD_BASE_URL
 navigateTo(
+APP_ENV
+EAS_BUILD_PROFILE
+getAppEnv
+OTA_CHANNEL
 ```
 
 ---
 
-*Ostatnia aktualizacja przewodnika: 2026-05-20. Przy większych zmianach architektury zaktualizuj ten plik w tym samym PR.*
+*Ostatnia aktualizacja przewodnika: 2026-05-25. Przy większych zmianach architektury zaktualizuj ten plik w tym samym PR.*

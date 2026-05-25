@@ -17,6 +17,7 @@ import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useAppUpdates } from '../context/AppUpdatesContext';
+import { getAppEnvDisplayName, isProductionApp } from '../config/env';
 import { getUpdateErrorAlertMessage } from '../features/settings/updateUserMessages';
 import { APP_VERSION } from '../version';
 
@@ -31,10 +32,13 @@ export default function SettingsScreen() {
     setAutoCheckEnabled,
     checking,
     pendingReload,
+    runningUpdateId,
+    otaChannel,
     checkForUpdate,
     applyPendingUpdate,
   } = useAppUpdates();
   const [cacheClearing, setCacheClearing] = useState(false);
+  const showBuildDiagnostics = !isProductionApp();
 
   const refreshScreen = useCallback(async () => {
     await refetch();
@@ -119,12 +123,10 @@ export default function SettingsScreen() {
         );
         break;
       case 'downloaded':
-        if (!pendingReload) {
-          Alert.alert(
-            'Gotowe',
-            'Aktualizacja została pobrana. Za chwilę aplikacja uruchomi się ponownie.'
-          );
-        }
+        Alert.alert(
+          'Aktualizacje',
+          'Pobrano nową wersję. Aby ją włączyć, użyj przycisku „Zastosuj pobraną aktualizację” poniżej — aplikacja uruchomi się ponownie.'
+        );
         break;
       case 'error':
         Alert.alert(
@@ -135,7 +137,7 @@ export default function SettingsScreen() {
       default:
         break;
     }
-  }, [checkForUpdate, checking, pendingReload]);
+  }, [checkForUpdate, checking]);
 
   const handleAutoUpdatesToggle = useCallback(
     async (next: boolean) => {
@@ -334,6 +336,16 @@ export default function SettingsScreen() {
 
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
+          {showBuildDiagnostics ? (
+            <>
+              {'\n'}
+              Środowisko: {getAppEnvDisplayName()}
+              {otaChannel ? `\nKanał OTA: ${otaChannel}` : ''}
+              {runningUpdateId
+                ? `\nPakiet OTA: ${runningUpdateId.slice(0, 8)}…`
+                : ''}
+            </>
+          ) : null}
         </Text>
       </RefreshableScrollView>
     </SafeAreaView>

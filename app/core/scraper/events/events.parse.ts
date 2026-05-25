@@ -48,6 +48,20 @@ function eventIdFromUrl(url: string): string {
   return slug ?? url;
 }
 
+/** Porządek rosnący po dacie (najwcześniejsze wydarzenie po lewej). */
+function comparePublicEventsByDate(a: PublicEvent, b: PublicEvent): number {
+  const [dayA, monthA, yearA] = a.dateLabel.split('.').map((part) => Number.parseInt(part, 10));
+  const [dayB, monthB, yearB] = b.dateLabel.split('.').map((part) => Number.parseInt(part, 10));
+
+  if (yearA !== yearB) {
+    return yearA - yearB;
+  }
+  if (monthA !== monthB) {
+    return monthA - monthB;
+  }
+  return dayA - dayB;
+}
+
 export function parsePublicEvents(html: string): PublicEvent[] {
   const { document } = parseHTML(html);
   const section = document.querySelector('#events');
@@ -98,5 +112,5 @@ export function parsePublicEvents(html: string): PublicEvent[] {
     });
   });
 
-  return events;
+  return events.sort(comparePublicEventsByDate);
 }

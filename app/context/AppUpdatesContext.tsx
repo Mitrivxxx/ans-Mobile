@@ -49,6 +49,7 @@ export function AppUpdatesProvider({ children }: Props) {
   const [checking, setChecking] = useState(false);
   const lastForegroundCheckRef = useRef(0);
   const checkInFlightRef = useRef(false);
+  const checkPromiseRef = useRef<Promise<AppUpdateCheckResult> | null>(null);
 
   const supported = isAppUpdatesSupported();
   const runningUpdateId = getRunningUpdateLabel();
@@ -72,37 +73,31 @@ export function AppUpdatesProvider({ children }: Props) {
       if (!isAppUpdatesSupported()) {
         return __DEV__ ? { status: 'dev' } : { status: 'disabled' };
       }
-      if (checkInFlightRef.current) {
-        return pendingReload ? { status: 'downloaded' } : { status: 'upToDate' };
+
+      if (checkPromiseRef.current) {
+        return checkPromiseRef.current;
       }
 
-      checkInFlightRef.current = true;
-      setChecking(true);
-      try {
-        const result = await checkAndFetchAppUpdate();
-        if (result.status === 'downloaded') {
-          setPendingReload(true);
-          if (options?.userInitiated) {
-            try {
-              await reloadAppWithUpdate();
-            } catch (reloadErr: unknown) {
-              return {
-                status: 'error',
-                message:
-                  reloadErr instanceof Error
-                    ? reloadErr.message
-                    : 'Nie udało się uruchomić aplikacji z aktualizacją.',
-              };
-            }
+      const checkPromise = (async (): Promise<AppUpdateCheckResult> => {
+        checkInFlightRef.current = true;
+        setChecking(true);
+        try {
+          const result = await checkAndFetchAppUpdate();
+          if (result.status === 'downloaded') {
+            setPendingReload(true);
           }
+          return result;
+        } finally {
+          checkInFlightRef.current = false;
+          setChecking(false);
+          checkPromiseRef.current = null;
         }
-        return result;
-      } finally {
-        checkInFlightRef.current = false;
-        setChecking(false);
-      }
+      })();
+
+      checkPromiseRef.current = checkPromise;
+      return checkPromise;
     },
-    [pendingReload]
+    []
   );
 
   const applyPendingUpdate = useCallback(async () => {

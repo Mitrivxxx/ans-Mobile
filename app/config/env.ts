@@ -53,6 +53,10 @@ export function isDevLoggingEnabled(): boolean {
 }
 
 /** Tylko build / tryb deweloperski — nie na produkcji (kanał production w APK). */
+export function isProductionApp(): boolean {
+  return getAppEnv() === 'production';
+}
+
 export function shouldShowEnvBadge(): boolean {
   return getAppEnv() === 'development';
 }
