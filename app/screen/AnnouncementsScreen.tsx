@@ -20,6 +20,8 @@ import { useRefreshControlProps } from '../hooks/useRefreshControlProps';
 import { useSyncBanner } from '../hooks/useSyncBanner';
 import { useThemedStyles } from '../theme/useThemedStyles';
 
+// do testu
+
 type Props = {
   navigation: {
     goBack: () => void;
