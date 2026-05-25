@@ -21,8 +21,16 @@ export async function prefetchStudentPlanWeeks(
   referenceDate = new Date()
 ): Promise<void> {
   const weekMondayKeys = getPrefetchWeekMondayKeys(referenceDate);
+  // #region agent log
+  fetch('http://127.0.0.1:7884/ingest/daefe8e1-1e84-486a-b8a4-fabf03b42721',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68a4b3'},body:JSON.stringify({sessionId:'68a4b3',location:'prefetchStudentPlanWeeks.ts:start',message:'prefetch window start',data:{weekCount:weekMondayKeys.length,firstKey:weekMondayKeys[0],lastKey:weekMondayKeys[weekMondayKeys.length-1]},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
 
   await mapWithConcurrency(weekMondayKeys, PREFETCH_CONCURRENCY, async (weekMondayKey) => {
+    const qk = queryKeys.studentPlan.weekLessons(userKey, weekMondayKey);
+    const hadCache = queryClient.getQueryData(qk) !== undefined;
+    // #region agent log
+    fetch('http://127.0.0.1:7884/ingest/daefe8e1-1e84-486a-b8a4-fabf03b42721',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68a4b3'},body:JSON.stringify({sessionId:'68a4b3',location:'prefetchStudentPlanWeeks.ts:week',message:'prefetch week',data:{weekMondayKey,hadCache},timestamp:Date.now(),hypothesisId:'C,E'})}).catch(()=>{});
+    // #endregion
     try {
       await queryClient.prefetchQuery({
         queryKey: queryKeys.studentPlan.weekLessons(userKey, weekMondayKey),

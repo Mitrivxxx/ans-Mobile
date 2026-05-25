@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 
+import { devLog } from '../config/devLog';
 import { useAppTheme } from '../context/AppThemeContext';
 import { setupScraperAuthGuard } from '../core/scraper/auth/ensureAuthenticated';
 import { initClient } from '../core/scraper/client/client';
@@ -74,6 +75,7 @@ export default function AppInitGate({ children }: Props) {
     try {
       setupScraperAuthGuard();
       await initClient();
+      devLog('Init', 'scraper client ready');
       setReady(true);
     } catch (err: unknown) {
       console.error('[APP] Init error:', err);

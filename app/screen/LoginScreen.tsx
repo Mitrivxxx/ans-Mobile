@@ -11,6 +11,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { devLog } from '../config/devLog';
 import { AuthService } from '../core/scraper/auth/auth.service';
 import {
   classifyLoginThrowable,
@@ -36,7 +37,6 @@ import {
 } from '../features/login/LoginScreen.styles';
 import { logoLogin } from '../assets/brandLogos';
 import AppLogo from '../components/AppLogo';
-import KeyboardDismissView from '../components/KeyboardDismissView';
 
 export default function LoginScreen() {
   const authService = useMemo(() => new AuthService(), []);
@@ -135,6 +135,7 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
+      devLog('LoginScreen', 'submit');
 
       const loginOptions =
         captchaContinuationHtml !== null
@@ -184,6 +185,10 @@ export default function LoginScreen() {
       resetCaptchaUi();
 
       const sessionReady = await confirmWdSessionAfterLogin();
+      devLog(
+        'LoginScreen',
+        sessionReady ? 'session confirmed' : 'session not confirmed'
+      );
       if (!sessionReady) {
         setFormError(
           'Zalogowano, ale portal nie potwierdził sesji. Spróbuj ponownie za chwilę.'
@@ -235,7 +240,6 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardDismissView>
       <KeyboardAwareScrollView
         ref={scrollRef}
         style={styles.scroll}
@@ -364,7 +368,6 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
-      </KeyboardDismissView>
     </SafeAreaView>
   );
 }

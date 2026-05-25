@@ -4,19 +4,33 @@
     "appVersionSource": "local"
   },
   "build": {
-    "preview": {
-      "channel": "preview",
+    "development": {
+      "channel": "development",
       "distribution": "internal",
+      "env": {
+        "APP_ENV": "development"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "presentation": {
+      "channel": "presentation",
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "presentation"
+      },
       "android": {
         "buildType": "app-bundle"
       }
     },
+    "preview": {
+      "extends": "presentation",
+      "channel": "presentation"
+    },
     "github": {
-      "channel": "preview",
-      "distribution": "internal",
-      "android": {
-        "buildType": "app-bundle"
-      },
+      "extends": "presentation",
+      "channel": "presentation",
       "ios": {
         "simulator": false
       }
@@ -29,17 +43,26 @@
     "production": {
       "channel": "production",
       "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production"
+      },
       "android": {
         "buildType": "app-bundle"
       }
     }
   },
   "update": {
-    "production": {
-      "channel": "production"
+    "development": {
+      "channel": "development"
+    },
+    "presentation": {
+      "channel": "presentation"
     },
     "preview": {
-      "channel": "preview"
+      "channel": "presentation"
+    },
+    "production": {
+      "channel": "production"
     }
   },
   "submit": {

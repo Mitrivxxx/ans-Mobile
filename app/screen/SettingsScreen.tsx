@@ -17,6 +17,7 @@ import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useAppUpdates } from '../context/AppUpdatesContext';
+import { getAppEnvDisplayName } from '../config/env';
 import { APP_VERSION } from '../version';
 
 export default function SettingsScreen() {
@@ -248,6 +249,8 @@ export default function SettingsScreen() {
 
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
+          {'\n'}
+          Środowisko: {getAppEnvDisplayName()}
           {runningUpdateId ? `\nPakiet OTA: ${runningUpdateId.slice(0, 8)}…` : ''}
         </Text>
       </RefreshableScrollView>

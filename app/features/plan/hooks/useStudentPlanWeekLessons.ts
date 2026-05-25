@@ -22,7 +22,12 @@ export function useStudentPlanWeekLessons(weekMondayKey?: string) {
   const query = useUserPersistentQuery<Lesson[]>({
     queryKey: (userKey) =>
       queryKeys.studentPlan.weekLessons(userKey, resolvedWeekMondayKey),
-    queryFn: () => planService.getWeekLessons(referenceDate),
+    queryFn: () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7884/ingest/daefe8e1-1e84-486a-b8a4-fabf03b42721',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68a4b3'},body:JSON.stringify({sessionId:'68a4b3',location:'useStudentPlanWeekLessons.ts:queryFn',message:'hook queryFn invoked',data:{weekMondayKey:resolvedWeekMondayKey},timestamp:Date.now(),hypothesisId:'A,C'})}).catch(()=>{});
+      // #endregion
+      return planService.getWeekLessons(referenceDate);
+    },
     syncOnMount: true,
   });
 

@@ -87,12 +87,19 @@ export function useUserPersistentQuery<TData>({
     if (!enabled) {
       return;
     }
+    const isPlanWeek =
+      Array.isArray(resolvedQueryKey) && resolvedQueryKey[2] === 'weekLessons';
+    if (isPlanWeek) {
+      // #region agent log
+      fetch('http://127.0.0.1:7884/ingest/daefe8e1-1e84-486a-b8a4-fabf03b42721',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68a4b3'},body:JSON.stringify({sessionId:'68a4b3',location:'useUserPersistentQuery.ts:syncIfNoCache',message:'syncIfNoCache',data:{weekMondayKey:resolvedQueryKey[3],hasCachedData,syncOnMount,willFetch:!hasCachedData},timestamp:Date.now(),hypothesisId:'A,D'})}).catch(()=>{});
+      // #endregion
+    }
     if (hasCachedData) {
       setSyncStatus('upToDate');
       return;
     }
     await syncInBackground();
-  }, [enabled, hasCachedData, syncInBackground]);
+  }, [enabled, hasCachedData, syncInBackground, resolvedQueryKey, syncOnMount]);
 
   useFocusEffect(
     useCallback(() => {

@@ -1,5 +1,6 @@
 import type { AxiosResponse } from "axios";
 
+import { devLog } from "../../../config/devLog";
 import {
   WD_BASE_URL,
   client as httpClient,
@@ -80,6 +81,7 @@ async function loginWD(
   options?: LoginWdOptions
 ): Promise<LoginResult> {
   try {
+    devLog("Login", "WD login attempt");
     const useContinuation = Boolean(options?.continuationHtml?.trim());
 
     let loginPageHtml = "";
@@ -286,10 +288,12 @@ async function loginWD(
 
     await markSessionEstablished();
 
+    devLog("Login", "WD login success");
     return {
       success: true,
     };
   } catch (error: unknown) {
+    devLog("Login", "WD login error");
     return loginFailureFromThrowable(error);
   }
 }
@@ -305,7 +309,14 @@ export class AuthService {
       await clearSession();
     }
 
-    return loginWD(username, password, options);
+    const result = await loginWD(username, password, options);
+    if (!result.success) {
+      devLog(
+        "Login",
+        `failed${result.errorCode ? ` (${result.errorCode})` : ""}`
+      );
+    }
+    return result;
   }
 
   async logout(): Promise<void> {

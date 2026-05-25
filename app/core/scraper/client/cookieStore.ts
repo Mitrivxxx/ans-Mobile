@@ -2,7 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CookieManager from "@react-native-cookies/cookies";
 import { Platform } from "react-native";
 
-export const WD_BASE_URL = "https://wd.ans-ns.edu.pl";
+import { WD_BASE_URL } from "../../../config/env";
+
+export { WD_BASE_URL };
 
 const LEGACY_STORAGE_KEY = "cookieJar";
 

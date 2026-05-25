@@ -37,6 +37,7 @@ import {
 import { clearSession } from '../core/scraper/auth/session.store';
 import { probeWdSessionAlive } from '../core/scraper/auth/sessionValidation';
 import { onNetworkReconnect } from '../core/network/networkSubscription';
+import { devLog } from '../config/devLog';
 import { initClient } from '../core/scraper/client/client';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated';
@@ -224,6 +225,10 @@ export function AuthSessionProvider({
       }
       const resolved = await resolveAuthStatus();
       if (isSessionResolveCurrent(runId)) {
+        devLog(
+          'Auth',
+          `session resolved: ${resolved.status}${resolved.sessionDegraded ? ' (degraded)' : ''}`
+        );
         applyResolvedSession(resolved);
       }
     },
@@ -385,6 +390,10 @@ export function AuthSessionProvider({
 
   const markAuthenticated = useCallback((options?: { ephemeral?: boolean }) => {
     bumpSessionResolve();
+    devLog(
+      'Auth',
+      `authenticated (ephemeral=${options?.ephemeral === true ? 'yes' : 'no'})`
+    );
     if (options?.ephemeral === true) {
       setEphemeralSessionActive(true);
     } else if (options?.ephemeral === false) {
@@ -411,6 +420,7 @@ export function AuthSessionProvider({
 
   const signOut = useCallback(async () => {
     bumpSessionResolve();
+    devLog('Auth', 'sign out');
     clearEphemeralSession();
     await performSignOut();
     setAuthStatus('unauthenticated');

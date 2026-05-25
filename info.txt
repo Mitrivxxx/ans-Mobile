@@ -26,3 +26,16 @@ npm run test:watch
 ----------
 Aktualizacje OTA (expo-updates / EAS Update)
 npm run update:production -- --message "fix: opis zmiany"
+
+
+----------
+Środowiska (dev / prezentacja / prod)
+# dev
+npx expo start
+npx expo run:android
+# prezentacja
+npm run build:presentation
+npm run update:presentation -- --message "opis"
+# prod
+npm run build:production
+npm run update:production -- --message "opis"

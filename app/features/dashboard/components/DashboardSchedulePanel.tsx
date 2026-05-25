@@ -11,6 +11,7 @@ import { usePrefetchPlanWeekWindow } from '../../plan/hooks/usePrefetchPlanWeekW
 import { useStudentPlanWeekLessons } from '../../plan/hooks/useStudentPlanWeekLessons';
 import { useSyncBanner } from '../../../hooks/useSyncBanner';
 import { getWeekMondayDateKey } from '../../../core/scraper/features/plan/plan.dateRange';
+import { isWeekInDefaultPrefetchWindow } from '../../../core/queryClient/planWeekWindow';
 import {
   addCalendarWeeks,
   dateKeyFromDate,
@@ -120,8 +121,26 @@ export default function DashboardSchedulePanel() {
     );
   }, [lessonsByDate, selectedDateKey]);
 
-  const goToPrevWeek = () => setWeekOffset((offset) => offset - 1);
-  const goToNextWeek = () => setWeekOffset((offset) => offset + 1);
+  const logWeekNav = (direction: 'prev' | 'next', nextOffset: number) => {
+    const ref = addCalendarWeeks(new Date(), nextOffset);
+    const key = getWeekMondayDateKey(ref);
+    // #region agent log
+    fetch('http://127.0.0.1:7884/ingest/daefe8e1-1e84-486a-b8a4-fabf03b42721',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'68a4b3'},body:JSON.stringify({sessionId:'68a4b3',location:'DashboardSchedulePanel.tsx:weekNav',message:'week navigation',data:{direction,weekMondayKey:key,inPrefetchWindow:isWeekInDefaultPrefetchWindow(key)},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+  };
+
+  const goToPrevWeek = () => {
+    setWeekOffset((offset) => {
+      logWeekNav('prev', offset - 1);
+      return offset - 1;
+    });
+  };
+  const goToNextWeek = () => {
+    setWeekOffset((offset) => {
+      logWeekNav('next', offset + 1);
+      return offset + 1;
+    });
+  };
 
   let lessonsContent: React.ReactNode;
   if (isFatalError) {
