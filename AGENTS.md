@@ -233,8 +233,8 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 
 - **EAS Update** — poprawki JS/UI bez nowej instalacji ze sklepu (`npm run update:production`).
 - **runtimeVersion** — `app.json` → `policy: "appVersion"` (zgodność z polem `version`). Przy OTA **nie podbijaj** `version` w `app.json`; podbij tylko przy nowym buildzie natywnym do sklepu.
-- **Warstwy** — `development` (dev / Metro, `APP_ENV` domyślnie przy `expo start`), `presentation` (wewnętrzny APK, `eas build --profile presentation`), `production` (sklep, `eas build --profile production`). Osobne `android.package` dla dev i prezentacji (`.dev`, `.presentation`).
-- **Kanały OTA** — `development` / `presentation` / `production` w `eas.json` (muszą pasować do profilu `eas build`). `preview` w EAS dziedziczy po `presentation`.
+- **Warstwy** — `development` (Metro), `presentation` (wewnętrzny test, `.presentation`), `production` (prod: `pl.matsma.WDMobile`, bez sufiksu). **GitHub APK** — profil `github` w `eas.json` (`extends production`, APK, kanał `production`).
+- **Kanały OTA** — `channel` w profilu `build` + `updates.channel` w `app.config.ts` (lokalny `gradlew` wymaga `APP_ENV=production` przy prebuild). Publikacja dla GitHub/telefonów użytkownika: `npm run update:production` (kanał `production`).
 - **Konfig** — `app.config.ts`, runtime: `app/config/env.ts`, logi dev: `app/config/devLog.ts` (tylko dev).
 - **W aplikacji** — `AppUpdatesProvider`, baner + „Sprawdź aktualizacje” w Ustawieniach; OTA **nie działa** w `__DEV__` / Expo Go.
 - Po pierwszej instalacji `expo-updates` wymagany **nowy** build natywny (APK/AAB z EAS).
@@ -249,10 +249,10 @@ Z `info.txt` / `package.json`:
 npx expo start                    # warstwa dev (Metro)
 adb reverse tcp:8081 tcp:8081   # fizyczne urządzenie
 npx expo run:android
-npm run build:presentation
-npm run build:production
-npm run update:presentation
-npm run update:production
+npm run build:github          # APK prod (GitHub / internal)
+npm run build:production      # AAB sklep
+npm run build:apk:local       # lokalny release APK (APP_ENV=production)
+npm run update:production     # OTA dla APK z GitHub
 npm run prebuild:android          # ikony + expo prebuild --clean
 ```
 ---

@@ -10,7 +10,12 @@ import React, {
 import { AppState, type AppStateStatus } from 'react-native';
 
 import {
+  isAutoUpdatesEnabled,
+  setAutoUpdatesEnabled as persistAutoUpdatesEnabled,
+} from '../core/preferences/autoUpdates.storage';
+import {
   checkAndFetchAppUpdate,
+  getOtaChannel,
   getRunningUpdateLabel,
   isAppUpdatesSupported,
   reloadAppWithUpdate,
@@ -21,9 +26,12 @@ const FOREGROUND_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 type AppUpdatesContextValue = {
   supported: boolean;
+  autoCheckEnabled: boolean;
+  setAutoCheckEnabled: (enabled: boolean) => Promise<void>;
   pendingReload: boolean;
   checking: boolean;
   runningUpdateId: string | null;
+  otaChannel: string | null;
   checkForUpdate: (options?: { userInitiated?: boolean }) => Promise<AppUpdateCheckResult>;
   applyPendingUpdate: () => Promise<void>;
 };
@@ -35,6 +43,8 @@ type Props = {
 };
 
 export function AppUpdatesProvider({ children }: Props) {
+  const [autoCheckEnabled, setAutoCheckEnabledState] = useState(false);
+  const [autoCheckReady, setAutoCheckReady] = useState(false);
   const [pendingReload, setPendingReload] = useState(false);
   const [checking, setChecking] = useState(false);
   const lastForegroundCheckRef = useRef(0);
@@ -42,6 +52,20 @@ export function AppUpdatesProvider({ children }: Props) {
 
   const supported = isAppUpdatesSupported();
   const runningUpdateId = getRunningUpdateLabel();
+  const otaChannel = getOtaChannel();
+
+  useEffect(() => {
+    void (async () => {
+      const enabled = await isAutoUpdatesEnabled();
+      setAutoCheckEnabledState(enabled);
+      setAutoCheckReady(true);
+    })();
+  }, []);
+
+  const setAutoCheckEnabled = useCallback(async (enabled: boolean) => {
+    await persistAutoUpdatesEnabled(enabled);
+    setAutoCheckEnabledState(enabled);
+  }, []);
 
   const runCheck = useCallback(
     async (options?: { userInitiated?: boolean }): Promise<AppUpdateCheckResult> => {
@@ -59,7 +83,17 @@ export function AppUpdatesProvider({ children }: Props) {
         if (result.status === 'downloaded') {
           setPendingReload(true);
           if (options?.userInitiated) {
-            await reloadAppWithUpdate();
+            try {
+              await reloadAppWithUpdate();
+            } catch (reloadErr: unknown) {
+              return {
+                status: 'error',
+                message:
+                  reloadErr instanceof Error
+                    ? reloadErr.message
+                    : 'Nie udało się uruchomić aplikacji z aktualizacją.',
+              };
+            }
           }
         }
         return result;
@@ -79,10 +113,17 @@ export function AppUpdatesProvider({ children }: Props) {
   }, [pendingReload]);
 
   useEffect(() => {
+    if (!autoCheckReady || !autoCheckEnabled) {
+      return;
+    }
     void runCheck();
-  }, [runCheck]);
+  }, [autoCheckReady, autoCheckEnabled, runCheck]);
 
   useEffect(() => {
+    if (!autoCheckReady || !autoCheckEnabled) {
+      return;
+    }
+
     const onAppStateChange = (next: AppStateStatus) => {
       if (next !== 'active') {
         return;
@@ -97,22 +138,28 @@ export function AppUpdatesProvider({ children }: Props) {
 
     const sub = AppState.addEventListener('change', onAppStateChange);
     return () => sub.remove();
-  }, [runCheck]);
+  }, [autoCheckReady, autoCheckEnabled, runCheck]);
 
   const value = useMemo<AppUpdatesContextValue>(
     () => ({
       supported,
+      autoCheckEnabled,
+      setAutoCheckEnabled,
       pendingReload,
       checking,
       runningUpdateId,
+      otaChannel,
       checkForUpdate: runCheck,
       applyPendingUpdate,
     }),
     [
       supported,
+      autoCheckEnabled,
+      setAutoCheckEnabled,
       pendingReload,
       checking,
       runningUpdateId,
+      otaChannel,
       runCheck,
       applyPendingUpdate,
     ]

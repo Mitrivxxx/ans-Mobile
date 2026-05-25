@@ -29,8 +29,15 @@
       "channel": "presentation"
     },
     "github": {
-      "extends": "presentation",
-      "channel": "presentation",
+      "extends": "production",
+      "channel": "production",
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "production"
+      },
+      "android": {
+        "buildType": "apk"
+      },
       "ios": {
         "simulator": false
       }
@@ -49,20 +56,6 @@
       "android": {
         "buildType": "app-bundle"
       }
-    }
-  },
-  "update": {
-    "development": {
-      "channel": "development"
-    },
-    "presentation": {
-      "channel": "presentation"
-    },
-    "preview": {
-      "channel": "presentation"
-    },
-    "production": {
-      "channel": "production"
     }
   },
   "submit": {

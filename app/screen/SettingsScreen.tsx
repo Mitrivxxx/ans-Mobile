@@ -25,8 +25,17 @@ export default function SettingsScreen() {
   const { refetch } = useStudentProfile();
   const { rememberMeEnabled, disableRememberMe } = useAuthSession();
   const { isOffline } = useNetworkStatus();
-  const { supported, checking, checkForUpdate, runningUpdateId } =
-    useAppUpdates();
+  const {
+    supported,
+    autoCheckEnabled,
+    setAutoCheckEnabled,
+    checking,
+    pendingReload,
+    checkForUpdate,
+    applyPendingUpdate,
+    runningUpdateId,
+    otaChannel,
+  } = useAppUpdates();
   const [cacheClearing, setCacheClearing] = useState(false);
 
   const refreshScreen = useCallback(async () => {
@@ -109,6 +118,12 @@ export default function SettingsScreen() {
         Alert.alert('Aktualizacje', 'Masz najnowszą wersję aplikacji.');
         break;
       case 'downloaded':
+        if (!pendingReload) {
+          Alert.alert(
+            'Aktualizacje',
+            'Pobrano nową wersję. Aplikacja zostanie uruchomiona ponownie.'
+          );
+        }
         break;
       case 'error':
         Alert.alert('Błąd aktualizacji', result.message);
@@ -116,7 +131,17 @@ export default function SettingsScreen() {
       default:
         break;
     }
-  }, [checkForUpdate, checking]);
+  }, [checkForUpdate, checking, pendingReload]);
+
+  const handleAutoUpdatesToggle = useCallback(
+    async (next: boolean) => {
+      await setAutoCheckEnabled(next);
+      if (next && supported && !checking) {
+        void checkForUpdate();
+      }
+    },
+    [setAutoCheckEnabled, supported, checking, checkForUpdate]
+  );
 
   return (
     <SafeAreaView
@@ -224,28 +249,90 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
 
-        {supported ? (
+        <View
+          style={[
+            styles.updatesSection,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.grayBorder,
+            },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.charcoal }]}>
+            Aktualizacje aplikacji
+          </Text>
+          <Text style={[styles.cardDescription, { color: colors.gray }]}>
+              {supported
+              ? 'Poprawki JS/UI bez ponownej instalacji APK (EAS Update). Przy pierwszym uruchomieniu auto jest wyłączone.'
+              : 'Dostępne w buildzie z GitHub / EAS (release), nie w trybie deweloperskim Expo.'}
+          </Text>
+
+          {supported && otaChannel ? (
+            <Text style={[styles.otaMeta, { color: colors.gray }]}>
+              Kanał OTA: {otaChannel}
+            </Text>
+          ) : null}
+
+          <View
+            style={[
+              styles.card,
+              styles.updatesRow,
+              { borderColor: colors.grayBorder, backgroundColor: colors.dashboardBg },
+            ]}
+          >
+            <View style={styles.textBlock}>
+              <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
+                Sprawdzaj automatycznie
+              </Text>
+              <Text style={[styles.cardDescription, { color: colors.gray }]}>
+                Przy starcie aplikacji i co ok. 5 min po powrocie na ekran.
+              </Text>
+            </View>
+            <Switch
+              value={autoCheckEnabled}
+              onValueChange={(value) => void handleAutoUpdatesToggle(value)}
+              disabled={!supported}
+              trackColor={{
+                false: colors.switchTrackOff,
+                true: colors.switchTrackOn,
+              }}
+              thumbColor={colors.switchThumb}
+              ios_backgroundColor={colors.switchTrackOff}
+            />
+          </View>
+
           <TouchableOpacity
             style={[
-              styles.actionCard,
+              styles.updatesButton,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.grayBorder,
-                opacity: checking ? 0.6 : 1,
+                backgroundColor: colors.gold,
+                opacity: !supported || checking || isOffline ? 0.55 : 1,
               },
             ]}
             onPress={() => void handleCheckAppUpdate()}
-            disabled={checking || isOffline}
+            disabled={!supported || checking || isOffline}
             activeOpacity={0.85}
           >
-            <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
-              Sprawdź aktualizacje aplikacji
-            </Text>
-            <Text style={[styles.cardDescription, { color: colors.gray }]}>
-              Pobiera poprawki bez instalacji z sklepu (wymaga internetu).
+            <Text style={[styles.updatesButtonText, { color: colors.black }]}>
+              {checking ? 'Sprawdzanie…' : 'Sprawdź teraz'}
             </Text>
           </TouchableOpacity>
-        ) : null}
+
+          {supported && pendingReload && !checking ? (
+            <TouchableOpacity
+              style={[
+                styles.updatesButtonOutline,
+                { borderColor: colors.grayBorder },
+              ]}
+              onPress={() => void applyPendingUpdate()}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.updatesButtonOutlineText, { color: colors.charcoal }]}>
+                Uruchom ponownie (aktualizacja pobrana)
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
 
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
@@ -308,6 +395,43 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 16,
     gap: 4,
+  },
+  updatesSection: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    gap: 12,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  otaMeta: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  updatesRow: {
+    marginTop: 0,
+  },
+  updatesButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  updatesButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  updatesButtonOutline: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  updatesButtonOutlineText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   textBlock: {
     flex: 1,

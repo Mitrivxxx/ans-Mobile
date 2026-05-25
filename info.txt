@@ -7,35 +7,48 @@ Narzędzia
 - Pokaż podłączone urządzenia: adb devices
 - Mirror telefonu: scrcpy
 
-Prebuild (native)
-- npx expo prebuild
-- npx expo run:android
 
-Budowanie release (Android)
 cd android
 gradlew assembleRelease
-------------
-release install
-adb install -r app\build\outputs\apk\release\app-release.apk
+----------
+PROD — APK na GitHub + OTA (kanał production, APP_ENV=production)
+Pakiet: pl.matsma.WDMobile (bez sufiksu .presentation / .dev)
+
+EAS Build (zalecane na CI / GitHub Actions):
+  npm run build:github
+  → profil eas.json "github" (extends production, APK, channel production)
+
+OTA po zmianach tylko w JS/UI:
+  npm run update:production -- --message "opis zmian"
+  (alias: npm run update:github — ten sam kanał production)
+
+Na telefonie: Ustawienia → Sprawdź teraz (kanał OTA: production)
+
+WAŻNE — fingerprint:
+  Po KAŻDEJ zmianie app.config / app.json / eas.json / nowych pluginów:
+  najpierw npm run build:github + nowy APK, dopiero potem update:production.
+  Sam update nie zadziała na starym APK jeśli fingerprint się nie zgadza.
+
+----------
+PROD — lokalny APK (zamiast samego cd android bez APP_ENV)
+  npm run build:apk:local
+  npm run install:apk:local
+Ręcznie (po prebuild:prod):
+  npm run prebuild:prod
+  cd android
+  gradlew.bat assembleRelease
+  adb install -r app\build\outputs\apk\release\app-release.apk
+
+Uwaga: stary APK z kanałem "presentation" NIE dostanie OTA z production —
+zainstaluj nowy build z GitHub / build:github / build:apk:local.
+
+----------
+Inne środowiska
+dev:        npx expo start
+prezentacja: npm run build:presentation  +  npm run update:presentation
+sklep AAB:   npm run build:production
 
 ----------
 testy
-npm test          
+npm test
 npm run test:watch
-
-----------
-Aktualizacje OTA (expo-updates / EAS Update)
-npm run update:production -- --message "fix: opis zmiany"
-
-
-----------
-Środowiska (dev / prezentacja / prod)
-# dev
-npx expo start
-npx expo run:android
-# prezentacja
-npm run build:presentation
-npm run update:presentation -- --message "opis"
-# prod
-npm run build:production
-npm run update:production -- --message "opis"
