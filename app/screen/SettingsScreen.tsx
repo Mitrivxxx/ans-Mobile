@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RefreshableScrollView from '../components/RefreshableScrollView';
@@ -32,6 +33,8 @@ export default function SettingsScreen() {
     setAutoCheckEnabled,
     checking,
     pendingReload,
+    updateAvailable,
+    probeUpdateAvailability,
     runningUpdateId,
     otaChannel,
     checkForUpdate,
@@ -45,6 +48,15 @@ export default function SettingsScreen() {
   }, [refetch]);
 
   useRegisterScreenRefresh(refreshScreen);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!supported || isOffline) {
+        return;
+      }
+      void probeUpdateAvailability();
+    }, [supported, isOffline, probeUpdateAvailability])
+  );
 
   const handleRememberMeToggle = useCallback(
     async (next: boolean) => {
@@ -101,6 +113,11 @@ export default function SettingsScreen() {
       return;
     }
 
+    if (pendingReload) {
+      await applyPendingUpdate();
+      return;
+    }
+
     const result = await checkForUpdate({ userInitiated: true });
 
     switch (result.status) {
@@ -137,7 +154,7 @@ export default function SettingsScreen() {
       default:
         break;
     }
-  }, [checkForUpdate, checking]);
+  }, [applyPendingUpdate, checkForUpdate, checking, pendingReload]);
 
   const handleAutoUpdatesToggle = useCallback(
     async (next: boolean) => {
@@ -273,6 +290,12 @@ export default function SettingsScreen() {
               : 'Dostępne po zainstalowaniu aplikacji z pliku APK (nie w trybie programisty).'}
           </Text>
 
+          {supported && updateAvailable ? (
+            <Text style={[styles.updateAvailableText, { color: colors.error }]}>
+              Dostępna jest nowa aktualizacja
+            </Text>
+          ) : null}
+
           <View
             style={[
               styles.card,
@@ -314,24 +337,15 @@ export default function SettingsScreen() {
             activeOpacity={0.85}
           >
             <Text style={[styles.updatesButtonText, { color: colors.black }]}>
-              {checking ? 'Sprawdzanie…' : 'Sprawdź teraz'}
+              {checking
+                ? pendingReload
+                  ? 'Uruchamianie…'
+                  : 'Sprawdzanie…'
+                : updateAvailable
+                  ? 'Aktualizuj'
+                  : 'Sprawdź teraz'}
             </Text>
           </TouchableOpacity>
-
-          {supported && pendingReload && !checking ? (
-            <TouchableOpacity
-              style={[
-                styles.updatesButtonOutline,
-                { borderColor: colors.grayBorder },
-              ]}
-              onPress={() => void applyPendingUpdate()}
-              activeOpacity={0.85}
-            >
-              <Text style={[styles.updatesButtonOutlineText, { color: colors.charcoal }]}>
-                Zastosuj pobraną aktualizację
-              </Text>
-            </TouchableOpacity>
-          ) : null}
         </View>
 
         <Text style={[styles.version, { color: colors.gray }]}>
@@ -413,6 +427,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '800',
+  },
+  updateAvailableText: {
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
   },
   updatesRow: {
     marginTop: 0,

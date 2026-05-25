@@ -1,5 +1,12 @@
 import * as Updates from 'expo-updates';
 
+export type AppUpdateAvailabilityResult =
+  | { status: 'dev' }
+  | { status: 'disabled' }
+  | { status: 'upToDate' }
+  | { status: 'available' }
+  | { status: 'error'; message: string };
+
 export type AppUpdateCheckResult =
   | { status: 'dev' }
   | { status: 'disabled' }
@@ -68,7 +75,8 @@ function formatUpdateErrorMessage(err: unknown): string {
   return `${raw}${diagnostics}`;
 }
 
-export async function checkAndFetchAppUpdate(): Promise<AppUpdateCheckResult> {
+/** Tylko manifest EAS — bez pobierania bundla (np. wejście w Ustawienia). */
+export async function probeAppUpdateAvailability(): Promise<AppUpdateAvailabilityResult> {
   if (__DEV__) {
     return { status: 'dev' };
   }
@@ -95,6 +103,31 @@ export async function checkAndFetchAppUpdate(): Promise<AppUpdateCheckResult> {
       return { status: 'upToDate' };
     }
 
+    return { status: 'available' };
+  } catch (err: unknown) {
+    return {
+      status: 'error',
+      message: formatUpdateErrorMessage(err),
+    };
+  }
+}
+
+export async function checkAndFetchAppUpdate(): Promise<AppUpdateCheckResult> {
+  const probe = await probeAppUpdateAvailability();
+  if (probe.status === 'dev') {
+    return { status: 'dev' };
+  }
+  if (probe.status === 'disabled') {
+    return { status: 'disabled' };
+  }
+  if (probe.status === 'upToDate') {
+    return { status: 'upToDate' };
+  }
+  if (probe.status === 'error') {
+    return { status: 'error', message: probe.message };
+  }
+
+  try {
     const fetch = await Updates.fetchUpdateAsync();
     if (!fetch.isNew) {
       return { status: 'upToDate' };

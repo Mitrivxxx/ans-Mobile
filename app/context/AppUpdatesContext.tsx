@@ -18,6 +18,7 @@ import {
   getOtaChannel,
   getRunningUpdateLabel,
   isAppUpdatesSupported,
+  probeAppUpdateAvailability,
   reloadAppWithUpdate,
   type AppUpdateCheckResult,
 } from '../core/updates/appUpdates';
@@ -29,9 +30,13 @@ type AppUpdatesContextValue = {
   autoCheckEnabled: boolean;
   setAutoCheckEnabled: (enabled: boolean) => Promise<void>;
   pendingReload: boolean;
+  /** Serwer ma nowy bundel (probe) lub update już pobrany — do komunikatu w Ustawieniach. */
+  updateAvailable: boolean;
+  probingAvailability: boolean;
   checking: boolean;
   runningUpdateId: string | null;
   otaChannel: string | null;
+  probeUpdateAvailability: () => Promise<void>;
   checkForUpdate: (options?: { userInitiated?: boolean }) => Promise<AppUpdateCheckResult>;
   applyPendingUpdate: () => Promise<void>;
 };
@@ -46,6 +51,8 @@ export function AppUpdatesProvider({ children }: Props) {
   const [autoCheckEnabled, setAutoCheckEnabledState] = useState(false);
   const [autoCheckReady, setAutoCheckReady] = useState(false);
   const [pendingReload, setPendingReload] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [probingAvailability, setProbingAvailability] = useState(false);
   const [checking, setChecking] = useState(false);
   const lastForegroundCheckRef = useRef(0);
   const checkInFlightRef = useRef(false);
@@ -68,6 +75,39 @@ export function AppUpdatesProvider({ children }: Props) {
     setAutoCheckEnabledState(enabled);
   }, []);
 
+  const applyAvailabilityFromProbe = useCallback(
+    (status: Awaited<ReturnType<typeof probeAppUpdateAvailability>>['status']) => {
+      if (status === 'available') {
+        setUpdateAvailable(true);
+      } else if (status === 'upToDate') {
+        setUpdateAvailable(false);
+      }
+    },
+    []
+  );
+
+  const probeUpdateAvailability = useCallback(async () => {
+    if (!isAppUpdatesSupported()) {
+      return;
+    }
+    if (pendingReload) {
+      setUpdateAvailable(true);
+      return;
+    }
+
+    setProbingAvailability(true);
+    try {
+      const result = await probeAppUpdateAvailability();
+      if (result.status === 'error') {
+        setUpdateAvailable(false);
+      } else {
+        applyAvailabilityFromProbe(result.status);
+      }
+    } finally {
+      setProbingAvailability(false);
+    }
+  }, [applyAvailabilityFromProbe, pendingReload]);
+
   const runCheck = useCallback(
     async (options?: { userInitiated?: boolean }): Promise<AppUpdateCheckResult> => {
       if (!isAppUpdatesSupported()) {
@@ -85,6 +125,9 @@ export function AppUpdatesProvider({ children }: Props) {
           const result = await checkAndFetchAppUpdate();
           if (result.status === 'downloaded') {
             setPendingReload(true);
+            setUpdateAvailable(true);
+          } else if (result.status === 'upToDate') {
+            setUpdateAvailable(false);
           }
           return result;
         } finally {
@@ -141,9 +184,12 @@ export function AppUpdatesProvider({ children }: Props) {
       autoCheckEnabled,
       setAutoCheckEnabled,
       pendingReload,
+      updateAvailable,
+      probingAvailability,
       checking,
       runningUpdateId,
       otaChannel,
+      probeUpdateAvailability,
       checkForUpdate: runCheck,
       applyPendingUpdate,
     }),
@@ -152,9 +198,12 @@ export function AppUpdatesProvider({ children }: Props) {
       autoCheckEnabled,
       setAutoCheckEnabled,
       pendingReload,
+      updateAvailable,
+      probingAvailability,
       checking,
       runningUpdateId,
       otaChannel,
+      probeUpdateAvailability,
       runCheck,
       applyPendingUpdate,
     ]
