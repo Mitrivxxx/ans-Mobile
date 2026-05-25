@@ -1,8 +1,21 @@
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 
 export type AppEnv = 'development' | 'presentation' | 'production';
 
 const DEFAULT_WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
+
+/** Kanał z APK (natywny) — nie zależy od błędnego bundla OTA. */
+function readNativeOtaChannel(): AppEnv | null {
+  if (__DEV__ || !Updates.isEnabled) {
+    return null;
+  }
+  const channel = Updates.channel;
+  if (channel === 'production' || channel === 'presentation' || channel === 'development') {
+    return channel;
+  }
+  return null;
+}
 
 function readExtraAppEnv(): AppEnv | null {
   const raw = Constants.expoConfig?.extra?.appEnv;
@@ -13,6 +26,11 @@ function readExtraAppEnv(): AppEnv | null {
 }
 
 export function getAppEnv(): AppEnv {
+  const fromChannel = readNativeOtaChannel();
+  if (fromChannel) {
+    return fromChannel;
+  }
+
   const fromExtra = readExtraAppEnv();
   if (fromExtra) {
     return fromExtra;
@@ -28,26 +46,19 @@ export function getWdBaseUrl(): string {
   return DEFAULT_WD_BASE_URL;
 }
 
-/** Portal WD — jeden URL we wszystkich warstwach (chyba że zmienisz w app.config). */
 export const WD_BASE_URL = getWdBaseUrl();
 
 export function isDevLoggingEnabled(): boolean {
   return __DEV__ || getAppEnv() === 'development';
 }
 
+/** Tylko build / tryb deweloperski — nie na produkcji (kanał production w APK). */
 export function shouldShowEnvBadge(): boolean {
-  return Constants.expoConfig?.extra?.showEnvBadge === true;
+  return getAppEnv() === 'development';
 }
 
 export function getAppEnvLabel(): string {
-  switch (getAppEnv()) {
-    case 'development':
-      return 'DEV';
-    case 'presentation':
-      return 'PREZENTACJA';
-    default:
-      return '';
-  }
+  return getAppEnv() === 'development' ? 'DEV' : '';
 }
 
 export function getAppEnvDisplayName(): string {

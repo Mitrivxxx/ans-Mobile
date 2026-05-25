@@ -17,7 +17,7 @@ import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useAppUpdates } from '../context/AppUpdatesContext';
-import { getAppEnvDisplayName } from '../config/env';
+import { getUpdateErrorAlertMessage } from '../features/settings/updateUserMessages';
 import { APP_VERSION } from '../version';
 
 export default function SettingsScreen() {
@@ -33,8 +33,6 @@ export default function SettingsScreen() {
     pendingReload,
     checkForUpdate,
     applyPendingUpdate,
-    runningUpdateId,
-    otaChannel,
   } = useAppUpdates();
   const [cacheClearing, setCacheClearing] = useState(false);
 
@@ -104,29 +102,35 @@ export default function SettingsScreen() {
     switch (result.status) {
       case 'dev':
         Alert.alert(
-          'Aktualizacje OTA',
-          'W trybie deweloperskim aktualizacje z EAS nie są dostępne. Użyj builda release (EAS Build lub APK release).'
+          'Aktualizacje',
+          'Ta funkcja działa w aplikacji pobranej z pliku APK, a nie w trybie do programowania (Expo Go).'
         );
         break;
       case 'disabled':
         Alert.alert(
-          'Aktualizacje OTA',
-          'Ta instalacja nie obsługuje aktualizacji w tle (np. stary build bez expo-updates). Zbuduj aplikację ponownie przez EAS.'
+          'Aktualizacje',
+          'Twoja wersja aplikacji nie obsługuje aktualizacji w tle. Zainstaluj najnowszy plik APK z GitHub.'
         );
         break;
       case 'upToDate':
-        Alert.alert('Aktualizacje', 'Masz najnowszą wersję aplikacji.');
+        Alert.alert(
+          'Aktualizacje',
+          'Jesteś na bieżąco — nie ma nowych aktualizacji.'
+        );
         break;
       case 'downloaded':
         if (!pendingReload) {
           Alert.alert(
-            'Aktualizacje',
-            'Pobrano nową wersję. Aplikacja zostanie uruchomiona ponownie.'
+            'Gotowe',
+            'Aktualizacja została pobrana. Za chwilę aplikacja uruchomi się ponownie.'
           );
         }
         break;
       case 'error':
-        Alert.alert('Błąd aktualizacji', result.message);
+        Alert.alert(
+          'Nie udało się zaktualizować',
+          getUpdateErrorAlertMessage(result.message)
+        );
         break;
       default:
         break;
@@ -262,16 +266,10 @@ export default function SettingsScreen() {
             Aktualizacje aplikacji
           </Text>
           <Text style={[styles.cardDescription, { color: colors.gray }]}>
-              {supported
-              ? 'Poprawki JS/UI bez ponownej instalacji APK (EAS Update). Przy pierwszym uruchomieniu auto jest wyłączone.'
-              : 'Dostępne w buildzie z GitHub / EAS (release), nie w trybie deweloperskim Expo.'}
+            {supported
+              ? 'Możesz pobrać nowe poprawki bez ponownej instalacji z GitHub. Przy pierwszym uruchomieniu sprawdzanie w tle jest wyłączone — włącz je poniżej, jeśli chcesz.'
+              : 'Dostępne po zainstalowaniu aplikacji z pliku APK (nie w trybie programisty).'}
           </Text>
-
-          {supported && otaChannel ? (
-            <Text style={[styles.otaMeta, { color: colors.gray }]}>
-              Kanał OTA: {otaChannel}
-            </Text>
-          ) : null}
 
           <View
             style={[
@@ -285,7 +283,7 @@ export default function SettingsScreen() {
                 Sprawdzaj automatycznie
               </Text>
               <Text style={[styles.cardDescription, { color: colors.gray }]}>
-                Przy starcie aplikacji i co ok. 5 min po powrocie na ekran.
+                Aplikacja sama poszuka aktualizacji po włączeniu i po powrocie do programu.
               </Text>
             </View>
             <Switch
@@ -328,7 +326,7 @@ export default function SettingsScreen() {
               activeOpacity={0.85}
             >
               <Text style={[styles.updatesButtonOutlineText, { color: colors.charcoal }]}>
-                Uruchom ponownie (aktualizacja pobrana)
+                Zastosuj pobraną aktualizację
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -336,9 +334,6 @@ export default function SettingsScreen() {
 
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
-          {'\n'}
-          Środowisko: {getAppEnvDisplayName()}
-          {runningUpdateId ? `\nPakiet OTA: ${runningUpdateId.slice(0, 8)}…` : ''}
         </Text>
       </RefreshableScrollView>
     </SafeAreaView>
@@ -406,10 +401,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '800',
-  },
-  otaMeta: {
-    fontSize: 12,
-    fontWeight: '600',
   },
   updatesRow: {
     marginTop: 0,

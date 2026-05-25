@@ -72,8 +72,8 @@ export default function AppUpdatesBanner() {
         />
         <Text style={styles.text}>
           {checking
-            ? 'Pobieranie aktualizacji aplikacji…'
-            : 'Dostępna nowa wersja. Uruchom ponownie, aby zastosować zmiany.'}
+            ? 'Pobieram aktualizację…'
+            : 'Pobrano aktualizację. Dotknij „Zastosuj”, aby ją włączyć.'}
         </Text>
         <View style={styles.actions}>
           {checking ? (
@@ -87,7 +87,7 @@ export default function AppUpdatesBanner() {
               ]}
               accessibilityRole="button"
             >
-              <Text style={styles.buttonText}>Uruchom</Text>
+              <Text style={styles.buttonText}>Zastosuj</Text>
             </Pressable>
           )}
         </View>

@@ -27,7 +27,6 @@ function createAppEnvBadgeStyles(c: AnsColors) {
 }
 
 export default function AppEnvBadge() {
-  const { colors } = useAppTheme();
   const styles = useThemedStyles(createAppEnvBadgeStyles);
   const label = getAppEnvLabel();
 
