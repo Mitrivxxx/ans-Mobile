@@ -43,3 +43,6 @@ yarn-error.*
 
 # keys
 *.keystore
+
+AGENTS.mb
+info.txt
