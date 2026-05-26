@@ -24,7 +24,8 @@
     "update:production": "cross-env APP_ENV=production eas update --channel production",
     "update:preview": "eas update --channel presentation",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

@@ -142,12 +142,6 @@ export async function postLecturerPlanGrid(
   const { customOperationState, callbackState } =
     extractLecturerGridState(pageHtml);
 
-  if (!customOperationState || !callbackState) {
-    console.warn(
-      "[LECTURER PLAN] Brak stanu grida (customOperationState / callbackState) w HTML GET"
-    );
-  }
-
   const body = buildGridPostBody(
     scheduleId,
     parametry,

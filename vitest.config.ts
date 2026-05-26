@@ -11,9 +11,12 @@ export default defineConfig({
     environment: 'node',
     include: ['__tests__/**/*.test.ts'],
     globals: false,
+    setupFiles: [path.join(rootDir, '__tests__', 'setup.ts')],
   },
   resolve: {
     alias: {
+      'expo-constants': path.join(mocksDir, 'expo-constants.ts'),
+      'expo-updates': path.join(mocksDir, 'expo-updates.ts'),
       'react-native': path.join(mocksDir, 'react-native.ts'),
       '@react-native-async-storage/async-storage': path.join(
         mocksDir,

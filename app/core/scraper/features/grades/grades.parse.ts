@@ -341,9 +341,6 @@ export function discoverGradesIndex(gradesHtml: string): GradesIndex {
     const semesterNumber = parseInt(semesterInfo.number, 10);
     const semesterRequestPath = extractSemesterRequestPath(card);
     if (!semesterRequestPath) {
-      console.warn(
-        `Nie znaleziono URL semestru dla semestru ${semesterInfo.number}`
-      );
       continue;
     }
 

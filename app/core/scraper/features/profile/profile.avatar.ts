@@ -150,15 +150,6 @@ export async function fetchAvatarPhoto(): Promise<string> {
     setCachedProfilePhoto(photo);
   }
 
-  if (!photo) {
-    console.warn(
-      "[PROFILE] Avatar not in HTML",
-      "aside:",
-      /<aside\b/i.test(homeHtml),
-      "zdjecie_glowne:",
-      /zdjecie_glowne/i.test(homeHtml)
-    );
-  }
 
   return photo;
 }

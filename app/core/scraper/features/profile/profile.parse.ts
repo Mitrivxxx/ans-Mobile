@@ -136,7 +136,6 @@ async function resolveProfilePhoto(): Promise<string> {
     }
     return photo;
   } catch (error) {
-    console.warn("[PROFILE] Nie udało się pobrać zdjęcia profilu:", error);
     return "";
   }
 }
