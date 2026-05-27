@@ -210,6 +210,7 @@ export default function DashboardSchedulePanel() {
                 styles.dayButton,
                 isToday && !isSelected && styles.dayButtonToday,
                 isSelected && styles.dayButtonSelected,
+                isToday && isSelected && styles.dayButtonSelectedToday,
               ]}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}

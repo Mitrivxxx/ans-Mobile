@@ -62,6 +62,10 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     backgroundColor: HARMONOGRAM_ACCENT_COLOR,
     borderColor: HARMONOGRAM_ACCENT_COLOR,
   },
+  dayButtonSelectedToday: {
+    borderWidth: 3,
+    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
+  },
   dayDot: {
     marginTop: 5,
     width: 5,

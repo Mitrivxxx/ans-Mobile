@@ -42,11 +42,24 @@ function EventItem({
 
 export default function DashboardEventsSection() {
   const { colors, isDarkMode } = useAppTheme();
+  const {
+    events,
+    isInitialLoading,
+    hasCachedEvents,
+    departments,
+    selectedDepartment,
+    setDepartment,
+  } = useEventsQuery();
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const styles = useMemo(
-    () => createDashboardEventsSectionStyles(colors, isDarkMode),
-    [colors, isDarkMode]
+    () =>
+      createDashboardEventsSectionStyles(
+        colors,
+        isDarkMode,
+        selectedDepartment.panelColor
+      ),
+    [colors, isDarkMode, selectedDepartment.panelColor]
   );
-  const { events, isInitialLoading, hasCachedEvents } = useEventsQuery();
 
   const openEventUrl = useCallback(async (url: string) => {
     try {
@@ -60,6 +73,18 @@ export default function DashboardEventsSection() {
       Alert.alert('Nie można otworzyć linku', url);
     }
   }, []);
+
+  const toggleDropdown = useCallback(() => {
+    setIsDropdownOpen((value) => !value);
+  }, []);
+
+  const onSelectDepartment = useCallback(
+    (departmentId: typeof selectedDepartment.id) => {
+      setIsDropdownOpen(false);
+      void setDepartment(departmentId);
+    },
+    [setDepartment]
+  );
 
   if (isInitialLoading && !hasCachedEvents) {
     return (
@@ -84,6 +109,47 @@ export default function DashboardEventsSection() {
         <View style={styles.headerRow}>
           <Text style={styles.title}>Wydarzenia</Text>
           <View style={styles.titleUnderline} />
+          <View style={styles.dropdownWrap}>
+            <Pressable
+              onPress={toggleDropdown}
+              style={styles.dropdownButton}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isDropdownOpen }}
+              accessibilityLabel="Wybierz wydział wydarzeń"
+            >
+              <Text style={styles.dropdownButtonText} numberOfLines={1}>
+                {selectedDepartment.label}
+              </Text>
+              <Text style={styles.dropdownChevron}>{isDropdownOpen ? '▲' : '▼'}</Text>
+            </Pressable>
+
+            {isDropdownOpen ? (
+              <View style={styles.dropdownMenu}>
+                {departments.map((department) => (
+                  <Pressable
+                    key={department.id}
+                    onPress={() => onSelectDepartment(department.id)}
+                    style={({ pressed }) => [
+                      styles.dropdownItem,
+                      pressed && styles.dropdownItemPressed,
+                    ]}
+                    accessibilityRole="button"
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        department.id === selectedDepartment.id &&
+                          styles.dropdownItemTextActive,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {department.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+          </View>
         </View>
 
         <View style={styles.row}>
