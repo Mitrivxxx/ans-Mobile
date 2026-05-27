@@ -38,7 +38,8 @@ import { clearSession } from '../core/scraper/auth/session.store';
 import { probeWdSessionAlive } from '../core/scraper/auth/sessionValidation';
 import { onNetworkReconnect } from '../core/network/networkSubscription';
 import { devLog } from '../config/devLog';
-import { initClient } from '../core/scraper/client/client';
+import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
+import { startupMark, startupMeasure } from '../core/startup/startupMetrics';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated';
 
@@ -143,12 +144,19 @@ async function resolveAuthStatus(): Promise<{
   rememberMeEnabled: boolean;
 }> {
   try {
-    await initClient();
+    await ensureScraperInfraReady();
   } catch {
     /* proceed */
   }
 
   const rememberMe = await isRememberMeEnabled();
+  let hasSessionCache: boolean | null = null;
+  const readHasScraperSession = async (): Promise<boolean> => {
+    if (hasSessionCache === null) {
+      hasSessionCache = await hasScraperSession();
+    }
+    return hasSessionCache;
+  };
 
   if (rememberMe) {
     const resolved = await resolveRememberMeWithDegradedFallback();
@@ -159,10 +167,18 @@ async function resolveAuthStatus(): Promise<{
   }
 
   if (!isEphemeralSessionActive()) {
-    if (await hasScraperSession()) {
+    if (await readHasScraperSession()) {
       await clearSession();
     }
-  } else if (await hasLiveScraperSession()) {
+    return {
+      status: 'unauthenticated',
+      sessionDegraded: false,
+      sessionDegradedMessage: '',
+      rememberMeEnabled: false,
+    };
+  }
+
+  if (await hasLiveScraperSession()) {
     return {
       status: 'authenticated',
       sessionDegraded: false,
@@ -171,7 +187,7 @@ async function resolveAuthStatus(): Promise<{
     };
   }
 
-  if (await hasScraperSession()) {
+  if (await readHasScraperSession()) {
     await clearSession();
   }
 
@@ -223,8 +239,15 @@ export function AuthSessionProvider({
       if (options?.showSplash !== false) {
         setAuthStatus('unknown');
       }
+      startupMark('auth-restore-start');
       const resolved = await resolveAuthStatus();
       if (isSessionResolveCurrent(runId)) {
+        startupMark('auth-restore-resolved');
+        startupMeasure(
+          'restoreSession -> resolved',
+          'auth-restore-start',
+          'auth-restore-resolved'
+        );
         devLog(
           'Auth',
           `session resolved: ${resolved.status}${resolved.sessionDegraded ? ' (degraded)' : ''}`
@@ -271,11 +294,16 @@ export function AuthSessionProvider({
   }, [handleSessionLost]);
 
   useEffect(() => {
+    // Szybki resolve sesji na cold starcie (bez czekania na restore cache).
+    void restoreSession({ showSplash: true });
+  }, [restoreSession]);
+
+  useEffect(() => {
     if (!persistReady) {
       return;
     }
-
-    void restoreSession({ showSplash: true });
+    // Po restore cache odśwież stan sesji bez ponownego blokowania spinnerem.
+    void restoreSession({ showSplash: false });
   }, [persistReady, restoreSession]);
 
   useEffect(() => {
@@ -434,7 +462,7 @@ export function AuthSessionProvider({
     const runId = ++sessionResolveRunIdRef.current;
 
     try {
-      await initClient();
+      await ensureScraperInfraReady();
     } catch {
       /* proceed */
     }

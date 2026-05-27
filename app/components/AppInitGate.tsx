@@ -9,8 +9,8 @@ import {
 
 import { devLog } from '../config/devLog';
 import { useAppTheme } from '../context/AppThemeContext';
-import { setupScraperAuthGuard } from '../core/scraper/auth/ensureAuthenticated';
-import { initClient } from '../core/scraper/client/client';
+import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
+import { startupMark, startupMeasure } from '../core/startup/startupMetrics';
 
 type Props = {
   children: React.ReactNode;
@@ -71,11 +71,13 @@ export default function AppInitGate({ children }: Props) {
   const bootstrap = useCallback(async () => {
     setLoading(true);
     setError(null);
+    startupMark('app-init-start');
 
     try {
-      setupScraperAuthGuard();
-      await initClient();
-      devLog('Init', 'scraper client ready');
+      await ensureScraperInfraReady();
+      startupMark('app-init-ready');
+      startupMeasure('AppInitGate -> ready', 'app-init-start', 'app-init-ready');
+      devLog('Init', 'app init gate ready');
       setReady(true);
     } catch (err: unknown) {
       console.error('[APP] Init error:', err);

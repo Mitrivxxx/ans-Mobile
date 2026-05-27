@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -44,6 +44,7 @@ import {
 } from './app/core/queryClient/persistentQueryConfig';
 import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
+import { startupMark, startupMeasure } from './app/core/startup/startupMetrics';
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
 const AppStack = createStackNavigator<
@@ -51,6 +52,20 @@ const AppStack = createStackNavigator<
 >();
 
 function AuthNavigator() {
+  const loggedRef = useRef(false);
+  useEffect(() => {
+    if (loggedRef.current) {
+      return;
+    }
+    loggedRef.current = true;
+    startupMark('first-auth-render');
+    startupMeasure(
+      'App start -> AuthNavigator first render',
+      'app-init-start',
+      'first-auth-render'
+    );
+  }, []);
+
   return (
     <AuthStack.Navigator
       initialRouteName="Login"
@@ -62,6 +77,20 @@ function AuthNavigator() {
 }
 
 function MainNavigator() {
+  const loggedRef = useRef(false);
+  useEffect(() => {
+    if (loggedRef.current) {
+      return;
+    }
+    loggedRef.current = true;
+    startupMark('first-main-render');
+    startupMeasure(
+      'App start -> MainNavigator first render',
+      'app-init-start',
+      'first-main-render'
+    );
+  }, []);
+
   return (
     <AppStack.Navigator
       initialRouteName="Dashboard"
@@ -140,6 +169,8 @@ function AppShell() {
 export default function App() {
   const [persistReady, setPersistReady] = useState(false);
   const onPersistSuccess = useCallback(() => {
+    startupMark('persist-ready');
+    startupMeasure('App start -> persist restore', 'app-init-start', 'persist-ready');
     setPersistReady(true);
   }, []);
 
