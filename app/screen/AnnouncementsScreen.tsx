@@ -1,4 +1,5 @@
-import React from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,17 +11,23 @@ import {
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import SyncBanner from '../components/SyncBanner';
 import { useAppTheme } from '../context/AppThemeContext';
+import { archivedAnnouncementToDetails } from '../core/announcements/archive/announcementsArchive.utils';
+import type { ArchivedAnnouncement } from '../core/announcements/archive/announcementsArchive.types';
+import AnnouncementsArchiveView from '../features/announcements/components/AnnouncementsArchiveView';
 import AnnouncementDetailsView from '../features/announcements/components/AnnouncementDetailsView';
+import AnnouncementListItem from '../features/announcements/components/AnnouncementListItem';
+import AnnouncementsTabBar, {
+  type AnnouncementsTab,
+} from '../features/announcements/components/AnnouncementsTabBar';
 import { createAnnouncementsUiStyles } from '../features/announcements/announcementsUi.styles';
 import { useAnnouncementSelection } from '../features/announcements/hooks/useAnnouncementSelection';
+import { useAnnouncementsArchive } from '../features/announcements/hooks/useAnnouncementsArchive';
 import { useAnnouncementsQuery } from '../features/announcements/hooks/useAnnouncementsQuery';
 import { createAnnouncementsScreenStyles } from '../features/announcements/AnnouncementsScreen.styles';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useRefreshControlProps } from '../hooks/useRefreshControlProps';
 import { useSyncBanner } from '../hooks/useSyncBanner';
 import { useThemedStyles } from '../theme/useThemedStyles';
-
-// do testu
 
 type Props = {
   navigation: {
@@ -32,6 +39,16 @@ export default function AnnouncementsScreen(_props: Props) {
   const { colors } = useAppTheme();
   const screenStyles = useThemedStyles(createAnnouncementsScreenStyles);
   const uiStyles = useThemedStyles(createAnnouncementsUiStyles);
+  const [activeTab, setActiveTab] = useState<AnnouncementsTab>('announcements');
+  const [selectedArchived, setSelectedArchived] =
+    useState<ArchivedAnnouncement | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      setActiveTab('announcements');
+    }, [])
+  );
+
   const {
     announcements,
     isInitialLoading,
@@ -52,9 +69,34 @@ export default function AnnouncementsScreen(_props: Props) {
     clearSelection,
   } = useAnnouncementSelection(refetchAnnouncements, forceRefresh);
 
+  const {
+    archived,
+    isLoading: isArchiveLoading,
+    archivingId,
+    removingId,
+    isArchived,
+    toggleArchive,
+    removeFromArchive,
+    reload: reloadArchive,
+  } = useAnnouncementsArchive();
+
+  const handleTabChange = useCallback(
+    (tab: AnnouncementsTab) => {
+      setActiveTab(tab);
+      clearSelection();
+      setSelectedArchived(null);
+    },
+    [clearSelection]
+  );
+
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
-  useRegisterScreenRefresh(refreshSelection);
+  useRegisterScreenRefresh(
+    useCallback(async () => {
+      await reloadArchive();
+      await refreshSelection();
+    }, [reloadArchive, refreshSelection])
+  );
   const { refreshControl } = useRefreshControlProps();
 
   const syncBanner = (
@@ -67,7 +109,24 @@ export default function AnnouncementsScreen(_props: Props) {
     />
   );
 
-  if (isInitialLoading) {
+  if (selectedArchived) {
+    return (
+      <RefreshableScrollView
+        style={screenStyles.screen}
+        contentContainerStyle={screenStyles.detailsContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <AnnouncementDetailsView
+          selected={archivedAnnouncementToDetails(selectedArchived)}
+          styles={uiStyles}
+          onBack={() => setSelectedArchived(null)}
+          backLabel="← Archiwum"
+        />
+      </RefreshableScrollView>
+    );
+  }
+
+  if (isInitialLoading && activeTab === 'announcements') {
     return (
       <RefreshableScrollView
         style={screenStyles.screen}
@@ -80,7 +139,12 @@ export default function AnnouncementsScreen(_props: Props) {
     );
   }
 
-  if (isFatalError && announcements.length === 0 && !selectedItem) {
+  if (
+    activeTab === 'announcements' &&
+    isFatalError &&
+    announcements.length === 0 &&
+    !selectedItem
+  ) {
     return (
       <RefreshableScrollView
         style={screenStyles.screen}
@@ -98,7 +162,7 @@ export default function AnnouncementsScreen(_props: Props) {
     );
   }
 
-  if (selectedItem) {
+  if (selectedItem && activeTab === 'announcements') {
     if (detailsLoading && !selected) {
       return (
         <RefreshableScrollView
@@ -153,6 +217,26 @@ export default function AnnouncementsScreen(_props: Props) {
     }
   }
 
+  if (activeTab === 'archive') {
+    return (
+      <RefreshableScrollView
+        style={screenStyles.screen}
+        contentContainerStyle={screenStyles.archiveContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <AnnouncementsTabBar activeTab={activeTab} onTabChange={handleTabChange} />
+        <AnnouncementsArchiveView
+          items={archived}
+          isLoading={isArchiveLoading}
+          removingId={removingId}
+          uiStyles={uiStyles}
+          onOpen={setSelectedArchived}
+          onRemove={(id) => void removeFromArchive(id)}
+        />
+      </RefreshableScrollView>
+    );
+  }
+
   return (
     <View style={screenStyles.screen}>
       <FlatList
@@ -163,6 +247,10 @@ export default function AnnouncementsScreen(_props: Props) {
         refreshControl={refreshControl}
         ListHeaderComponent={
           <View style={screenStyles.listHeader}>
+            <AnnouncementsTabBar
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
             {syncBanner}
             {detailsError ? (
               <Text style={uiStyles.errorText}>{detailsError}</Text>
@@ -181,24 +269,15 @@ export default function AnnouncementsScreen(_props: Props) {
           const isFetching = detailsLoading && selectedItem?.id === item.id;
 
           return (
-            <TouchableOpacity
+            <AnnouncementListItem
+              item={item}
+              styles={uiStyles}
+              isFetching={isFetching}
+              isArchived={isArchived(item.id)}
+              isArchiving={archivingId === item.id}
               onPress={() => setSelectedItem(item)}
-              disabled={isFetching}
-              style={[uiStyles.card, isFetching && uiStyles.cardDisabled]}
-              accessibilityRole="button"
-            >
-              <Text style={uiStyles.cardTitle} numberOfLines={2}>
-                {item.title}
-              </Text>
-
-              <Text style={uiStyles.cardAuthor} numberOfLines={1}>
-                {item.authorName}
-              </Text>
-
-              <Text style={uiStyles.cardAction}>
-                {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
-              </Text>
-            </TouchableOpacity>
+              onToggleArchive={() => void toggleArchive(item)}
+            />
           );
         }}
       />

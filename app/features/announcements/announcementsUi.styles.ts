@@ -55,8 +55,68 @@ export function createAnnouncementsUiStyles(c: AnsColors) {
       shadowOffset: { width: 0, height: 4 },
       elevation: 1,
     },
+    cardRow: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      gap: 10,
+    },
+    cardMain: {
+      flex: 1,
+      minWidth: 0,
+    },
     cardDisabled: {
       opacity: 0.7,
+    },
+    archiveButton: {
+      alignSelf: 'center',
+      maxWidth: 96,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.goldDark,
+      backgroundColor: c.dashboardBg,
+      justifyContent: 'center',
+    },
+    archiveButtonPressed: {
+      opacity: 0.75,
+    },
+    archiveButtonText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: c.goldDark,
+      textAlign: 'center',
+      lineHeight: 14,
+    },
+    archiveButtonArchived: {
+      borderColor: c.error,
+      backgroundColor: c.errorBg,
+    },
+    archiveButtonTextArchived: {
+      color: c.error,
+    },
+    archiveRemoveButton: {
+      marginTop: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.error,
+      backgroundColor: c.errorBg,
+      alignSelf: 'flex-start',
+    },
+    archiveRemoveButtonPressed: {
+      opacity: 0.75,
+    },
+    archiveRemoveButtonText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.error,
+    },
+    archiveSavedAt: {
+      fontSize: 12,
+      color: c.gray,
+      marginTop: 4,
     },
     cardTitle: {
       fontSize: 16,

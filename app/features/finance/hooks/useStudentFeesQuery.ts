@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 
 import { cacheUntilReplaceQueryOptions } from '../../../core/queryClient/cacheUntilReplace';
 import { runWithManualRefreshCooldown } from '../../../core/queryClient/manualRefreshCooldown';
+import { usePersistentCacheSyncEffects } from '../../../core/queryClient/usePersistentCacheSyncEffects';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import type { SyncStatus } from '../../../core/queryClient/syncTypes';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
@@ -25,7 +25,8 @@ export function useStudentFeesQuery() {
     ...cacheUntilReplaceQueryOptions<StudentFee[]>(),
   });
 
-  const { refetch, isLoading, isFetching, isError, error, data } = query;
+  const { refetch, isLoading, isFetching, isError, error, data, dataUpdatedAt } =
+    query;
   const fees = data ?? [];
   const hasCachedData = data !== undefined;
 
@@ -64,15 +65,13 @@ export function useStudentFeesQuery() {
     [runSync]
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (hasCachedData) {
-        setSyncStatus('upToDate');
-        return;
-      }
-      void runSync();
-    }, [hasCachedData, runSync])
-  );
+  usePersistentCacheSyncEffects({
+    enabled: true,
+    hasCachedData,
+    dataUpdatedAt,
+    syncInBackground: runSync,
+    setSyncStatus,
+  });
 
   return {
     fees,

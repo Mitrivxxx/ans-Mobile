@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, type QueryKey } from '@tanstack/react-query';
 
 import { useNetworkReconnectEffect } from '../../hooks/useNetworkReconnect';
 import { cacheUntilReplaceQueryOptions } from './cacheUntilReplace';
 import { runWithManualRefreshCooldown } from './manualRefreshCooldown';
+import { usePersistentCacheSyncEffects } from './usePersistentCacheSyncEffects';
 import { useQueryUserKey } from './useQueryUserKey';
 import type { SyncStatus } from './syncTypes';
 
@@ -40,7 +40,7 @@ export function useUserPersistentQuery<TData>({
     ...cacheUntilReplaceQueryOptions<TData>(),
   });
 
-  const { refetch, data } = query;
+  const { refetch, data, dataUpdatedAt } = query;
   const hasCachedData = data !== undefined;
 
   const runSync = useCallback(
@@ -83,22 +83,14 @@ export function useUserPersistentQuery<TData>({
     [runSync]
   );
 
-  const syncIfNoCache = useCallback(async () => {
-    if (!enabled) {
-      return;
-    }
-    if (hasCachedData) {
-      setSyncStatus('upToDate');
-      return;
-    }
-    await syncInBackground();
-  }, [enabled, hasCachedData, syncInBackground]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void syncIfNoCache();
-    }, [syncIfNoCache])
-  );
+  usePersistentCacheSyncEffects({
+    enabled,
+    hasCachedData,
+    dataUpdatedAt,
+    syncOnMount,
+    syncInBackground,
+    setSyncStatus,
+  });
 
   useNetworkReconnectEffect(() => {
     if (!enabled || !hasCachedData) {
@@ -108,13 +100,6 @@ export function useUserPersistentQuery<TData>({
       void syncInBackground();
     }
   });
-
-  useEffect(() => {
-    if (!syncOnMount || !enabled) {
-      return;
-    }
-    void syncIfNoCache();
-  }, [enabled, syncIfNoCache, syncOnMount]);
 
   return {
     data: query.data,

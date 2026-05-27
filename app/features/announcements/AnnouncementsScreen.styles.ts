@@ -29,5 +29,8 @@ export function createAnnouncementsScreenStyles(c: AnsColors) {
     detailsContent: {
       paddingBottom: 24,
     },
+    archiveContent: {
+      paddingBottom: 24,
+    },
   });
 }

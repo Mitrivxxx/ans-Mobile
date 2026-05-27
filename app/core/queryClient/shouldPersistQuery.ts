@@ -4,10 +4,10 @@ import { isWeekInDefaultPrefetchWindow } from './planWeekWindow';
 
 /**
  * Zapytania zapisywane na dysk (offline / degraded).
- * Bez: partial, detail, semester, lessons, weekLessons poza 3-miesięcznym oknem.
+ * Bez: partial, detail, semester, weekLessons poza 3-miesięcznym oknem.
  */
 const OFFLINE_QUERY_SEGMENTS = {
-  studentPlan: new Set(['weekLessons']),
+  studentPlan: new Set(['lessons', 'weekLessons']),
   grades: new Set(['index']),
   announcements: new Set(['list']),
   profile: new Set(['summary', 'details']),
