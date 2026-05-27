@@ -35,8 +35,9 @@ export default function AnnouncementsArchiveView({
       <View style={styles.noteCard}>
         <Text style={styles.noteTitle}>Archiwum ogłoszeń</Text>
         <Text style={styles.noteText}>
-          Zapisane ogłoszenia (wraz z treścią) są przechowywane tutaj przez 6
-          miesięcy od zapisania. Po tym czasie zostaną automatycznie usunięte.
+          Ogłoszenia zapisane w archiwum są przechowywane przez 6 miesięcy od daty
+          archiwizacji. Po tym czasie zostaną automatycznie usunięte. Uwaga:
+          załączniki nie są zapisywane w archiwum i wygasają wraz z wiadomością.
         </Text>
       </View>
 

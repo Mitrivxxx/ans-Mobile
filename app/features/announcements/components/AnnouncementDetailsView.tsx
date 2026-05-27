@@ -55,6 +55,13 @@ export default function AnnouncementDetailsView({
         </View>
       </View>
 
+      <View style={styles.contentCard}>
+        <AnnouncementContentText
+          html={selected.content}
+          baseStyle={styles.contentText}
+        />
+      </View>
+
       {selected.attachmentUrl ? (
         <View style={styles.attachmentCard}>
           <Text style={styles.attachmentLabel}>Załącznik</Text>
@@ -65,13 +72,6 @@ export default function AnnouncementDetailsView({
           </Pressable>
         </View>
       ) : null}
-
-      <View style={styles.contentCard}>
-        <AnnouncementContentText
-          html={selected.content}
-          baseStyle={styles.contentText}
-        />
-      </View>
     </View>
   );
 }

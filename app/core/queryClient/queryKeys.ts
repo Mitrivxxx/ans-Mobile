@@ -25,7 +25,6 @@ export const queryKeys = {
     fees: (userKey: string) => ['finance', userKey, 'fees'] as const,
   },
   events: {
-    list: (userKey: string, departmentId: string) =>
-      ['events', userKey, 'list', departmentId] as const,
+    list: (userKey: string) => ['events', userKey, 'list'] as const,
   },
 } as const;
