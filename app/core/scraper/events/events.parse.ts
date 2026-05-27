@@ -6,18 +6,14 @@ import {
 } from './events.constants';
 import type { PublicEvent } from './events.types';
 
-function resolveAnsUrl(href: string): string {
+function resolveAnsUrl(href: string, pagePath: string): string {
   const trimmed = href.trim();
   if (!trimmed) {
     return ANS_WEB_ORIGIN;
   }
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-  if (trimmed.startsWith('/')) {
-    return `${ANS_WEB_ORIGIN}${trimmed}`;
-  }
-  return `${ANS_WEB_ORIGIN}/${trimmed}`;
+
+  const baseUrl = new URL(pagePath, ANS_WEB_ORIGIN).toString();
+  return new URL(trimmed, baseUrl).toString();
 }
 
 function parseEventDate(raw: string): Pick<PublicEvent, 'day' | 'monthLabel' | 'dateLabel'> | null {
@@ -62,7 +58,7 @@ function comparePublicEventsByDate(a: PublicEvent, b: PublicEvent): number {
   return dayA - dayB;
 }
 
-export function parsePublicEvents(html: string): PublicEvent[] {
+export function parsePublicEvents(html: string, pagePath = '/'): PublicEvent[] {
   const { document } = parseHTML(html);
   const section = document.querySelector('#events');
   if (!section) {
@@ -102,7 +98,7 @@ export function parsePublicEvents(html: string): PublicEvent[] {
       return;
     }
 
-    const url = resolveAnsUrl(href);
+    const url = resolveAnsUrl(href, pagePath);
 
     events.push({
       id: eventIdFromUrl(url),

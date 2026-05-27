@@ -20,3 +20,50 @@ export const EVENTS_MONTH_LABELS_UPPER = [
   'LISTOPADA',
   'GRUDNIA',
 ] as const;
+
+export const EVENTS_DEPARTMENTS = [
+  {
+    id: 'general',
+    label: 'Ogólny',
+    path: '/',
+    panelColor: null,
+  },
+  {
+    id: 'we',
+    label: 'Nauk Ekonomicznych',
+    path: '/we',
+    panelColor: '#306138',
+  },
+  {
+    id: 'wh',
+    label: 'Nauk Humanistycznych',
+    path: '/wh',
+    panelColor: '#8A7500',
+  },
+  {
+    id: 'wkfb',
+    label: 'Nauk o Kulturze Fizycznej i Bezpieczeństwie',
+    path: '/wkfb',
+    panelColor: '#325F80',
+  },
+  {
+    id: 'wss',
+    label: 'Nauk Społecznych i Sztuki',
+    path: '/wss',
+    panelColor: '#794472',
+  },
+  {
+    id: 'wi',
+    label: 'Nauk Inżynieryjnych',
+    path: '/wi',
+    panelColor: '#2D4174',
+  },
+  {
+    id: 'wz',
+    label: 'Lekarski i Nauk o Zdrowiu',
+    path: '/wz',
+    panelColor: '#BD3C52',
+  },
+] as const;
+
+export type EventsDepartmentId = (typeof EVENTS_DEPARTMENTS)[number]['id'];
