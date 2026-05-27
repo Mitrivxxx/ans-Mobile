@@ -1,6 +1,7 @@
 import { parseHTML } from "linkedom";
 
 import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
+import { WD_BASE_URL } from "../../client/client";
 import type { Announcement, AnnouncementDetails } from "./announcements.types";
 
 export type { Announcement, AnnouncementDetails } from "./announcements.types";
@@ -53,6 +54,8 @@ export function parseAnnouncementDetails(html: string): AnnouncementDetails {
   let content = "";
   let authorName = "Wirtualny Dziekanat";
   let date = "";
+  let attachmentUrl: string | null = null;
+  let attachmentName: string | null = null;
 
   const noticeDiv = doc.querySelector(".apr-notice");
   if (noticeDiv) {
@@ -86,7 +89,18 @@ export function parseAnnouncementDetails(html: string): AnnouncementDetails {
     }
   }
 
-  return { content, authorName, date };
+  const attachmentLink = doc.querySelector(
+    '.row.no-gutters a[href*="/Shared/PobierzPlik/"]'
+  );
+  const rawAttachmentHref = attachmentLink?.getAttribute("href")?.trim() ?? "";
+  if (rawAttachmentHref) {
+    attachmentUrl = rawAttachmentHref.startsWith("http")
+      ? rawAttachmentHref
+      : `${WD_BASE_URL}${rawAttachmentHref.startsWith("/") ? "" : "/"}${rawAttachmentHref}`;
+    attachmentName = attachmentLink?.textContent?.trim() || null;
+  }
+
+  return { content, authorName, date, attachmentUrl, attachmentName };
 }
 
 export function parseAnnouncements(html: string): Announcement[] {

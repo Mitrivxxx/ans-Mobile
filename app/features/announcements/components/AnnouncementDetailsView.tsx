@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Text, View } from 'react-native';
 
 import ScreenBackButton from '../../../components/ScreenBackButton';
 import type { AnnouncementDetails } from '../../../core/scraper/features/announcements/announcements.types';
@@ -21,6 +21,23 @@ export default function AnnouncementDetailsView({
   onBack,
   backLabel = '← Lista ogłoszeń',
 }: Props) {
+  const handleOpenAttachment = React.useCallback(async () => {
+    if (!selected.attachmentUrl) {
+      return;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(selected.attachmentUrl);
+      if (!supported) {
+        Alert.alert('Nie można otworzyć linku', selected.attachmentUrl);
+        return;
+      }
+      await Linking.openURL(selected.attachmentUrl);
+    } catch {
+      Alert.alert('Nie można otworzyć linku', selected.attachmentUrl);
+    }
+  }, [selected.attachmentUrl]);
+
   return (
     <View>
       <ScreenBackButton label={backLabel} onPress={onBack} />
@@ -37,6 +54,17 @@ export default function AnnouncementDetailsView({
           <Text style={styles.metaValue}>{selected.date || '-'}</Text>
         </View>
       </View>
+
+      {selected.attachmentUrl ? (
+        <View style={styles.attachmentCard}>
+          <Text style={styles.attachmentLabel}>Załącznik</Text>
+          <Pressable onPress={handleOpenAttachment} accessibilityRole="link">
+            <Text style={styles.attachmentLink}>
+              {selected.attachmentName || 'Pobierz plik'}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <View style={styles.contentCard}>
         <AnnouncementContentText

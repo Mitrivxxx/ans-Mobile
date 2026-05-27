@@ -173,6 +173,26 @@ export function createAnnouncementsUiStyles(c: AnsColors) {
       borderWidth: 1,
       borderColor: c.dashboardFeatureBorder,
     },
+    attachmentCard: {
+      backgroundColor: c.surface,
+      borderRadius: 14,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: c.dashboardFeatureBorder,
+      marginBottom: 12,
+    },
+    attachmentLabel: {
+      fontSize: 12,
+      color: c.gray,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+      marginBottom: 8,
+    },
+    attachmentLink: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.goldDark,
+    },
     contentText: {
       fontSize: 14,
       lineHeight: 20,
