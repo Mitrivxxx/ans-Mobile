@@ -41,10 +41,15 @@ import { devLog } from '../config/devLog';
 import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
 import { startupMark, startupMeasure } from '../core/startup/startupMetrics';
 
-export type AuthStatus = 'unknown' | 'authenticated' | 'unauthenticated';
+export type AuthStatus =
+  | 'unknown'
+  | 'restoring'
+  | 'authenticated'
+  | 'unauthenticated';
 
 type AuthSessionContextValue = {
   authStatus: AuthStatus;
+  isRestoringSession: boolean;
   rememberMeEnabled: boolean;
   /** Sesja WD niedostępna, ale jest cache danych — tryb offline. */
   sessionDegraded: boolean;
@@ -206,7 +211,7 @@ export function AuthSessionProvider({
   children: React.ReactNode;
   persistReady: boolean;
 }) {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('unknown');
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('restoring');
   const [rememberMeEnabled, setRememberMeEnabled] = useState(false);
   const [sessionDegraded, setSessionDegraded] = useState(false);
   const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
@@ -237,7 +242,7 @@ export function AuthSessionProvider({
     async (options?: { showSplash?: boolean }) => {
       const runId = ++sessionResolveRunIdRef.current;
       if (options?.showSplash !== false) {
-        setAuthStatus('unknown');
+        setAuthStatus('restoring');
       }
       startupMark('auth-restore-start');
       const resolved = await resolveAuthStatus();
@@ -545,6 +550,7 @@ export function AuthSessionProvider({
   const value = useMemo<AuthSessionContextValue>(
     () => ({
       authStatus,
+      isRestoringSession: authStatus === 'restoring',
       rememberMeEnabled,
       sessionDegraded,
       sessionDegradedMessage,

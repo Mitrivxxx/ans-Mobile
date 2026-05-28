@@ -43,7 +43,7 @@ export default function AnnouncementListItem({
       accessibilityLabel={`${item.title}, zobacz szczegóły`}
     >
       <View style={styles.cardRow}>
-        <View style={styles.cardMain}>
+        <View style={[styles.cardMain, styles.cardMainCentered]}>
           <Text style={styles.cardTitle} numberOfLines={2}>
             {item.title}
           </Text>

@@ -64,6 +64,9 @@ export function createAnnouncementsUiStyles(c: AnsColors) {
       flex: 1,
       minWidth: 0,
     },
+    cardMainCentered: {
+      justifyContent: 'center',
+    },
     cardDisabled: {
       opacity: 0.7,
     },

@@ -9,6 +9,7 @@ import { useAppTheme } from '../context/AppThemeContext';
 export default function AuthSyncBanner() {
   const { colors } = useAppTheme();
   const {
+    isRestoringSession,
     sessionDegraded,
     sessionDegradedMessage,
     retrySessionRestore,
@@ -47,6 +48,16 @@ export default function AuthSyncBanner() {
           borderWidth: 1,
           borderColor: colors.grayBorder,
         },
+        restoringBanner: {
+          backgroundColor: colors.dashboardBluePale,
+        },
+        restoringText: {
+          flex: 1,
+          fontSize: 13,
+          lineHeight: 18,
+          color: colors.dashboardBlue,
+          fontWeight: '700',
+        },
         errorText: {
           flex: 1,
           fontSize: 13,
@@ -80,6 +91,17 @@ export default function AuthSyncBanner() {
       }),
     [colors]
   );
+
+  if (isRestoringSession) {
+    return (
+      <View style={styles.wrapper}>
+        <View style={[styles.banner, styles.restoringBanner]}>
+          <ActivityIndicator size="small" color={colors.dashboardBlue} />
+          <Text style={styles.restoringText}>Logowanie...</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!sessionDegraded) {
     return null;

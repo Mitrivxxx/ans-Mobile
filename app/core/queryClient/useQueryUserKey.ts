@@ -11,7 +11,9 @@ export function useQueryUserKey(): string {
   const [userKey, setUserKey] = useState(SESSION_USER_KEY);
 
   useEffect(() => {
-    if (authStatus !== 'authenticated') {
+    const canResolveUserScopedCache =
+      authStatus === 'authenticated' || authStatus === 'restoring';
+    if (!canResolveUserScopedCache) {
       setUserKey(SESSION_USER_KEY);
       return;
     }

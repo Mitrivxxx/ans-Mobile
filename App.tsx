@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -113,21 +113,6 @@ function AppShell() {
   const { isDarkMode, colors } = useAppTheme();
   const { authStatus } = useAuthSession();
   usePrefetchUserScraperData();
-
-  if (authStatus === 'unknown') {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.gold} />
-      </View>
-    );
-  }
 
   if (authStatus === 'unauthenticated') {
     return (
