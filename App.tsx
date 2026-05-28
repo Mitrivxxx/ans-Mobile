@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -111,8 +111,30 @@ function MainNavigator() {
 
 function AppShell() {
   const { isDarkMode, colors } = useAppTheme();
-  const { authStatus } = useAuthSession();
+  const { authStatus, isRememberMeStartupRestoreActive } = useAuthSession();
   usePrefetchUserScraperData();
+
+  if (isRememberMeStartupRestoreActive) {
+    return (
+      <>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            backgroundColor: colors.surface,
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.gold} />
+          <Text style={{ marginTop: 12, fontSize: 14, color: colors.gray }}>
+            Przywracanie sesji...
+          </Text>
+        </View>
+      </>
+    );
+  }
 
   if (authStatus === 'unauthenticated') {
     return (

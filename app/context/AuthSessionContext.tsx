@@ -51,6 +51,7 @@ type AuthSessionContextValue = {
   authStatus: AuthStatus;
   isRestoringSession: boolean;
   rememberMeEnabled: boolean;
+  isRememberMeStartupRestoreActive: boolean;
   /** Sesja WD niedostępna, ale jest cache danych — tryb offline. */
   sessionDegraded: boolean;
   sessionDegradedMessage: string;
@@ -213,6 +214,8 @@ export function AuthSessionProvider({
 }) {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('restoring');
   const [rememberMeEnabled, setRememberMeEnabled] = useState(false);
+  const [isRememberMeStartupRestoreActive, setIsRememberMeStartupRestoreActive] =
+    useState(false);
   const [sessionDegraded, setSessionDegraded] = useState(false);
   const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
   const sessionResolveRunIdRef = useRef(0);
@@ -241,23 +244,34 @@ export function AuthSessionProvider({
   const restoreSession = useCallback(
     async (options?: { showSplash?: boolean }) => {
       const runId = ++sessionResolveRunIdRef.current;
+      const startupRestore = options?.showSplash !== false;
       if (options?.showSplash !== false) {
         setAuthStatus('restoring');
       }
-      startupMark('auth-restore-start');
-      const resolved = await resolveAuthStatus();
+      const rememberMeForRun = await isRememberMeEnabled();
       if (isSessionResolveCurrent(runId)) {
-        startupMark('auth-restore-resolved');
-        startupMeasure(
-          'restoreSession -> resolved',
-          'auth-restore-start',
-          'auth-restore-resolved'
-        );
-        devLog(
-          'Auth',
-          `session resolved: ${resolved.status}${resolved.sessionDegraded ? ' (degraded)' : ''}`
-        );
-        applyResolvedSession(resolved);
+        setIsRememberMeStartupRestoreActive(startupRestore && rememberMeForRun);
+      }
+      startupMark('auth-restore-start');
+      try {
+        const resolved = await resolveAuthStatus();
+        if (isSessionResolveCurrent(runId)) {
+          startupMark('auth-restore-resolved');
+          startupMeasure(
+            'restoreSession -> resolved',
+            'auth-restore-start',
+            'auth-restore-resolved'
+          );
+          devLog(
+            'Auth',
+            `session resolved: ${resolved.status}${resolved.sessionDegraded ? ' (degraded)' : ''}`
+          );
+          applyResolvedSession(resolved);
+        }
+      } finally {
+        if (startupRestore && isSessionResolveCurrent(runId)) {
+          setIsRememberMeStartupRestoreActive(false);
+        }
       }
     },
     [applyResolvedSession, isSessionResolveCurrent]
@@ -552,6 +566,7 @@ export function AuthSessionProvider({
       authStatus,
       isRestoringSession: authStatus === 'restoring',
       rememberMeEnabled,
+      isRememberMeStartupRestoreActive,
       sessionDegraded,
       sessionDegradedMessage,
       enableRememberMe,
@@ -563,6 +578,7 @@ export function AuthSessionProvider({
     [
       authStatus,
       rememberMeEnabled,
+      isRememberMeStartupRestoreActive,
       sessionDegraded,
       sessionDegradedMessage,
       enableRememberMe,
