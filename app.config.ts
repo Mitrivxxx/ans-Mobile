@@ -2,7 +2,7 @@ import type { ExpoConfig } from 'expo/config';
 
 import baseAppJson from './app.json';
 
-export type AppEnv = 'development' | 'presentation' | 'production';
+export type AppEnv = 'development' | 'demo' | 'production';
 
 const BASE_PACKAGE = 'pl.matsma.WDMobile';
 const WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
@@ -10,7 +10,7 @@ const WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
 /** Kanał EAS Update — musi pasować do `channel` w profilu eas build / `eas update --channel`. */
 const OTA_CHANNEL_BY_ENV: Record<AppEnv, string> = {
   development: 'development',
-  presentation: 'presentation',
+  demo: 'demo',
   production: 'production',
 };
 
@@ -22,9 +22,9 @@ const ENV_LAYERS: Record<
     name: 'WDMobile Dev',
     packageSuffix: '.dev',
   },
-  presentation: {
-    name: 'WDMobile (Prezentacja)',
-    packageSuffix: '.presentation',
+  demo: {
+    name: 'WDMobile (Demo)',
+    packageSuffix: '.demo',
   },
   production: {
     name: 'WDMobile',
@@ -37,15 +37,15 @@ function resolveAppEnv(): AppEnv {
   if (easProfile === 'github' || easProfile === 'production') {
     return 'production';
   }
-  if (easProfile === 'presentation' || easProfile === 'preview') {
-    return 'presentation';
+  if (easProfile === 'demo' || easProfile === 'preview') {
+    return 'demo';
   }
   if (easProfile === 'development') {
     return 'development';
   }
 
   const raw = process.env.APP_ENV ?? 'development';
-  if (raw === 'presentation' || raw === 'production' || raw === 'development') {
+  if (raw === 'demo' || raw === 'production' || raw === 'development') {
     return raw;
   }
   return 'development';

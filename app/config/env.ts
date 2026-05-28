@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 
-export type AppEnv = 'development' | 'presentation' | 'production';
+export type AppEnv = 'development' | 'demo' | 'production';
 
 const DEFAULT_WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
 
@@ -11,7 +11,7 @@ function readNativeOtaChannel(): AppEnv | null {
     return null;
   }
   const channel = Updates.channel;
-  if (channel === 'production' || channel === 'presentation' || channel === 'development') {
+  if (channel === 'production' || channel === 'demo' || channel === 'development') {
     return channel;
   }
   return null;
@@ -19,7 +19,7 @@ function readNativeOtaChannel(): AppEnv | null {
 
 function readExtraAppEnv(): AppEnv | null {
   const raw = Constants.expoConfig?.extra?.appEnv;
-  if (raw === 'development' || raw === 'presentation' || raw === 'production') {
+  if (raw === 'development' || raw === 'demo' || raw === 'production') {
     return raw;
   }
   return null;
@@ -69,8 +69,8 @@ export function getAppEnvDisplayName(): string {
   switch (getAppEnv()) {
     case 'development':
       return 'Deweloperska';
-    case 'presentation':
-      return 'Prezentacja';
+    case 'demo':
+      return 'Demo';
     default:
       return 'Produkcyjna';
   }

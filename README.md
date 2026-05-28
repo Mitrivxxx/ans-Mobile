@@ -23,7 +23,7 @@ Na fizycznym urządzeniu z Metro: `adb reverse tcp:8081 tcp:8081`.
 | Środowisko | Profil EAS | Package (Android) | Kanał OTA |
 |------------|------------|-------------------|-----------|
 | development | `development` | `pl.matsma.WDMobile.dev` | `development` |
-| presentation | `presentation` | `pl.matsma.WDMobile.presentation` | `presentation` |
+| demo | `demo` | `pl.matsma.WDMobile.demo` | `demo` |
 | production | `github` / `production` | `pl.matsma.WDMobile` | `production` |
 
 ```bash

@@ -47,7 +47,7 @@ app/version.ts         # APP_VERSION — sync z package.json i app.json
 
 ---
 
-## Środowiska (development / presentation / production)
+## Środowiska (development / demo / production)
 
 Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`). To **nie są osobne gałęzie git** — ten sam kod na `main`, a środowisko wybiera się przy **buildzie EAS** (profil w `eas.json`) lub lokalnie przez `APP_ENV` / Metro.
 
@@ -58,17 +58,17 @@ Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`)
 | Warstwa | Nazwa w launcherze | Package Android / iOS | Kanał EAS Update | Profil `eas build` | Typowy cel |
 |---------|-------------------|------------------------|------------------|-------------------|------------|
 | **development** | WDMobile Dev | `pl.matsma.WDMobile.dev` | `development` | `development` | Dev na urządzeniu, APK wewnętrzny |
-| **presentation** | WDMobile (Prezentacja) | `pl.matsma.WDMobile.presentation` | `presentation` | `presentation`, `preview`* | Test wewnętrzny, osobna instalacja obok prod |
+| **demo** | WDMobile (Demo) | `pl.matsma.WDMobile.demo` | `demo` | `demo`, `preview`* | Test wewnętrzny, osobna instalacja obok prod |
 | **production** | WDMobile | `pl.matsma.WDMobile` | `production` | `production`, `github`** | Użytkownicy: sklep (AAB) lub APK z GitHub |
 
-\* `preview` w `eas.json` dziedziczy po `presentation` (ten sam kanał).  
+\* `preview` w `eas.json` dziedziczy po `demo` (ten sam kanał).  
 \** `github` = `extends: production` — to samo `APP_ENV` i kanał `production`, ale **APK** + `distribution: internal` (GitHub Releases / workflow `.github/workflows/build-github-apk.yml`).
 
 ### Jak ustawiane jest środowisko
 
 **Przy buildzie natywnym (EAS / prebuild):** `app.config.ts` → `resolveAppEnv()`:
 
-1. `EAS_BUILD_PROFILE` — mapowanie: `github` \| `production` → production; `presentation` \| `preview` → presentation; `development` → development.
+1. `EAS_BUILD_PROFILE` — mapowanie: `github` \| `production` → production; `demo` \| `preview` → demo; `development` → development.
 2. W przeciwnym razie zmienna `APP_ENV` z profilu `eas.json` (`env.APP_ENV`).
 3. Domyślnie: `development` (np. lokalny prebuild bez `APP_ENV=production`).
 
@@ -78,14 +78,14 @@ Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`)
 2. Potem `Constants.expoConfig.extra.appEnv`.
 3. W `__DEV__` (Metro / Expo Go): zawsze traktowane jak development.
 
-**Metro (`npx expo start`):** nie buduje warstwy presentation/prod — to development z bundlerem; OTA wyłączone (`__DEV__`).
+**Metro (`npx expo start`):** nie buduje warstwy demo/prod — to development z bundlerem; OTA wyłączone (`__DEV__`).
 
 ### Komendy per środowisko
 
-| Akcja | development | presentation | production (GitHub / sklep) |
+| Akcja | development | demo | production (GitHub / sklep) |
 |-------|-------------|--------------|----------------------------|
-| EAS build Android | `npm run build:development` | `npm run build:presentation` | `npm run build:github` (APK) lub `build:production` (AAB) |
-| EAS Update | `npm run update:development` | `npm run update:presentation` | `npm run update:production` (alias: `update:github`) |
+| EAS build Android | `npm run build:development` | `npm run build:demo` | `npm run build:github` (APK) lub `build:production` (AAB) |
+| EAS Update | `npm run update:development` | `npm run update:demo` | `npm run update:production` (alias: `update:github`) |
 | Lokalny APK release | — | — | `npm run build:apk:local` (`APP_ENV=production` + `prebuild:prod`) |
 
 Kanał przy `eas update` **musi** zgadzać się z kanałem wbudowanym w APK (patrz tabela). Update z gałęzi `dev` po merge na `main` jest OK — liczy się commit/kod i **niezmieniony** `runtimeVersion`, nie historia gałęzi.
@@ -313,12 +313,12 @@ adb reverse tcp:8081 tcp:8081   # fizyczne urządzenie
 npx expo run:android
 npm run prebuild:prod           # prebuild Android, APP_ENV=production
 npm run build:development       # EAS APK, .dev, kanał development
-npm run build:presentation      # EAS AAB, .presentation
+npm run build:demo              # EAS AAB, .demo
 npm run build:github            # EAS APK prod (GitHub / internal)
 npm run build:production        # EAS AAB sklep
 npm run build:apk:local         # lokalny release APK (production)
 npm run update:development
-npm run update:presentation
+npm run update:demo
 npm run update:production       # OTA prod (to samo co update:github)
 npm run prebuild:android        # ikony + expo prebuild --clean (domyślnie dev)
 ```

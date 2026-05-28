@@ -14,19 +14,19 @@
         "buildType": "apk"
       }
     },
-    "presentation": {
-      "channel": "presentation",
+    "demo": {
+      "channel": "demo",
       "distribution": "internal",
       "env": {
-        "APP_ENV": "presentation"
+        "APP_ENV": "demo"
       },
       "android": {
         "buildType": "app-bundle"
       }
     },
     "preview": {
-      "extends": "presentation",
-      "channel": "presentation"
+      "extends": "demo",
+      "channel": "demo"
     },
     "github": {
       "extends": "production",

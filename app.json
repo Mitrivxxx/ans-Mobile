@@ -2,7 +2,7 @@
   "expo": {
     "name": "WDMobile",
     "slug": "WDMobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -10,23 +10,23 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#2C3748"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "pl.matsma.WDMobile",
-      "buildNumber": "100"
+      "buildNumber": "101"
     },
     "android": {
       "versionCode": 101,
       "splash": {
         "image": "./assets/splash-icon.png",
         "resizeMode": "contain",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#2C3748"
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#2C3748"
       },
       "allowBackup": false,
       "edgeToEdgeEnabled": true,

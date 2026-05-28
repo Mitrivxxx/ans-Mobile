@@ -1,6 +1,6 @@
 {
   "name": "wdmobile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -15,14 +15,14 @@
     "web": "expo start --web",
     "build:ios": "eas build --platform ios --profile ios-simulator --non-interactive",
     "build:development": "eas build --profile development",
-    "build:presentation": "eas build --profile presentation",
+    "build:demo": "eas build --profile demo",
     "build:github": "eas build --profile github --platform android",
     "build:production": "eas build --profile production",
     "update:development": "cross-env APP_ENV=development eas update --channel development",
-    "update:presentation": "cross-env APP_ENV=presentation eas update --channel presentation",
+    "update:demo": "cross-env APP_ENV=demo eas update --channel demo",
     "update:github": "cross-env APP_ENV=production eas update --channel production",
     "update:production": "cross-env APP_ENV=production eas update --channel production",
-    "update:preview": "eas update --channel presentation",
+    "update:preview": "eas update --channel demo",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
