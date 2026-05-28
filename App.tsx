@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -117,20 +117,20 @@ function AppShell() {
   if (isRememberMeStartupRestoreActive) {
     return (
       <>
-        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <StatusBar style="light" />
         <View
           style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 24,
-            backgroundColor: colors.surface,
+            backgroundColor: '#000',
           }}
         >
-          <ActivityIndicator size="large" color={colors.gold} />
-          <Text style={{ marginTop: 12, fontSize: 14, color: colors.gray }}>
-            Przywracanie sesji...
-          </Text>
+          <Image
+            source={require('./assets/splash-icon.png')}
+            resizeMode="contain"
+            style={{ width: 280, height: 280 }}
+          />
         </View>
       </>
     );
