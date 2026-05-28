@@ -43,14 +43,14 @@ export default function AnnouncementArchiveListItem({
   const { colors } = useAppTheme();
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}, zobacz szczegóły`}
+      style={styles.card}
+    >
       <View style={styles.cardRow}>
-        <TouchableOpacity
-          onPress={onPress}
-          accessibilityRole="button"
-          accessibilityLabel={`${item.title}, zobacz szczegóły`}
-          style={styles.cardMain}
-        >
+        <View style={styles.cardMain}>
           <Text style={styles.cardTitle} numberOfLines={2}>
             {item.title}
           </Text>
@@ -62,9 +62,7 @@ export default function AnnouncementArchiveListItem({
           <Text style={styles.archiveSavedAt}>
             Data wygaśnięcia: {formatExpirationDate(item.savedAt)}
           </Text>
-
-          <Text style={styles.cardAction}>Zobacz szczegóły →</Text>
-        </TouchableOpacity>
+        </View>
 
         <Pressable
           onPress={onRemove}
@@ -86,6 +84,6 @@ export default function AnnouncementArchiveListItem({
           )}
         </Pressable>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

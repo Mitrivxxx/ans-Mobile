@@ -45,4 +45,6 @@ yarn-error.*
 *.keystore
 
 AGENTS.mb
-info.txt
+/info.txt
+*.mb
+!README.mb

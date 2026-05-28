@@ -35,27 +35,19 @@ export default function AnnouncementListItem({
   const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.card, isFetching && styles.cardDisabled]}>
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={isFetching}
+      style={[styles.card, isFetching && styles.cardDisabled]}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}, zobacz szczegóły`}
+    >
       <View style={styles.cardRow}>
-        <TouchableOpacity
-          onPress={onPress}
-          disabled={isFetching}
-          style={styles.cardMain}
-          accessibilityRole="button"
-          accessibilityLabel={`${item.title}, zobacz szczegóły`}
-        >
+        <View style={styles.cardMain}>
           <Text style={styles.cardTitle} numberOfLines={2}>
             {item.title}
           </Text>
-
-          <Text style={styles.cardAuthor} numberOfLines={1}>
-            {item.authorName}
-          </Text>
-
-          <Text style={styles.cardAction}>
-            {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
-          </Text>
-        </TouchableOpacity>
+        </View>
 
         <Pressable
           onPress={onToggleArchive}
@@ -84,6 +76,6 @@ export default function AnnouncementListItem({
           )}
         </Pressable>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
