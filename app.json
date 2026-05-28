@@ -18,7 +18,7 @@
       "buildNumber": "101"
     },
     "android": {
-      "versionCode": 101,
+      "versionCode": 102,
       "splash": {
         "image": "./assets/splash-icon.png",
         "resizeMode": "contain",

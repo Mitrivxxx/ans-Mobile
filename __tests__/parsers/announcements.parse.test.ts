@@ -43,6 +43,8 @@ describe('parseAnnouncementDetails', () => {
       content: '<p>Treść <b>HTML</b></p>',
       authorName: 'Jan Kowalski',
       date: '2026-05-10 12:00',
+      attachmentUrl: null,
+      attachmentName: null,
     });
   });
 
