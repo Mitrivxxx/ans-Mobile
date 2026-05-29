@@ -19,7 +19,6 @@ import {
   type LecturerSearchResult,
 } from '../core/scraper/features/lecturers/lecturers.service';
 import type { RootParamList } from '../navigation/navigationRef';
-import KeyboardDismissView from '../components/KeyboardDismissView';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 
@@ -120,11 +119,11 @@ export default function FindLecturerScreen() {
       style={styles.safeArea}
       edges={['left', 'right', 'bottom']}
     >
-      <KeyboardDismissView>
       <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.formCard}>
@@ -218,7 +217,6 @@ export default function FindLecturerScreen() {
           </View>
         ) : null}
       </RefreshableScrollView>
-      </KeyboardDismissView>
     </SafeAreaView>
   );
 }

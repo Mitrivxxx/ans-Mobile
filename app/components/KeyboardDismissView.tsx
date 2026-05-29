@@ -12,14 +12,18 @@ type KeyboardDismissViewProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Ukrywa klawiaturę po tapnięciu poza polem tekstowym. */
+/**
+ * Ukrywa klawiaturę po tapnięciu poza polem tekstowym.
+ * Używaj **wewnątrz** ScrollView (jako opakowanie treści), nie na zewnątrz —
+ * owinięcie ScrollView z zewnątrz blokuje gest przewijania.
+ */
 export default function KeyboardDismissView({
   children,
   style,
 }: KeyboardDismissViewProps) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={[{ flex: 1 }, style]}>{children}</View>
+      <View style={style}>{children}</View>
     </TouchableWithoutFeedback>
   );
 }

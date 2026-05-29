@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
+import { waitForMinSplashDisplay } from '../core/preferences/splashTheme';
 import ThemedSplashOverlay from './ThemedSplashOverlay';
 
 type Props = {
@@ -15,13 +16,24 @@ type Props = {
  */
 export default function AppBootstrap({ isDarkMode, children }: Props) {
   const [overlayVisible, setOverlayVisible] = useState(true);
+  const shownAtRef = useRef(Date.now());
+  const hideStartedRef = useRef(false);
 
   const onSplashLayout = useCallback(() => {
-    void SplashScreen.hideAsync()
-      .catch(() => {})
-      .finally(() => {
-        setOverlayVisible(false);
-      });
+    if (hideStartedRef.current) {
+      return;
+    }
+    hideStartedRef.current = true;
+
+    const hideSplash = () => {
+      void SplashScreen.hideAsync()
+        .catch(() => {})
+        .finally(() => {
+          setOverlayVisible(false);
+        });
+    };
+
+    void waitForMinSplashDisplay(shownAtRef.current).finally(hideSplash);
   }, []);
 
   return (

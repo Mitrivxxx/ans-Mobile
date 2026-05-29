@@ -17,6 +17,7 @@ import {
   isEphemeralSessionActive,
   setEphemeralSessionActive,
 } from '../core/auth/ephemeralSession';
+import { clearLocalUserSessionData } from '../core/auth/clearLocalUserSessionData';
 import { performSignOut } from '../core/auth/performSignOut';
 import { syncUserDataAfterSessionRestore } from '../core/auth/syncUserDataAfterSessionRestore';
 import {
@@ -173,9 +174,8 @@ async function resolveAuthStatus(): Promise<{
   }
 
   if (!isEphemeralSessionActive()) {
-    if (await readHasScraperSession()) {
-      await clearSession();
-    }
+    // Cold start po logowaniu bez „Zapamiętaj mnie” — jak ręczne Wyloguj.
+    await clearLocalUserSessionData();
     return {
       status: 'unauthenticated',
       sessionDegraded: false,

@@ -45,6 +45,7 @@ import {
 import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
 import ThemedSplashOverlay from './app/components/ThemedSplashOverlay';
+import { useMinSplashDisplay } from './app/hooks/useMinSplashDisplay';
 import { startupMark, startupMeasure } from './app/core/startup/startupMetrics';
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
@@ -112,10 +113,17 @@ function MainNavigator() {
 
 function AppShell() {
   const { isDarkMode, colors } = useAppTheme();
-  const { authStatus, isRememberMeStartupRestoreActive } = useAuthSession();
+  const {
+    authStatus,
+    isRememberMeStartupRestoreActive,
+    isRestoringSession,
+  } = useAuthSession();
+  const showStartupSplash = useMinSplashDisplay(
+    isRememberMeStartupRestoreActive
+  );
   usePrefetchUserScraperData();
 
-  if (isRememberMeStartupRestoreActive) {
+  if (showStartupSplash || isRestoringSession) {
     return (
       <>
         <StatusBar style={isDarkMode ? 'light' : 'dark'} />
@@ -136,7 +144,8 @@ function AppShell() {
     );
   }
 
-  return (
+  if (authStatus === 'authenticated') {
+    return (
     <>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <NavigationContainer ref={navigationRef}>
@@ -158,7 +167,10 @@ function AppShell() {
         </ScreenRefreshProvider>
       </NavigationContainer>
     </>
-  );
+    );
+  }
+
+  return null;
 }
 
 type AppProps = {
