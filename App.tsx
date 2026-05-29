@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -44,6 +44,7 @@ import {
 } from './app/core/queryClient/persistentQueryConfig';
 import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
+import ThemedSplashOverlay from './app/components/ThemedSplashOverlay';
 import { startupMark, startupMeasure } from './app/core/startup/startupMetrics';
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
@@ -117,21 +118,8 @@ function AppShell() {
   if (isRememberMeStartupRestoreActive) {
     return (
       <>
-        <StatusBar style="light" />
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#000',
-          }}
-        >
-          <Image
-            source={require('./assets/splash-icon.png')}
-            resizeMode="contain"
-            style={{ width: 280, height: 280 }}
-          />
-        </View>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <ThemedSplashOverlay isDarkMode={isDarkMode} />
       </>
     );
   }
@@ -173,7 +161,11 @@ function AppShell() {
   );
 }
 
-export default function App() {
+type AppProps = {
+  initialDarkMode?: boolean;
+};
+
+export default function App({ initialDarkMode }: AppProps = {}) {
   const [persistReady, setPersistReady] = useState(false);
   const onPersistSuccess = useCallback(() => {
     startupMark('persist-ready');
@@ -182,7 +174,7 @@ export default function App() {
   }, []);
 
   return (
-    <AppThemeProvider>
+    <AppThemeProvider initialDarkMode={initialDarkMode}>
       <AppErrorBoundary>
         <AppInitGate>
           <AppUpdatesProvider>

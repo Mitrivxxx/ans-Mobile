@@ -30,11 +30,13 @@ const AppThemeContext = createContext<AppThemeContextValue | undefined>(
 
 type Props = {
   children: React.ReactNode;
+  /** Ustawione przy starcie z AppRoot — unika migotania przed odczytem AsyncStorage. */
+  initialDarkMode?: boolean;
 };
 
-export function AppThemeProvider({ children }: Props) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isThemeReady, setIsThemeReady] = useState(false);
+export function AppThemeProvider({ children, initialDarkMode }: Props) {
+  const [isDarkMode, setIsDarkMode] = useState(initialDarkMode ?? false);
+  const [isThemeReady, setIsThemeReady] = useState(initialDarkMode !== undefined);
 
   useEffect(() => {
     let cancelled = false;

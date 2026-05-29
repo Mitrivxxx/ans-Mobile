@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
 import secureStorage from './SecureStorageService';
+import { clearLastLoginContext } from './lastLoginContext.storage';
 
 const REMEMBER_ME_ENABLED_KEY = '@wdmobile/rememberMeEnabled';
 /** Migracja z expo-secure-store (JSON) przed react-native-keychain. */
@@ -74,6 +75,10 @@ export async function saveRememberMeCredentials(
 }
 
 export async function clearRememberMe(): Promise<void> {
+  const creds = await secureStorage.getCredentials();
   await AsyncStorage.removeItem(REMEMBER_ME_ENABLED_KEY);
   await secureStorage.clearCredentials();
+  if (creds?.username?.trim()) {
+    await clearLastLoginContext(creds.username);
+  }
 }

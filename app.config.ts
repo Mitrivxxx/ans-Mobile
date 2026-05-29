@@ -83,6 +83,17 @@ export default (): ExpoConfig => {
       wdBaseUrl: WD_BASE_URL,
       showEnvBadge: appEnv !== 'production',
     },
+    plugins: [
+      ...(base.plugins ?? []),
+      [
+        'expo-splash-screen',
+        {
+          backgroundColor: '#FFFFFF',
+          image: './assets/splash-icon.png',
+          resizeMode: 'contain',
+        },
+      ],
+    ],
   };
 
   return config as ExpoConfig;

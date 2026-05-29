@@ -10,6 +10,49 @@ export type LoginContextOption = {
   subtitle?: string;
 };
 
+/** Zapis w AsyncStorage — dopasowanie po id, href lub samym personType. */
+export type StoredLoginContextRef = {
+  personType: number;
+  id?: string;
+  href: string;
+};
+
+export function toStoredLoginContextRef(
+  option: LoginContextOption
+): StoredLoginContextRef {
+  return {
+    personType: option.personType,
+    id: option.id,
+    href: option.href,
+  };
+}
+
+export function findLoginContextOption(
+  options: LoginContextOption[],
+  stored: StoredLoginContextRef
+): LoginContextOption | null {
+  if (stored.id) {
+    const byId = options.find(
+      (o) => o.personType === stored.personType && o.id === stored.id
+    );
+    if (byId) {
+      return byId;
+    }
+  }
+
+  const byHref = options.find((o) => o.href === stored.href);
+  if (byHref) {
+    return byHref;
+  }
+
+  const sameType = options.filter((o) => o.personType === stored.personType);
+  if (sameType.length === 1) {
+    return sameType[0];
+  }
+
+  return null;
+}
+
 export function isContextSelectionPageHtml(html: string): boolean {
   if (!html || html.length < 120) {
     return false;

@@ -2,7 +2,7 @@
   "expo": {
     "name": "WDMobile",
     "slug": "WDMobile",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -15,10 +15,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "pl.matsma.WDMobile",
-      "buildNumber": "101"
+      "buildNumber": "100"
     },
     "android": {
-      "versionCode": 102,
+      "versionCode": 100,
       "splash": {
         "image": "./assets/splash-icon.png",
         "resizeMode": "contain",

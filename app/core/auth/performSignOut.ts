@@ -3,6 +3,7 @@ import { clearProfilePhotoSessionCache } from '../scraper/features/profile/profi
 import { clearProfilePhotoForUser } from '../scraper/features/profile/profileSummaryPhoto';
 import { clearUserAppCache } from '../queryClient/clearUserAppCache';
 import { AuthService } from '../scraper/auth/auth.service';
+import { clearLastLoginContext } from './lastLoginContext.storage';
 import { clearRememberMe, getSavedCredentials } from './rememberMe.storage';
 import { clearLastUsername, getLastUsername } from './sessionUser.storage';
 
@@ -14,6 +15,7 @@ export async function performSignOut(): Promise<void> {
   if (userKey) {
     await clearProfilePhotoForUser(userKey);
     await clearAnnouncementsArchive(userKey);
+    await clearLastLoginContext(userKey);
   }
 
   const authService = new AuthService();

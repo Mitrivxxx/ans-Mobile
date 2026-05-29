@@ -36,7 +36,10 @@ import {
   isLoginFormHtml,
   loginPostLooksSuccessful,
 } from "./login.parser";
-import { ensureLoginContextResolved } from "./contextSelection";
+import {
+  fetchLoginContextSelection,
+  tryAutoApplyRememberedLoginContext,
+} from "./contextSelection";
 import { ensureWdUserConsentCookie } from "./userConsent";
 import { logout as performLogout } from "./logout";
 import { markSessionEstablished } from "./sessionLifetime";
@@ -278,11 +281,28 @@ async function loginWD(
     await ensureWdUserConsentCookie();
     await setSessionCookies(getAxiosCookieHeader());
 
-    const contextOutcome = await ensureLoginContextResolved(postRes);
-    if (!contextOutcome.ok) {
+    const contextPage = await fetchLoginContextSelection(postRes);
+    if (contextPage.status === "error") {
       return {
         success: false,
-        error: contextOutcome.error,
+        error: contextPage.error,
+      };
+    }
+
+    if (contextPage.status === "required") {
+      const auto = await tryAutoApplyRememberedLoginContext(
+        contextPage.options
+      );
+      if (auto.applied) {
+        devLog("Login", "WD login — remembered context applied");
+        return { success: true };
+      }
+
+      devLog("Login", "WD login — context selection required");
+      return {
+        success: true,
+        requiresContextSelection: true,
+        contextOptions: contextPage.options,
       };
     }
 

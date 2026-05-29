@@ -20,9 +20,13 @@ import { getLoginResultErrorMessage } from "../../../features/login/loginErrorDi
 
 import { AuthService } from "./auth.service";
 import {
-  ensureLoginContextResolved,
   responseNeedsContextSelection,
+  tryAutoApplyRememberedLoginContext,
 } from "./contextSelection";
+import {
+  parseContextSelectionOptions,
+  type LoginContextOption,
+} from "./contextSelection.parser";
 import {
   canAttemptSilentLogin,
   getSilentLoginBlockedMessage,
@@ -114,6 +118,8 @@ export async function hasScraperSession(): Promise<boolean> {
 export async function loginWithSavedCredentials(): Promise<{
   success: boolean;
   errorMessage?: string;
+  requiresContextSelection?: boolean;
+  contextOptions?: LoginContextOption[];
 }> {
   const credentials = await getSavedCredentials();
   if (!credentials) {
@@ -128,6 +134,22 @@ export async function loginWithSavedCredentials(): Promise<{
     credentials.username,
     credentials.password
   );
+
+  if (result.requiresContextSelection && result.contextOptions?.length) {
+    await mergeAuthCookiesFromNativeIfNeeded();
+    const auto = await tryAutoApplyRememberedLoginContext(
+      result.contextOptions
+    );
+    if (auto.applied) {
+      return { success: true };
+    }
+    return {
+      success: false,
+      requiresContextSelection: true,
+      contextOptions: result.contextOptions,
+      errorMessage: "Wybierz kontekst logowania na ekranie logowania.",
+    };
+  }
 
   if (result.success) {
     await mergeAuthCookiesFromNativeIfNeeded();
@@ -314,21 +336,26 @@ export function setupScraperAuthGuard(): void {
       }
 
       if (responseNeedsContextSelection(response)) {
-        const contextOutcome = await ensureLoginContextResolved();
-        if (!contextOutcome.ok) {
-          notifySessionLost();
-          throw new SessionExpiredError(
-            contextOutcome.error ??
-              "Nie udało się wybrać kontekstu studenta na portalu WD."
-          );
+        const body =
+          typeof response.data === "string"
+            ? response.data
+            : String(response.data ?? "");
+        const options = parseContextSelectionOptions(body);
+        if (options.length > 0) {
+          const auto = await tryAutoApplyRememberedLoginContext(options);
+          if (auto.applied) {
+            const retryConfig: InternalAxiosRequestConfig = {
+              ...response.config,
+              _sessionRetried: true,
+            };
+            return client.request(retryConfig);
+          }
         }
 
-        const retryConfig: InternalAxiosRequestConfig = {
-          ...response.config,
-          _sessionRetried: true,
-        };
-
-        return client.request(retryConfig);
+        notifySessionLost();
+        throw new SessionExpiredError(
+          "Wymagany wybór kontekstu logowania — zaloguj się ponownie i wybierz kierunek."
+        );
       }
 
       if (!responseIndicatesSessionExpired(response)) {

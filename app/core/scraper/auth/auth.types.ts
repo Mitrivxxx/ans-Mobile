@@ -5,6 +5,8 @@ export type LoginWdOptions = {
 
 import type { LoginErrorCode } from './login.errors';
 
+import type { LoginContextOption } from './contextSelection.parser';
+
 export type LoginResult = {
   success: boolean;
   errorCode?: LoginErrorCode;
@@ -12,4 +14,7 @@ export type LoginResult = {
   requiresCaptcha?: boolean;
   continuationHtml?: string;
   captchaImageUrl?: string | null;
+  /** Po poprawnym haśle portal wymaga wyboru kierunku / roli. */
+  requiresContextSelection?: boolean;
+  contextOptions?: LoginContextOption[];
 };

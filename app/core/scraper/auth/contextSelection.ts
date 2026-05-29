@@ -6,11 +6,19 @@ import { LOGIN_REQUEST_TIMEOUT_MS } from "./login.errors";
 import {
   isContextSelectionPageHtml,
   parseContextSelectionOptions,
-  pickStudentLoginContext,
   urlIndicatesContextSelection,
   type LoginContextOption,
 } from "./contextSelection.parser";
+import {
+  getLastLoginContext,
+  matchStoredLoginContext,
+} from "../../auth/lastLoginContext.storage";
+import {
+  getSavedCredentials,
+  isRememberMeEnabled,
+} from "../../auth/rememberMe.storage";
 import { ensureWdUserConsentCookie } from "./userConsent";
+import { markSessionEstablished } from "./sessionLifetime";
 
 const LOGIN_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/147.0.0.0 Safari/537.36";
@@ -20,9 +28,16 @@ const HTML_HEADERS = {
   "User-Agent": LOGIN_USER_AGENT,
 } as const;
 
+export type { LoginContextOption } from "./contextSelection.parser";
+
 export type ContextResolutionResult =
   | { ok: true }
   | { ok: false; error: string };
+
+export type LoginContextFetchResult =
+  | { status: "not_required" }
+  | { status: "required"; options: LoginContextOption[] }
+  | { status: "error"; error: string };
 
 function responseHtml(data: unknown): string {
   return typeof data === "string" ? data : String(data ?? "");
@@ -87,9 +102,67 @@ function sessionStillOnContextSelection(
   );
 }
 
-async function selectLoginContext(
+/**
+ * Po logowaniu: sprawdź, czy portal wymaga wyboru kontekstu i zwróć listę opcji.
+ */
+export async function fetchLoginContextSelection(
+  postLoginResponse?: AxiosResponse<string>
+): Promise<LoginContextFetchResult> {
+  await ensureWdUserConsentCookie();
+
+  const location = postLoginResponse
+    ? redirectLocation(postLoginResponse)
+    : "";
+
+  const tryParsePage = (html: string): LoginContextFetchResult | null => {
+    if (!isContextSelectionPageHtml(html)) {
+      return null;
+    }
+    const options = parseContextSelectionOptions(html);
+    if (options.length === 0) {
+      return {
+        status: "error",
+        error:
+          "Portal wymaga wyboru kontekstu, ale nie znaleziono dostępnych opcji. Spróbuj w przeglądarce.",
+      };
+    }
+    return { status: "required", options };
+  };
+
+  if (location.includes("WyborKontekstu")) {
+    const page = await fetchWdHtml(
+      "/WyborKontekstu",
+      `${WD_BASE_URL}/Logowanie`
+    );
+    const parsed = tryParsePage(page.html);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  const wyborPage = await fetchWdHtml(
+    "/WyborKontekstu",
+    `${WD_BASE_URL}/Logowanie`
+  );
+  const fromWybor = tryParsePage(wyborPage.html);
+  if (fromWybor) {
+    return fromWybor;
+  }
+
+  const homePage = await fetchWdHtml("/", `${WD_BASE_URL}/Logowanie`);
+  const fromHome = tryParsePage(homePage.html);
+  if (fromHome) {
+    return fromHome;
+  }
+
+  return { status: "not_required" };
+}
+
+export async function applyLoginContextSelection(
   option: LoginContextOption
 ): Promise<ContextResolutionResult> {
+  await ensureWdUserConsentCookie();
+
   const path = option.href.startsWith("http")
     ? new URL(option.href).pathname + new URL(option.href).search
     : option.href.startsWith("/")
@@ -119,52 +192,19 @@ async function selectLoginContext(
       return {
         ok: false,
         error:
-          "Po wyborze kontekstu Student portal nadal pokazuje ekran wyboru. Spróbuj ponownie.",
+          "Po wyborze kontekstu portal nadal pokazuje ekran wyboru. Spróbuj ponownie.",
       };
     }
-    return { ok: true };
-  }
-
-  const html = responseHtml(selectRes.data);
-  const finalUrl = getResponseFinalUrl(selectRes);
-  if (sessionStillOnContextSelection(html, finalUrl)) {
-    return {
-      ok: false,
-      error:
-        "Nie udało się przełączyć na kontekst studenta (brak przekierowania z portalu).",
-    };
-  }
-
-  return { ok: true };
-}
-
-async function completeContextSelectionFromHtml(
-  html: string
-): Promise<ContextResolutionResult> {
-  await ensureWdUserConsentCookie();
-
-  const options = parseContextSelectionOptions(html);
-  const student = pickStudentLoginContext(options);
-
-  if (!student) {
-    return {
-      ok: false,
-      error:
-        "Po zalogowaniu portal wymaga wyboru kontekstu, ale nie znaleziono opcji „Student”. Zaloguj się w przeglądarce i wybierz kierunek studiów.",
-    };
-  }
-
-  try {
-    const selected = await selectLoginContext(student);
-    if (!selected.ok) {
-      return selected;
+  } else {
+    const html = responseHtml(selectRes.data);
+    const finalUrl = getResponseFinalUrl(selectRes);
+    if (sessionStillOnContextSelection(html, finalUrl)) {
+      return {
+        ok: false,
+        error:
+          "Nie udało się przełączyć na wybrany kontekst (brak przekierowania z portalu).",
+      };
     }
-  } catch {
-    return {
-      ok: false,
-      error:
-        "Nie udało się potwierdzić kontekstu studenta na portalu. Spróbuj ponownie.",
-    };
   }
 
   const afterHome = await fetchWdHtml("/", `${WD_BASE_URL}/WyborKontekstu`);
@@ -172,7 +212,7 @@ async function completeContextSelectionFromHtml(
     return {
       ok: false,
       error:
-        "Portal nadal oczekuje wyboru kontekstu logowania. Spróbuj ponownie lub wybierz kierunek w przeglądarce.",
+        "Portal nadal oczekuje wyboru kontekstu logowania. Spróbuj ponownie.",
     };
   }
 
@@ -180,53 +220,57 @@ async function completeContextSelectionFromHtml(
 }
 
 /**
- * Po logowaniu: wymuszenie GET /WyborKontekstu i wybór Student (personType=1).
- * Bez tego scraper działa na stronie z „testowym” avatarem i pada plan/profil.
+ * Przy włączonym „zapamiętaj mnie”: automatycznie wybiera ostatni kontekst,
+ * jeśli nadal jest na liście portalu.
  */
-export async function ensureLoginContextResolved(
-  postLoginResponse?: AxiosResponse<string>
-): Promise<ContextResolutionResult> {
-  await ensureWdUserConsentCookie();
-
-  const location = postLoginResponse
-    ? redirectLocation(postLoginResponse)
-    : "";
-
-  if (location.includes("WyborKontekstu")) {
-    const page = await fetchWdHtml(
-      "/WyborKontekstu",
-      `${WD_BASE_URL}/Logowanie`
-    );
-    if (isContextSelectionPageHtml(page.html)) {
-      return completeContextSelectionFromHtml(page.html);
-    }
+export async function tryAutoApplyRememberedLoginContext(
+  options: LoginContextOption[]
+): Promise<{ applied: boolean }> {
+  if (options.length === 0) {
+    return { applied: false };
   }
 
-  const wyborPage = await fetchWdHtml(
-    "/WyborKontekstu",
-    `${WD_BASE_URL}/Logowanie`
-  );
-  if (isContextSelectionPageHtml(wyborPage.html)) {
-    return completeContextSelectionFromHtml(wyborPage.html);
+  if (!(await isRememberMeEnabled())) {
+    return { applied: false };
   }
 
-  const homePage = await fetchWdHtml("/", `${WD_BASE_URL}/Logowanie`);
-  if (isContextSelectionPageHtml(homePage.html)) {
-    return completeContextSelectionFromHtml(homePage.html);
+  const credentials = await getSavedCredentials();
+  const username = credentials?.username?.trim();
+  if (!username) {
+    return { applied: false };
   }
 
-  return { ok: true };
+  const stored = await getLastLoginContext(username);
+  if (!stored) {
+    return { applied: false };
+  }
+
+  const option = matchStoredLoginContext(options, stored);
+  if (!option) {
+    return { applied: false };
+  }
+
+  const outcome = await confirmLoginContextSelection(option);
+  return { applied: outcome.ok };
 }
 
-/** Gdy response / probe zwraca HTML wyboru kontekstu. */
-export async function ensureLoginContextResolvedFromHtml(
-  html: string
+/** Zatwierdź wybór kontekstu i oznacz sesję WD jako gotową do scrapowania. */
+export async function confirmLoginContextSelection(
+  option: LoginContextOption
 ): Promise<ContextResolutionResult> {
-  if (!isContextSelectionPageHtml(html)) {
+  try {
+    const selected = await applyLoginContextSelection(option);
+    if (!selected.ok) {
+      return selected;
+    }
+    await markSessionEstablished();
     return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      error: "Nie udało się potwierdzić wybranego kontekstu. Spróbuj ponownie.",
+    };
   }
-
-  return completeContextSelectionFromHtml(html);
 }
 
 /** Interceptor: odpowiedź HTML/URL wskazuje /WyborKontekstu. */

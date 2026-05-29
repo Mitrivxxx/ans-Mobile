@@ -3,7 +3,6 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { client, WD_BASE_URL } from "../client/client";
 
 import {
-  ensureLoginContextResolvedFromHtml,
   getResponseFinalUrl,
   responseNeedsContextSelection,
 } from "./contextSelection";
@@ -115,7 +114,7 @@ export function assertAuthenticatedHtml(
   if (isContextSelectionPageHtml(html)) {
     throw new SessionExpiredError(
       message ??
-        "Wymagany wybór kontekstu logowania (Student) — odśwież sesję lub zaloguj się ponownie."
+        "Wymagany wybór kontekstu logowania — zaloguj się ponownie i wybierz kierunek."
     );
   }
 
@@ -148,22 +147,7 @@ export async function probeWdSessionAlive(): Promise<boolean> {
   });
 
   if (responseNeedsContextSelection(response)) {
-    const body = responseBody(response.data);
-    const resolved = await ensureLoginContextResolvedFromHtml(body);
-    if (!resolved.ok) {
-      return false;
-    }
-
-    const after = await client.get<string>("/", {
-      responseType: "text",
-      transformResponse: [(data) => data],
-      maxRedirects: 5,
-      skipSessionGuard: true,
-      skipSessionExpiryCheck: true,
-      headers: PROBE_HEADERS,
-    });
-
-    return !responseIndicatesSessionExpired(after);
+    return false;
   }
 
   return !responseIndicatesSessionExpired(response);

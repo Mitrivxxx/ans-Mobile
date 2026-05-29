@@ -138,7 +138,7 @@ flowchart TD
 | Plik | Rola |
 |------|------|
 | `auth/auth.service.ts` | Logowanie, captcha, POST do WD |
-| `auth/contextSelection.ts` | Po logowaniu: `/WyborKontekstu` → auto GET `/WybierzKontekst?…&personType=1` (Student) |
+| `auth/contextSelection.ts` | Po logowaniu: `/WyborKontekstu` → lista opcji; wybór na `LoginScreen`; przy „zapamiętaj mnie” ostatni kontekst w `lastLoginContext.storage.ts` (auto przy silent login / probe) |
 | `auth/userConsent.ts` | Ciasteczko `.user-consent` (wymagane przy wyborze kontekstu) |
 | `auth/ensureAuthenticated.ts` | Guard requestów, silent login, retry po wygaśnięciu sesji |
 | `auth/sessionValidation.ts` | `assertAuthenticatedHtml`, probe sesji, `SessionExpiredError` |

@@ -23,9 +23,17 @@ import LoginIconInput from '../features/login/LoginIconInput';
 import LoginInfoButton from '../features/login/LoginInfoButton';
 import { useAuthSession } from '../context/AuthSessionContext';
 import { useLoginStoredCredentials } from '../features/login/hooks/useLoginStoredCredentials';
+import { saveLastLoginContext } from '../core/auth/lastLoginContext.storage';
 import { saveLastUsername } from '../core/auth/sessionUser.storage';
 import { resetSilentLoginLimiter } from '../core/scraper/auth/silentLoginLimiter';
+import {
+  confirmLoginContextSelection,
+  fetchLoginContextSelection,
+  tryAutoApplyRememberedLoginContext,
+} from '../core/scraper/auth/contextSelection';
+import type { LoginContextOption } from '../core/scraper/auth/contextSelection.parser';
 import { confirmWdSessionAfterLogin } from '../core/scraper/auth/sessionValidation';
+import LoginContextSelectionView from '../features/login/LoginContextSelectionView';
 import {
   getLoginErrorMessage,
   getLoginResultErrorMessage,
@@ -43,6 +51,7 @@ export default function LoginScreen() {
   const { enableRememberMe, disableRememberMe, markAuthenticated } =
     useAuthSession();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
+  const didTryContextResume = useRef(false);
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const captchaRef = useRef<TextInput>(null);
@@ -63,9 +72,64 @@ export default function LoginScreen() {
   const [captchaCode, setCaptchaCode] = useState('');
   const [captchaBuster, setCaptchaBuster] = useState(0);
 
+  const [loginStep, setLoginStep] = useState<'credentials' | 'context'>(
+    'credentials'
+  );
+  const [contextOptions, setContextOptions] = useState<LoginContextOption[]>(
+    []
+  );
+  const [contextError, setContextError] = useState('');
+  const [rememberMeForContext, setRememberMeForContext] = useState(false);
+
   const captchaVisible = captchaContinuationHtml !== null;
+  const contextStepVisible = loginStep === 'context';
 
   useLoginStoredCredentials({ setUsername, setPassword, setRememberMe });
+
+  useEffect(() => {
+    if (loginStep !== 'credentials' || didTryContextResume.current) {
+      return;
+    }
+
+    didTryContextResume.current = true;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const page = await fetchLoginContextSelection();
+        if (cancelled || page.status !== 'required') {
+          return;
+        }
+
+        const auto = await tryAutoApplyRememberedLoginContext(page.options);
+        if (cancelled) {
+          return;
+        }
+        if (auto.applied) {
+          setRememberMeForContext(true);
+          const sessionOk = await confirmWdSessionAfterLogin();
+          if (cancelled) {
+            return;
+          }
+          if (sessionOk) {
+            resetContextStep();
+            markAuthenticated({ ephemeral: false });
+          }
+          return;
+        }
+
+        setContextOptions(page.options);
+        setLoginStep('context');
+        setContextError('');
+      } catch {
+        /* brak sesji — zostaje formularz logowania */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loginStep]);
 
   useEffect(() => {
     if (!captchaVisible) {
@@ -101,6 +165,83 @@ export default function LoginScreen() {
     setCaptchaCode('');
     setCaptchaBuster(0);
   }, []);
+
+  const resetContextStep = useCallback(() => {
+    setLoginStep('credentials');
+    setContextOptions([]);
+    setContextError('');
+    setRememberMeForContext(false);
+    didTryContextResume.current = true;
+  }, []);
+
+  const finishAuthenticatedSession = useCallback(
+    async (
+      ephemeral: boolean,
+      options?: { fromContextStep?: boolean }
+    ) => {
+      const sessionReady = await confirmWdSessionAfterLogin();
+      devLog(
+        'LoginScreen',
+        sessionReady ? 'session confirmed' : 'session not confirmed'
+      );
+      if (!sessionReady) {
+        const message =
+          'Zalogowano, ale portal nie potwierdził sesji. Spróbuj ponownie za chwilę.';
+        if (options?.fromContextStep) {
+          setContextError(message);
+        } else {
+          setFormError(message);
+        }
+        return false;
+      }
+
+      setPassword('');
+      resetContextStep();
+      markAuthenticated({ ephemeral });
+      return true;
+    },
+    [markAuthenticated, resetContextStep]
+  );
+
+  const handleContextSelect = useCallback(
+    async (option: LoginContextOption) => {
+      if (loading) {
+        return;
+      }
+
+      Keyboard.dismiss();
+      setContextError('');
+
+      try {
+        setLoading(true);
+        const outcome = await confirmLoginContextSelection(option);
+        if (!outcome.ok) {
+          setContextError(outcome.error);
+          return;
+        }
+
+        if (rememberMeForContext) {
+          const loginUsername = username.trim();
+          if (loginUsername) {
+            await saveLastLoginContext(loginUsername, option);
+          }
+        }
+
+        await finishAuthenticatedSession(!rememberMeForContext, {
+          fromContextStep: true,
+        });
+      } catch (err: unknown) {
+        setContextError(
+          err instanceof Error
+            ? err.message
+            : 'Nie udało się wybrać kontekstu. Spróbuj ponownie.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loading, rememberMeForContext, finishAuthenticatedSession, username]
+  );
 
   const handleLogin = useCallback(async () => {
     if (loading) {
@@ -184,20 +325,15 @@ export default function LoginScreen() {
       resetSilentLoginLimiter();
       resetCaptchaUi();
 
-      const sessionReady = await confirmWdSessionAfterLogin();
-      devLog(
-        'LoginScreen',
-        sessionReady ? 'session confirmed' : 'session not confirmed'
-      );
-      if (!sessionReady) {
-        setFormError(
-          'Zalogowano, ale portal nie potwierdził sesji. Spróbuj ponownie za chwilę.'
-        );
+      if (result.requiresContextSelection && result.contextOptions?.length) {
+        setRememberMeForContext(rememberMe);
+        setContextOptions(result.contextOptions);
+        setLoginStep('context');
+        setContextError('');
         return;
       }
 
-      setPassword('');
-      markAuthenticated({ ephemeral: !rememberMe });
+      await finishAuthenticatedSession(!rememberMe);
     } catch (err: unknown) {
       const code = classifyLoginThrowable(err);
       if (code) {
@@ -224,6 +360,7 @@ export default function LoginScreen() {
     rememberMe,
     enableRememberMe,
     disableRememberMe,
+    finishAuthenticatedSession,
   ]);
 
   const focusPassword = useCallback(() => {
@@ -254,19 +391,30 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         enableResetScrollToCoords={false}
       >
-        <View style={styles.header}>
-          <AppLogo
-            size={LOGIN_LOGO_SIZE}
-            style={styles.logo}
-            source={logoLogin}
-            variant="circle"
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>WD-ANS Mobile</Text>
-          <Text style={styles.subtitle}>Uczelnia w zasięgu ręki</Text>
-          <LoginInfoButton />
-        </View>
+        {!contextStepVisible && (
+          <View style={styles.header}>
+            <AppLogo
+              size={LOGIN_LOGO_SIZE}
+              style={styles.logo}
+              source={logoLogin}
+              variant="circle"
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>WD-ANS Mobile</Text>
+            <Text style={styles.subtitle}>Uczelnia w zasięgu ręki</Text>
+            <LoginInfoButton />
+          </View>
+        )}
 
+        {contextStepVisible ? (
+          <LoginContextSelectionView
+            options={contextOptions}
+            loading={loading}
+            error={contextError}
+            onSelect={(option) => void handleContextSelect(option)}
+            onBack={resetContextStep}
+          />
+        ) : (
         <View style={styles.form}>
           <LoginIconInput
             ref={usernameRef}
@@ -367,6 +515,7 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
         </View>
+        )}
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
