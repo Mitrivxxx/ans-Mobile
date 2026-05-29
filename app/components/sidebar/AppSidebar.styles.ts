@@ -36,24 +36,6 @@ export function createAppSidebarStyles(c: AnsColors) {
   safeArea: {
     flex: 1,
   },
-  panelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingTop: 4,
-    paddingBottom: 4,
-  },
-  closeButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
-  closeButtonPressed: {
-    opacity: 0.7,
-    backgroundColor: c.dashboardFeatureBg,
-  },
   menuScroll: {
     flex: 1,
   },

@@ -34,7 +34,10 @@ export default function AnnouncementListCard({
   children,
 }: Props) {
   const { colors } = useAppTheme();
-  const accentColor = resolveAnnouncementListAccentColor(item.listIcon, colors);
+  const accentColor = resolveAnnouncementListAccentColor(
+    item.listIcon ?? null,
+    colors
+  );
 
   return (
     <TouchableOpacity

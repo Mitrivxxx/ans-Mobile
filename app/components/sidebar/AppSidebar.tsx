@@ -85,26 +85,7 @@ export default function AppSidebar() {
         style={[styles.panel, { transform: [{ translateX: slideAnim }] }]}
       >
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left']}>
-          <View style={styles.panelHeader}>
-            <Pressable
-              onPress={close}
-              style={({ pressed }) => [
-                styles.closeButton,
-                pressed && styles.closeButtonPressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Zamknij menu"
-              hitSlop={8}
-            >
-              <SidebarMenuIcon
-                name="chevronLeft"
-                size={26}
-                color={colors.charcoal}
-              />
-            </Pressable>
-          </View>
-
-          <SidebarProfileHeader />
+          <SidebarProfileHeader onClose={close} />
 
           <ScrollView
             style={styles.menuScroll}

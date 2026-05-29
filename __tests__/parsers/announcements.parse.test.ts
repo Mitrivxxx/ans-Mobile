@@ -40,6 +40,22 @@ describe('parseAnnouncements', () => {
     });
   });
 
+  it('wykrywa ikonę z klasy Font Awesome na elemencie i', () => {
+    const { document } = parseHTML(`
+      <li class="list-group-item">
+        <div class="d-flex justify-content-start align-items-center">
+          <div class="ps-1 pe-3">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          </div>
+        </div>
+        <a href="/gloszenia/Ogloszenie/1">x</a>
+        <h6>Test</h6>
+      </li>
+    `);
+    const item = document.querySelector('li')!;
+    expect(listItemListIcon(item)).toBe('triangle-exclamation');
+  });
+
   it('wykrywa załącznik po zagnieżdżonym div w slocie flex', () => {
     const { document } = parseHTML(readFixture('announcements-list.html'));
     const items = document.querySelectorAll('.list-group-item, .list-group > li');

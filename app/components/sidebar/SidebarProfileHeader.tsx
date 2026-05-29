@@ -3,6 +3,7 @@ import { useThemedStyles } from '../../theme/useThemedStyles';
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   Text,
   TouchableOpacity,
   View,
@@ -11,6 +12,7 @@ import {
 import { useStudentProfile } from '../../context/StudentProfileContext';
 import { useAppTheme } from '../../context/AppThemeContext';
 import { useProfilePhoto } from '../../hooks/useProfilePhoto';
+import SidebarMenuIcon from './SidebarMenuIcon';
 import { createSidebarProfileHeaderStyles } from './SidebarProfileHeader.styles';
 
 function getInitials(firstName: string, lastName: string): string {
@@ -19,7 +21,11 @@ function getInitials(firstName: string, lastName: string): string {
   return (a + b).toUpperCase() || '?';
 }
 
-export default function SidebarProfileHeader() {
+type Props = {
+  onClose: () => void;
+};
+
+export default function SidebarProfileHeader({ onClose }: Props) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createSidebarProfileHeaderStyles);
   const { summary, loading, refetch } = useStudentProfile();
@@ -27,6 +33,19 @@ export default function SidebarProfileHeader() {
 
   return (
     <View style={styles.header}>
+      <Pressable
+        onPress={onClose}
+        style={({ pressed }) => [
+          styles.closeButton,
+          pressed && styles.closeButtonPressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Zamknij menu"
+        hitSlop={8}
+      >
+        <SidebarMenuIcon name="chevronLeft" size={26} color={colors.charcoal} />
+      </Pressable>
+
       {loading ? (
         <View style={styles.loadingRow}>
           <ActivityIndicator color={colors.gold} />

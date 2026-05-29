@@ -32,27 +32,133 @@ const LIST_ICONS = new Set<AnnouncementListIcon>([
   "circle-info",
 ]);
 
-/** Ikona priorytetu: div.d-flex.justify-content-start > div.ps-1.pe-3 > svg[data-icon]. */
-export function listItemListIcon(item: Element): AnnouncementListIcon | null {
-  const svg =
-    item.querySelector(
-      "div.d-flex.justify-content-start.align-items-center div.ps-1.pe-3 svg[data-icon]"
-    ) ?? item.querySelector("div.ps-1.pe-3 svg[data-icon]");
+/** WD / Font Awesome: data-icon albo klasy fa-* (HTML często bez svg przed i2svg). */
+const ICON_CLASS_RULES: { pattern: RegExp; icon: AnnouncementListIcon }[] = [
+  { pattern: /\bfa-(?:circle-info|info-circle)\b/, icon: "circle-info" },
+  {
+    pattern: /\bfa-(?:triangle-exclamation|exclamation-triangle)\b/,
+    icon: "triangle-exclamation",
+  },
+  { pattern: /\bfa-(?:circle-exclamation)\b/, icon: "exclamation" },
+  { pattern: /\bfa-exclamation\b/, icon: "exclamation" },
+];
 
-  const raw = svg?.getAttribute("data-icon")?.trim();
-  if (!raw) {
+function mapDataIconAttribute(
+  raw: string | null | undefined
+): AnnouncementListIcon | null {
+  const value = raw?.trim();
+  if (!value) {
     return null;
   }
-
-  if (raw === "circle-exclamation") {
+  if (value === "circle-exclamation") {
     return "exclamation";
   }
+  if (LIST_ICONS.has(value as AnnouncementListIcon)) {
+    return value as AnnouncementListIcon;
+  }
+  return null;
+}
 
-  if (LIST_ICONS.has(raw as AnnouncementListIcon)) {
-    return raw as AnnouncementListIcon;
+function mapIconFromClassName(className: string): AnnouncementListIcon | null {
+  const normalized = className.toLowerCase();
+  for (const { pattern, icon } of ICON_CLASS_RULES) {
+    if (pattern.test(normalized)) {
+      return icon;
+    }
+  }
+  return null;
+}
+
+function extractListIconFromElement(el: Element): AnnouncementListIcon | null {
+  const fromData = mapDataIconAttribute(el.getAttribute("data-icon"));
+  if (fromData) {
+    return fromData;
+  }
+  return mapIconFromClassName(el.getAttribute("class") ?? "");
+}
+
+function extractListIconFromSubtree(root: Element): AnnouncementListIcon | null {
+  for (const el of root.querySelectorAll("[data-icon]")) {
+    const icon = extractListIconFromElement(el);
+    if (icon) {
+      return icon;
+    }
+  }
+
+  for (const el of root.querySelectorAll("i, svg, span")) {
+    const icon = extractListIconFromElement(el);
+    if (icon) {
+      return icon;
+    }
   }
 
   return null;
+}
+
+function listItemIconColumn(item: Element): Element | null {
+  return (
+    item.querySelector("div.d-flex.justify-content-start.align-items-center") ??
+    item.querySelector("div.d-flex.justify-content-start") ??
+    item.querySelector("div.ps-1.pe-3") ??
+    item.querySelector("div.ps-1")
+  );
+}
+
+function listItemAttachmentSlot(item: Element): Element | null {
+  return item.querySelector("div.d-flex.flex-row.flex-xl-column-reverse");
+}
+
+function findAnnouncementLink(item: Element): Element | null {
+  if (item.tagName.toUpperCase() === "A") {
+    const href = item.getAttribute("href") ?? "";
+    if (href.includes("Ogloszenie")) {
+      return item;
+    }
+  }
+
+  return (
+    item.querySelector('a[href*="Ogloszenie/"]') ??
+    item.querySelector('a[href*="gloszenia/Ogloszenie/"]')
+  );
+}
+
+/** Ikona priorytetu z kolumny po lewej (nie ze slotu załącznika). */
+export function listItemListIcon(item: Element): AnnouncementListIcon | null {
+  const iconColumn = listItemIconColumn(item);
+  if (iconColumn) {
+    const fromColumn = extractListIconFromSubtree(iconColumn);
+    if (fromColumn) {
+      return fromColumn;
+    }
+  }
+
+  const attachmentSlot = listItemAttachmentSlot(item);
+  for (const el of item.querySelectorAll("[data-icon], i, svg")) {
+    if (attachmentSlot?.contains(el)) {
+      continue;
+    }
+    const icon = extractListIconFromElement(el);
+    if (icon) {
+      return icon;
+    }
+  }
+
+  return null;
+}
+
+/** Uzupełnia pola z cache sprzed listIcon / hasAttachment. */
+export function normalizeAnnouncement(
+  item: Announcement | (Omit<Announcement, "hasAttachment" | "listIcon"> & Partial<Pick<Announcement, "hasAttachment" | "listIcon">>)
+): Announcement {
+  return {
+    title: item.title,
+    url: item.url,
+    id: item.id,
+    authorName: item.authorName,
+    date: item.date,
+    hasAttachment: item.hasAttachment ?? false,
+    listIcon: item.listIcon ?? null,
+  };
 }
 
 /** Portal WD: slot załącznika to pusty div lub div z ikoną (zagnieżdżony div). */
@@ -174,10 +280,12 @@ export function parseAnnouncements(html: string): Announcement[] {
   const doc = parseDocument(html);
   const announcements: Announcement[] = [];
 
-  const items = doc.querySelectorAll(".list-group-item, .list-group > li");
+  const items = doc.querySelectorAll(
+    ".list-group-item, .list-group > li, a.list-group-item"
+  );
 
   items.forEach((item) => {
-    const linkElement = item.querySelector('a[href*="gloszenia/Ogloszenie/"]');
+    const linkElement = findAnnouncementLink(item);
     const titleElement = item.querySelector("h6");
 
     if (linkElement && titleElement) {
@@ -205,5 +313,5 @@ export function parseAnnouncements(html: string): Announcement[] {
     }
   });
 
-  return announcements;
+  return announcements.map(normalizeAnnouncement);
 }

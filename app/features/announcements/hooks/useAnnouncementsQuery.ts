@@ -1,3 +1,6 @@
+import { useMemo } from 'react';
+
+import { normalizeAnnouncement } from '../../../core/scraper/features/announcements/announcements.parse';
 import {
   AnnouncementsService,
   type Announcement,
@@ -10,12 +13,20 @@ const announcementsService = new AnnouncementsService();
 export function useAnnouncementsQuery() {
   const query = useUserPersistentQuery<Announcement[]>({
     queryKey: queryKeys.announcements.list,
-    queryFn: () => announcementsService.getAnnouncements(),
+    queryFn: async () => {
+      const list = await announcementsService.getAnnouncements();
+      return list.map((item) => normalizeAnnouncement(item));
+    },
     syncOnMount: true,
   });
 
+  const announcements = useMemo(
+    () => (query.data ?? []).map((item) => normalizeAnnouncement(item)),
+    [query.data]
+  );
+
   return {
-    announcements: query.data ?? [],
+    announcements,
     syncStatus: query.syncStatus,
     isInitialLoading: query.isInitialLoading,
     hasCachedAnnouncements: query.hasCachedData,

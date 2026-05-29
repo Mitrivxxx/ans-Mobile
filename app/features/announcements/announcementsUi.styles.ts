@@ -58,6 +58,7 @@ export function createAnnouncementsUiStyles(c: AnsColors) {
     },
     cardAccent: {
       width: 6,
+      alignSelf: 'stretch',
     },
     cardBody: {
       flex: 1,

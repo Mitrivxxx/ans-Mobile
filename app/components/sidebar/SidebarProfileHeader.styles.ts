@@ -2,22 +2,38 @@ import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../theme/ansTheme';
 
-export const SIDEBAR_AVATAR_SIZE = 64;
+export const SIDEBAR_AVATAR_SIZE = 78;
 
 export function createSidebarProfileHeaderStyles(c: AnsColors) {
   return StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingTop: 4,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: c.dashboardFeatureBorder,
     backgroundColor: c.surface,
     alignItems: 'center',
   },
+  closeButton: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    zIndex: 1,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  closeButtonPressed: {
+    opacity: 0.7,
+    backgroundColor: c.dashboardFeatureBg,
+  },
   content: {
     alignItems: 'center',
     width: '100%',
+    paddingTop: 2,
   },
   loadingRow: {
     flexDirection: 'row',
@@ -46,29 +62,29 @@ export function createSidebarProfileHeaderStyles(c: AnsColors) {
     height: SIDEBAR_AVATAR_SIZE,
   },
   avatarPlaceholder: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '800',
     color: c.goldDark,
   },
   name: {
-    marginTop: 12,
-    fontSize: 17,
+    marginTop: 10,
+    fontSize: 19,
     fontWeight: '800',
     color: c.charcoal,
-    lineHeight: 22,
+    lineHeight: 24,
     textAlign: 'center',
   },
   major: {
     marginTop: 4,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 19,
     color: c.gray,
     textAlign: 'center',
   },
   album: {
     marginTop: 4,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 19,
     color: c.gray,
     textAlign: 'center',
   },
