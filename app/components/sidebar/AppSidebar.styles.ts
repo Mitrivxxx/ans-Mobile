@@ -36,6 +36,24 @@ export function createAppSidebarStyles(c: AnsColors) {
   safeArea: {
     flex: 1,
   },
+  panelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    paddingBottom: 4,
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  closeButtonPressed: {
+    opacity: 0.7,
+    backgroundColor: c.dashboardFeatureBg,
+  },
   menuScroll: {
     flex: 1,
   },
@@ -47,41 +65,31 @@ export function createAppSidebarStyles(c: AnsColors) {
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 4,
-    gap: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 2,
+    gap: 14,
   },
   menuItemPressed: {
     opacity: 0.85,
   },
   menuItemActive: {
-    backgroundColor: c.dashboardBluePale,
+    backgroundColor: c.dashboardFeatureBg,
   },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  iconSlot: {
+    width: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuTextBlock: {
-    flex: 1,
-    minWidth: 0,
-  },
   menuTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
     color: c.charcoal,
   },
   menuTitleActive: {
-    color: c.dashboardBlue,
-  },
-  menuDescription: {
-    fontSize: 12,
-    color: c.gray,
-    marginTop: 2,
+    fontWeight: '700',
   },
   footer: {
     paddingHorizontal: 16,
@@ -94,12 +102,9 @@ export function createAppSidebarStyles(c: AnsColors) {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: c.errorBg,
-    borderWidth: 1,
-    borderColor: c.grayBorder,
+    borderRadius: 12,
   },
   logoutButtonDisabled: {
     opacity: 0.65,

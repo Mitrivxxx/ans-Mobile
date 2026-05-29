@@ -9,6 +9,9 @@ import {
 import { useAppTheme } from '../../../context/AppThemeContext';
 import { useThemedStyles } from '../../../theme/useThemedStyles';
 import AnnouncementDetailsView from '../../announcements/components/AnnouncementDetailsView';
+import AnnouncementListCard from '../../announcements/components/AnnouncementListCard';
+import AnnouncementListTitle from '../../announcements/components/AnnouncementListTitle';
+import { announcementListIconA11ySuffix } from '../../announcements/utils/announcementListIconTheme';
 import { createAnnouncementsUiStyles } from '../../announcements/announcementsUi.styles';
 import { useAnnouncementSelection } from '../../announcements/hooks/useAnnouncementSelection';
 import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
@@ -154,16 +157,17 @@ export default function DashboardAnnouncementsPanel() {
             const isFetching = detailsLoading && selectedItem?.id === item.id;
 
             return (
-              <TouchableOpacity
+              <AnnouncementListCard
                 key={item.id}
-                onPress={() => setSelectedItem(item)}
+                item={item}
+                styles={uiStyles}
                 disabled={isFetching}
-                style={[uiStyles.card, isFetching && uiStyles.cardDisabled]}
-                accessibilityRole="button"
+                onPress={() => setSelectedItem(item)}
+                accessibilityLabel={`${item.title}${announcementListIconA11ySuffix(item.listIcon)}${
+                  item.hasAttachment ? ', z załącznikiem' : ''
+                }, zobacz szczegóły`}
               >
-                <Text style={uiStyles.cardTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
+                <AnnouncementListTitle item={item} styles={uiStyles} />
 
                 <Text style={uiStyles.cardAuthor} numberOfLines={1}>
                   {item.authorName}
@@ -172,7 +176,7 @@ export default function DashboardAnnouncementsPanel() {
                 <Text style={uiStyles.cardAction}>
                   {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
                 </Text>
-              </TouchableOpacity>
+              </AnnouncementListCard>
             );
           })}
         </View>

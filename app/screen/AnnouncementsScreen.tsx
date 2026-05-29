@@ -211,6 +211,15 @@ export default function AnnouncementsScreen(_props: Props) {
             selected={selected}
             styles={uiStyles}
             onBack={clearSelection}
+            archiveAction={
+              selectedItem
+                ? {
+                    isArchived: isArchived(selectedItem.id),
+                    isArchiving: archivingId === selectedItem.id,
+                    onToggle: () => void toggleArchive(selectedItem),
+                  }
+                : undefined
+            }
           />
         </RefreshableScrollView>
       );
@@ -273,10 +282,7 @@ export default function AnnouncementsScreen(_props: Props) {
               item={item}
               styles={uiStyles}
               isFetching={isFetching}
-              isArchived={isArchived(item.id)}
-              isArchiving={archivingId === item.id}
               onPress={() => setSelectedItem(item)}
-              onToggleArchive={() => void toggleArchive(item)}
             />
           );
         }}

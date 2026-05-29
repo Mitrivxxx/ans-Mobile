@@ -1,10 +1,12 @@
 import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../theme/ansTheme';
-import { HARMONOGRAM_ACCENT_COLOR } from '../dashboard/dashboard.quickActions';
+import {
+  HARMONOGRAM_ACCENT_COLOR,
+  HARMONOGRAM_TODAY_DAY_COLOR,
+} from '../dashboard/dashboard.quickActions';
 
 const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
-const CALENDAR_SELECTED_DAY_BG = '#F5D547';
 
 export function createPlanScreenStyles(c: AnsColors) {
   return StyleSheet.create({
@@ -85,12 +87,19 @@ export function createPlanScreenStyles(c: AnsColors) {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayCircleSelected: {
-    backgroundColor: CALENDAR_SELECTED_DAY_BG,
-  },
   dayCircleToday: {
-    borderWidth: 2.5,
+    backgroundColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    borderWidth: 1,
+    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
+  },
+  dayCircleSelected: {
+    backgroundColor: HARMONOGRAM_ACCENT_COLOR,
+    borderWidth: 1,
     borderColor: HARMONOGRAM_ACCENT_COLOR,
+  },
+  dayCircleSelectedToday: {
+    borderWidth: 3,
+    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
   },
   dayText: {
     fontSize: 13,
@@ -98,11 +107,11 @@ export function createPlanScreenStyles(c: AnsColors) {
     fontWeight: '600',
   },
   dayTextSelected: {
-    color: c.charcoal,
+    color: c.surface,
     fontWeight: '800',
   },
   dayTextToday: {
-    color: HARMONOGRAM_ACCENT_COLOR,
+    color: c.charcoal,
     fontWeight: '700',
   },
   lessonDot: {

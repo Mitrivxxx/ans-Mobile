@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  listItemHasAttachment,
+  listItemListIcon,
   parseAnnouncementDetails,
   parseAnnouncements,
 } from '../../app/core/scraper/features/announcements/announcements.parse';
+import { parseHTML } from 'linkedom';
 import { SessionExpiredError } from '../../app/core/scraper/auth/sessionValidation';
 import { authenticatedPage } from '../helpers/authenticatedPage';
 import { readFixture } from '../helpers/readFixture';
@@ -13,14 +16,39 @@ describe('parseAnnouncements', () => {
     const html = authenticatedPage(readFixture('announcements-list.html'));
     const items = parseAnnouncements(html);
 
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(3);
     expect(items[0]).toEqual({
       title: 'Ważne ogłoszenie',
       url: '/gloszenia/Ogloszenie/42',
       id: '42',
       authorName: 'Dziekanat',
       date: '2026-05-01',
+      hasAttachment: false,
+      listIcon: 'circle-info',
     });
+    expect(items[1]).toMatchObject({
+      title: 'Z załącznikiem',
+      id: '99',
+      hasAttachment: true,
+      listIcon: 'triangle-exclamation',
+    });
+    expect(items[2]).toMatchObject({
+      title: 'Pilne',
+      id: '100',
+      listIcon: 'exclamation',
+      hasAttachment: false,
+    });
+  });
+
+  it('wykrywa załącznik po zagnieżdżonym div w slocie flex', () => {
+    const { document } = parseHTML(readFixture('announcements-list.html'));
+    const items = document.querySelectorAll('.list-group-item, .list-group > li');
+
+    expect(listItemHasAttachment(items[0]!)).toBe(false);
+    expect(listItemHasAttachment(items[1]!)).toBe(true);
+    expect(listItemListIcon(items[0]!)).toBe('circle-info');
+    expect(listItemListIcon(items[1]!)).toBe('triangle-exclamation');
+    expect(listItemListIcon(items[2]!)).toBe('exclamation');
   });
 
   it('rzuca SessionExpiredError dla strony logowania', () => {

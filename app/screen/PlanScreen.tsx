@@ -260,8 +260,9 @@ export default function PlanScreen({ navigation }: Props) {
                 <View
                   style={[
                     styles.dayCircle,
+                    isToday && !isSelected && styles.dayCircleToday,
                     isSelected && styles.dayCircleSelected,
-                    isToday && styles.dayCircleToday,
+                    isToday && isSelected && styles.dayCircleSelectedToday,
                   ]}
                 >
                   <Text

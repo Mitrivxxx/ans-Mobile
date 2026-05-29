@@ -1,18 +1,33 @@
 import React from 'react';
-import { Alert, Linking, Pressable, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 
 import ScreenBackButton from '../../../components/ScreenBackButton';
+import { useAppTheme } from '../../../context/AppThemeContext';
 import type { AnnouncementDetails } from '../../../core/scraper/features/announcements/announcements.types';
 import type { createAnnouncementsUiStyles } from '../announcementsUi.styles';
 import AnnouncementContentText from './AnnouncementContentText';
 
 type AnnouncementsUiStyles = ReturnType<typeof createAnnouncementsUiStyles>;
 
+type ArchiveAction = {
+  isArchived: boolean;
+  isArchiving: boolean;
+  onToggle: () => void;
+};
+
 type Props = {
   selected: AnnouncementDetails;
   styles: AnnouncementsUiStyles;
   onBack: () => void;
   backLabel?: string;
+  archiveAction?: ArchiveAction;
 };
 
 export default function AnnouncementDetailsView({
@@ -20,7 +35,10 @@ export default function AnnouncementDetailsView({
   styles,
   onBack,
   backLabel = '← Lista ogłoszeń',
+  archiveAction,
 }: Props) {
+  const { colors } = useAppTheme();
+
   const handleOpenAttachment = React.useCallback(async () => {
     if (!selected.attachmentUrl) {
       return;
@@ -71,6 +89,35 @@ export default function AnnouncementDetailsView({
             </Text>
           </Pressable>
         </View>
+      ) : null}
+
+      {archiveAction ? (
+        <Pressable
+          onPress={archiveAction.onToggle}
+          disabled={archiveAction.isArchiving}
+          style={({ pressed }) => [
+            styles.archiveButtonInDetails,
+            archiveAction.isArchived && styles.archiveButtonArchived,
+            pressed && styles.archiveButtonPressed,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={
+            archiveAction.isArchived ? 'Usuń z archiwum' : 'Dodaj do archiwum'
+          }
+        >
+          {archiveAction.isArchiving ? (
+            <ActivityIndicator size="small" color={colors.goldDark} />
+          ) : (
+            <Text
+              style={[
+                styles.archiveButtonText,
+                archiveAction.isArchived && styles.archiveButtonTextArchived,
+              ]}
+            >
+              {archiveAction.isArchived ? 'Usuń z archiwum' : 'Dodaj do archiwum'}
+            </Text>
+          )}
+        </Pressable>
       ) : null}
     </View>
   );

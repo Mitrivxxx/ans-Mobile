@@ -2,7 +2,11 @@ import { parseHTML } from "linkedom";
 
 import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import { WD_BASE_URL } from "../../client/client";
-import type { Announcement, AnnouncementDetails } from "./announcements.types";
+import type {
+  Announcement,
+  AnnouncementDetails,
+  AnnouncementListIcon,
+} from "./announcements.types";
 
 export type { Announcement, AnnouncementDetails } from "./announcements.types";
 
@@ -14,6 +18,68 @@ function parseDocument(html: string): Document {
 function innerHtml(el: Element | null | undefined): string {
   if (!el) return "";
   return ((el as HTMLElement).innerHTML ?? "").trim();
+}
+
+function directChildDivs(parent: Element): Element[] {
+  return Array.from(parent.children).filter(
+    (child) => child.tagName.toUpperCase() === "DIV"
+  );
+}
+
+const LIST_ICONS = new Set<AnnouncementListIcon>([
+  "exclamation",
+  "triangle-exclamation",
+  "circle-info",
+]);
+
+/** Ikona priorytetu: div.d-flex.justify-content-start > div.ps-1.pe-3 > svg[data-icon]. */
+export function listItemListIcon(item: Element): AnnouncementListIcon | null {
+  const svg =
+    item.querySelector(
+      "div.d-flex.justify-content-start.align-items-center div.ps-1.pe-3 svg[data-icon]"
+    ) ?? item.querySelector("div.ps-1.pe-3 svg[data-icon]");
+
+  const raw = svg?.getAttribute("data-icon")?.trim();
+  if (!raw) {
+    return null;
+  }
+
+  if (raw === "circle-exclamation") {
+    return "exclamation";
+  }
+
+  if (LIST_ICONS.has(raw as AnnouncementListIcon)) {
+    return raw as AnnouncementListIcon;
+  }
+
+  return null;
+}
+
+/** Portal WD: slot załącznika to pusty div lub div z ikoną (zagnieżdżony div). */
+export function listItemHasAttachment(item: Element): boolean {
+  const roots = directChildDivs(item);
+  const container = roots.length === 1 ? roots[0]! : item;
+  const outerParts = directChildDivs(container);
+
+  if (outerParts.length >= 2) {
+    const contentColumn = outerParts[1]!;
+    const rowParts = directChildDivs(contentColumn);
+
+    if (rowParts.length >= 2) {
+      return directChildDivs(rowParts[1]!).length > 0;
+    }
+  }
+
+  const flexSlots = item.querySelectorAll(
+    "div.d-flex.flex-row.flex-xl-column-reverse"
+  );
+  for (const slot of flexSlots) {
+    if (directChildDivs(slot).length > 0) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function extractLabeledField(container: Element, label: string): string {
@@ -108,7 +174,7 @@ export function parseAnnouncements(html: string): Announcement[] {
   const doc = parseDocument(html);
   const announcements: Announcement[] = [];
 
-  const items = doc.querySelectorAll(".list-group-item");
+  const items = doc.querySelectorAll(".list-group-item, .list-group > li");
 
   items.forEach((item) => {
     const linkElement = item.querySelector('a[href*="gloszenia/Ogloszenie/"]');
@@ -127,7 +193,15 @@ export function parseAnnouncements(html: string): Announcement[] {
         extractLabeledField(item, "Nadawca") || "Wirtualny Dziekanat";
       const date = extractLabeledField(item, "Opublikowane");
 
-      announcements.push({ title, url, id, authorName, date });
+      announcements.push({
+        title,
+        url,
+        id,
+        authorName,
+        date,
+        hasAttachment: listItemHasAttachment(item),
+        listIcon: listItemListIcon(item),
+      });
     }
   });
 

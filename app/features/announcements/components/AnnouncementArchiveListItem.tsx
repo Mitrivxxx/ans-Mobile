@@ -49,6 +49,7 @@ export default function AnnouncementArchiveListItem({
       accessibilityLabel={`${item.title}, zobacz szczegóły`}
       style={styles.card}
     >
+      <View style={styles.cardBody}>
       <View style={styles.cardRow}>
         <View style={styles.cardMain}>
           <Text style={styles.cardTitle} numberOfLines={2}>
@@ -83,6 +84,7 @@ export default function AnnouncementArchiveListItem({
             </Text>
           )}
         </Pressable>
+      </View>
       </View>
     </TouchableOpacity>
   );

@@ -1,4 +1,3 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import {
@@ -12,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import DashboardIcon from '../../features/dashboard/icons/DashboardIcon';
 import {
   getCurrentRouteName,
   type SidebarRouteName,
@@ -23,6 +21,7 @@ import {
   SIDEBAR_WIDTH,
 } from './AppSidebar.styles';
 import { SIDEBAR_MENU_ITEMS } from './sidebar.menu';
+import SidebarMenuIcon from './SidebarMenuIcon';
 import SidebarProfileHeader from './SidebarProfileHeader';
 import { useSidebar } from './SidebarContext';
 import { useSidebarActions } from './useSidebarActions';
@@ -86,6 +85,25 @@ export default function AppSidebar() {
         style={[styles.panel, { transform: [{ translateX: slideAnim }] }]}
       >
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left']}>
+          <View style={styles.panelHeader}>
+            <Pressable
+              onPress={close}
+              style={({ pressed }) => [
+                styles.closeButton,
+                pressed && styles.closeButtonPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Zamknij menu"
+              hitSlop={8}
+            >
+              <SidebarMenuIcon
+                name="chevronLeft"
+                size={26}
+                color={colors.charcoal}
+              />
+            </Pressable>
+          </View>
+
           <SidebarProfileHeader />
 
           <ScrollView
@@ -95,6 +113,7 @@ export default function AppSidebar() {
           >
             {SIDEBAR_MENU_ITEMS.map((feature) => {
               const isActive = currentRoute === feature.route;
+              const iconColor = feature.accentColor;
               return (
                 <Pressable
                   key={feature.route}
@@ -107,37 +126,23 @@ export default function AppSidebar() {
                   accessibilityRole="button"
                   accessibilityLabel={feature.title}
                 >
-                  <View
-                    style={[
-                      styles.iconWrap,
-                      { backgroundColor: feature.accentColor },
-                    ]}
-                  >
-                    <DashboardIcon
+                  <View style={styles.iconSlot}>
+                    <SidebarMenuIcon
                       name={feature.icon}
-                      size={22}
-                      color={colors.surface}
+                      size={24}
+                      color={iconColor}
                     />
                   </View>
-                  <View style={styles.menuTextBlock}>
-                    <Text
-                      style={[
-                        styles.menuTitle,
-                        isActive && styles.menuTitleActive,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {feature.title}
-                    </Text>
-                    <Text style={styles.menuDescription} numberOfLines={2}>
-                      {feature.description}
-                    </Text>
-                  </View>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color={colors.grayLight}
-                  />
+                  <Text
+                    style={[
+                      styles.menuTitle,
+                      isActive && styles.menuTitleActive,
+                      isActive && { color: iconColor },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {feature.title}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -159,9 +164,9 @@ export default function AppSidebar() {
                 <ActivityIndicator color={colors.error} />
               ) : (
                 <>
-                  <MaterialCommunityIcons
+                  <SidebarMenuIcon
                     name="logout"
-                    size={20}
+                    size={22}
                     color={colors.error}
                   />
                   <Text style={styles.logoutLabel}>Wyloguj</Text>
