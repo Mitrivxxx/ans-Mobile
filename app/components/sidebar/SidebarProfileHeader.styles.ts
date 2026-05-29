@@ -8,7 +8,7 @@ export function createSidebarProfileHeaderStyles(c: AnsColors) {
   return StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingTop: 4,
+    paddingTop: 10,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: c.dashboardFeatureBorder,
@@ -17,7 +17,7 @@ export function createSidebarProfileHeaderStyles(c: AnsColors) {
   },
   closeButton: {
     position: 'absolute',
-    top: 0,
+    top: 6,
     left: 8,
     zIndex: 1,
     width: 40,

@@ -9,9 +9,7 @@ import {
 import { useAppTheme } from '../../../context/AppThemeContext';
 import { useThemedStyles } from '../../../theme/useThemedStyles';
 import AnnouncementDetailsView from '../../announcements/components/AnnouncementDetailsView';
-import AnnouncementListCard from '../../announcements/components/AnnouncementListCard';
-import AnnouncementListTitle from '../../announcements/components/AnnouncementListTitle';
-import { announcementListIconA11ySuffix } from '../../announcements/utils/announcementListIconTheme';
+import AnnouncementListItem from '../../announcements/components/AnnouncementListItem';
 import { createAnnouncementsUiStyles } from '../../announcements/announcementsUi.styles';
 import { useAnnouncementSelection } from '../../announcements/hooks/useAnnouncementSelection';
 import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
@@ -157,26 +155,13 @@ export default function DashboardAnnouncementsPanel() {
             const isFetching = detailsLoading && selectedItem?.id === item.id;
 
             return (
-              <AnnouncementListCard
+              <AnnouncementListItem
                 key={item.id}
                 item={item}
                 styles={uiStyles}
-                disabled={isFetching}
+                isFetching={isFetching}
                 onPress={() => setSelectedItem(item)}
-                accessibilityLabel={`${item.title}${announcementListIconA11ySuffix(item.listIcon)}${
-                  item.hasAttachment ? ', z załącznikiem' : ''
-                }, zobacz szczegóły`}
-              >
-                <AnnouncementListTitle item={item} styles={uiStyles} />
-
-                <Text style={uiStyles.cardAuthor} numberOfLines={1}>
-                  {item.authorName}
-                </Text>
-
-                <Text style={uiStyles.cardAction}>
-                  {isFetching ? 'Wczytywanie…' : 'Zobacz szczegóły →'}
-                </Text>
-              </AnnouncementListCard>
+              />
             );
           })}
         </View>

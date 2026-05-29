@@ -1,10 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useAppTheme } from '../context/AppThemeContext';
 import { useThemedStyles } from '../theme/useThemedStyles';
 import { createFindLecturerScreenStyles } from '../features/lecturer/FindLecturerScreen.styles';
 import {
   ActivityIndicator,
-  Keyboard,
   StyleSheet,
   Text,
   TextInput,
@@ -31,6 +30,8 @@ export default function FindLecturerScreen() {
   const styles = useThemedStyles(createFindLecturerScreenStyles);
   const navigation = useNavigation<FindLecturerNav>();
   const lecturersService = useMemo(() => new LecturersService(), []);
+  const firstNameRef = useRef<TextInput>(null);
+  const lastNameRef = useRef<TextInput>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [results, setResults] = useState<LecturerSearchResult[]>([]);
@@ -40,8 +41,11 @@ export default function FindLecturerScreen() {
 
   const canSearch = (firstName.trim() || lastName.trim()) && !loading;
 
+  const focusLastName = useCallback(() => {
+    lastNameRef.current?.focus();
+  }, []);
+
   const handleSearch = useCallback(async () => {
-    Keyboard.dismiss();
     try {
       setLoading(true);
       setError('');
@@ -78,6 +82,7 @@ export default function FindLecturerScreen() {
     setResults([]);
     setSearched(false);
     setError('');
+    firstNameRef.current?.focus();
   }, []);
 
   const renderResultCard = (item: LecturerSearchResult, index: number) => (
@@ -119,17 +124,20 @@ export default function FindLecturerScreen() {
       <RefreshableScrollView
         style={styles.screen}
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="never"
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.formCard}>
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Imię</Text>
             <TextInput
+              ref={firstNameRef}
               value={firstName}
               onChangeText={setFirstName}
               autoCapitalize="words"
               returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={focusLastName}
               style={styles.input}
             />
           </View>
@@ -137,11 +145,16 @@ export default function FindLecturerScreen() {
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Nazwisko</Text>
             <TextInput
+              ref={lastNameRef}
               value={lastName}
               onChangeText={setLastName}
               autoCapitalize="words"
               returnKeyType="search"
-              onSubmitEditing={handleSearch}
+              onSubmitEditing={() => {
+                if (canSearch) {
+                  void handleSearch();
+                }
+              }}
               style={styles.input}
             />
           </View>
