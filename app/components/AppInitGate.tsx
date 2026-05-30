@@ -1,12 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import AppSplashView from './AppSplashView';
 import { devLog } from '../config/devLog';
 import { useAppTheme } from '../context/AppThemeContext';
 import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
@@ -31,11 +26,6 @@ export default function AppInitGate({ children }: Props) {
           justifyContent: 'center',
           padding: 24,
           backgroundColor: colors.surface,
-        },
-        hint: {
-          marginTop: 12,
-          fontSize: 14,
-          color: colors.gray,
         },
         title: {
           fontSize: 18,
@@ -97,12 +87,7 @@ export default function AppInitGate({ children }: Props) {
   }, [bootstrap]);
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.gold} />
-        <Text style={styles.hint}>Ładowanie aplikacji…</Text>
-      </View>
-    );
+    return <AppSplashView />;
   }
 
   if (!ready && error) {

@@ -5,8 +5,8 @@ import { prefetchStudentPlanWeeks } from '../../../core/queryClient/prefetchStud
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 
 /**
- * Jednorazowy prefetch 3 miesięcy planu (poprzedni + bieżący + następny) na dashboardzie.
- * Po zmianie miesiąca kalendarzowego okno jest prefetchowane ponownie.
+ * Jednorazowy prefetch 5 tygodni planu (2 wstecz, bieżący, 2 do przodu) na dashboardzie.
+ * Po zmianie tygodnia kalendarzowego okno jest prefetchowane ponownie.
  */
 export function usePrefetchPlanWeekWindow(): void {
   const userKey = useQueryUserKey();

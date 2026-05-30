@@ -1,5 +1,10 @@
 import type { ExpoConfig } from 'expo/config';
 
+import {
+  SPLASH_BACKGROUND_DARK,
+  SPLASH_BACKGROUND_LIGHT,
+  SPLASH_IMAGE_WIDTH,
+} from './splashTheme.constants.js';
 import baseAppJson from './app.json';
 
 export type AppEnv = 'development' | 'demo' | 'production';
@@ -51,6 +56,21 @@ function resolveAppEnv(): AppEnv {
   return 'development';
 }
 
+const SPLASH_IMAGE = './assets/splash-icon.png';
+
+const splashScreenColors = {
+  image: SPLASH_IMAGE,
+  imageWidth: SPLASH_IMAGE_WIDTH,
+  resizeMode: 'contain' as const,
+  backgroundColor: SPLASH_BACKGROUND_LIGHT,
+  dark: {
+    image: SPLASH_IMAGE,
+    imageWidth: SPLASH_IMAGE_WIDTH,
+    resizeMode: 'contain' as const,
+    backgroundColor: SPLASH_BACKGROUND_DARK,
+  },
+};
+
 export default (): ExpoConfig => {
   const appEnv = resolveAppEnv();
   const layer = ENV_LAYERS[appEnv];
@@ -60,6 +80,10 @@ export default (): ExpoConfig => {
   const config = {
     ...base,
     name: layer.name,
+    splash: {
+      ...base.splash,
+      ...splashScreenColors,
+    },
     ios: {
       ...base.ios,
       bundleIdentifier: packageId,
@@ -67,6 +91,10 @@ export default (): ExpoConfig => {
     android: {
       ...base.android,
       package: packageId,
+      splash: {
+        ...base.android?.splash,
+        ...splashScreenColors,
+      },
     } as ExpoConfig['android'],
     updates: {
       ...base.updates,
@@ -87,11 +115,7 @@ export default (): ExpoConfig => {
       ...(base.plugins ?? []),
       [
         'expo-splash-screen',
-        {
-          backgroundColor: '#FFFFFF',
-          image: './assets/splash-icon.png',
-          resizeMode: 'contain',
-        },
+        splashScreenColors,
       ],
     ],
   };

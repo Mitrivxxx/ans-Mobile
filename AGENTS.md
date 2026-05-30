@@ -195,18 +195,18 @@ Opcjonalnie: `*.grid.ts`, `*.page.ts`, `merge*.ts` (np. oceny).
 
 ### Co jest persystowane na dysk (offline bundle)
 
-`shouldPersistQuery.ts` — **whitelist** (nie cały root): `studentPlan.lessons` (plan semestru — sidebar Plan), `weekLessons` — poprzedni + bieżący + następny miesiąc kalendarzowy (`planWeekWindow.ts`), `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, tygodnie planu poza oknem prefetch.
+`shouldPersistQuery.ts` — **whitelist** (nie cały root): `studentPlan.lessons` (plan semestru — sidebar Plan), `weekLessons` — 5 tygodni wokół bieżącego (2 wstecz, bieżący, 2 do przodu — `planWeekWindow.ts`), `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, tygodnie planu poza oknem prefetch.
 
 - `maxAge`: `PERSIST_MAX_AGE_MS` (~90 dni) — stary blob AsyncStorage wygasa przy restore.
 - `buster`: `PERSIST_QUERY_BUSTER` (`v2-offline-bundle`) — migracja starego przepełnionego cache.
-- Przy zapisie: tygodnie planu poza 3-miesięcznym oknem są obcinane (`persistClientTransform.ts`).
+- Przy zapisie: tygodnie planu poza 5-tygodniowym oknem są obcinane (`persistClientTransform.ts`).
 - Awatar: `profilePhotoSessionCache` (RAM) + `profilePhotoPersist.storage.ts` (AsyncStorage); nie w blobie React Query (`profileSummaryPhoto.ts`, `persistClientTransform.ts`).
 
 Profil: prefetch summary po logowaniu; ekran Profil (`profile.details`) — `syncOnMount: false`; auto-scrape co 12h przy focusie lub pull-to-refresh.
 
 ### Prefetch po logowaniu
 
-`prefetchUserScraperData.ts` — po logowaniu: `profile.summary`. Plan tygodniowy (3 miesiące): `prefetchStudentPlanWeeks.ts` + `usePrefetchPlanWeekWindow` na panelu harmonogramu dashboardu; tygodnie poza oknem — lazy przy nawigacji (`useStudentPlanWeekLessons`, bez zapisu na dysk).
+`prefetchUserScraperData.ts` — po logowaniu: `profile.summary`. Plan tygodniowy (5 tygodni): `prefetchStudentPlanWeeks.ts` + `usePrefetchPlanWeekWindow` na panelu harmonogramu dashboardu; tygodnie poza oknem — lazy przy nawigacji (`useStudentPlanWeekLessons`, bez zapisu na dysk).
 
 Dashboard i ekrany sidebar (Ogłoszenia, Oceny, Plan, profil): `useUserPersistentQuery` + `persistentAutoSync.ts` — **auto-sync co 12h** od ostatniego udanego fetcha (`dataUpdatedAt`); ręczny pull-to-refresh (`forceRefresh`) resetuje licznik dla danego zapytania. `syncOnMount` na panelach dashboardu — przy wejściu sync tylko gdy brak cache lub minęło 12h. Opłaty (`useStudentFeesQuery`) — ten sam interwał, bez zapisu na dysk.
 

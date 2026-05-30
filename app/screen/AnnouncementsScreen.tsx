@@ -120,7 +120,7 @@ export default function AnnouncementsScreen(_props: Props) {
           selected={archivedAnnouncementToDetails(selectedArchived)}
           styles={uiStyles}
           onBack={() => setSelectedArchived(null)}
-          backLabel="← Archiwum"
+          backLabel="Archiwum"
         />
       </RefreshableScrollView>
     );

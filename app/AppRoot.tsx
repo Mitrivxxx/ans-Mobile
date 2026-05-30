@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 
 import App from '../App';
-import AppBootstrap from './components/AppBootstrap';
 import { isDarkModeEnabled } from './core/preferences/darkMode.storage';
 
 const initialDarkModePromise = isDarkModeEnabled();
@@ -24,13 +24,16 @@ export default function AppRoot() {
     };
   }, [isDarkMode]);
 
+  useEffect(() => {
+    if (isDarkMode === null) {
+      return;
+    }
+    void SplashScreen.hideAsync().catch(() => {});
+  }, [isDarkMode]);
+
   if (isDarkMode === null) {
     return null;
   }
 
-  return (
-    <AppBootstrap isDarkMode={isDarkMode}>
-      <App initialDarkMode={isDarkMode} />
-    </AppBootstrap>
-  );
+  return <App initialDarkMode={isDarkMode} />;
 }

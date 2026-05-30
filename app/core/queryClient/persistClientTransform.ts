@@ -14,7 +14,7 @@ function isStudentPlanWeekLessonsQueryKey(queryKey: unknown): boolean {
   );
 }
 
-/** Usuwa z dysku tygodnie planu poza 3-miesięcznym oknem prefetch. */
+/** Usuwa z dysku tygodnie planu poza 5-tygodniowym oknem prefetch. */
 function pruneStalePlanWeeksFromDehydratedState(
   clientState: DehydratedState
 ): DehydratedState {

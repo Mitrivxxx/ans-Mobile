@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import AppErrorBoundary from './app/components/AppErrorBoundary';
 import AppInitGate from './app/components/AppInitGate';
+import AppSplashView from './app/components/AppSplashView';
 import AppUpdatesBanner from './app/components/AppUpdatesBanner';
 import { AppUpdatesProvider } from './app/context/AppUpdatesContext';
 import AuthSyncBanner from './app/components/AuthSyncBanner';
@@ -44,8 +45,6 @@ import {
 } from './app/core/queryClient/persistentQueryConfig';
 import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
-import ThemedSplashOverlay from './app/components/ThemedSplashOverlay';
-import { useMinSplashDisplay } from './app/hooks/useMinSplashDisplay';
 import { startupMark, startupMeasure } from './app/core/startup/startupMetrics';
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
@@ -118,18 +117,10 @@ function AppShell() {
     isRememberMeStartupRestoreActive,
     isRestoringSession,
   } = useAuthSession();
-  const showStartupSplash = useMinSplashDisplay(
-    isRememberMeStartupRestoreActive
-  );
   usePrefetchUserScraperData();
 
-  if (showStartupSplash || isRestoringSession) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-        <ThemedSplashOverlay isDarkMode={isDarkMode} />
-      </>
-    );
+  if (isRememberMeStartupRestoreActive || isRestoringSession) {
+    return <AppSplashView />;
   }
 
   if (authStatus === 'unauthenticated') {

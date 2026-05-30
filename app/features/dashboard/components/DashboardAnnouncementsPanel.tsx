@@ -11,6 +11,7 @@ import { useThemedStyles } from '../../../theme/useThemedStyles';
 import AnnouncementDetailsView from '../../announcements/components/AnnouncementDetailsView';
 import AnnouncementListItem from '../../announcements/components/AnnouncementListItem';
 import { createAnnouncementsUiStyles } from '../../announcements/announcementsUi.styles';
+import { useAnnouncementsArchive } from '../../announcements/hooks/useAnnouncementsArchive';
 import { useAnnouncementSelection } from '../../announcements/hooks/useAnnouncementSelection';
 import { useAnnouncementsQuery } from '../../announcements/hooks/useAnnouncementsQuery';
 import { takeLatestAnnouncements } from '../../announcements/utils/takeLatestAnnouncements';
@@ -45,6 +46,8 @@ export default function DashboardAnnouncementsPanel() {
     refreshSelection,
     clearSelection,
   } = useAnnouncementSelection(refetch, forceRefresh);
+
+  const { archivingId, isArchived, toggleArchive } = useAnnouncementsArchive();
 
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
 
@@ -123,6 +126,15 @@ export default function DashboardAnnouncementsPanel() {
             selected={selected}
             styles={uiStyles}
             onBack={clearSelection}
+            archiveAction={
+              selectedItem
+                ? {
+                    isArchived: isArchived(selectedItem.id),
+                    isArchiving: archivingId === selectedItem.id,
+                    onToggle: () => void toggleArchive(selectedItem),
+                  }
+                : undefined
+            }
           />
         </View>
       );

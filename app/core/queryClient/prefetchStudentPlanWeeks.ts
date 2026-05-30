@@ -13,7 +13,7 @@ const planService = new PlanService();
 const PREFETCH_CONCURRENCY = 2;
 
 /**
- * Poprzedni, bieżący i następny miesiąc kalendarzowy (tygodnie w tym oknie).
+ * 5 tygodni planu (2 wstecz, bieżący, 2 do przodu).
  * Bez ponownego fetchu, gdy dane są już w cache.
  */
 export async function prefetchStudentPlanWeeks(
