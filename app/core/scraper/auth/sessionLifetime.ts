@@ -32,3 +32,8 @@ export async function isSessionPastTtl(): Promise<boolean> {
     Date.now() - established >= WD_SESSION_TTL_MS - WD_SESSION_REFRESH_MARGIN_MS
   );
 }
+
+/** Sesja uznana za świeżą lokalnie — można pominąć probe HTTP. */
+export async function isSessionFresh(): Promise<boolean> {
+  return !(await isSessionPastTtl());
+}

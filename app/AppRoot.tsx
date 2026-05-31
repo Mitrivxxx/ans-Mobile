@@ -3,8 +3,10 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import App from '../App';
 import { isDarkModeEnabled } from './core/preferences/darkMode.storage';
+import { ensureScraperInfraReady } from './core/scraper/auth/bootstrapSession';
 
 const initialDarkModePromise = isDarkModeEnabled();
+void ensureScraperInfraReady();
 
 export default function AppRoot() {
   const [isDarkMode, setIsDarkMode] = useState<boolean | null>(null);

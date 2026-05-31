@@ -5,6 +5,10 @@ import { initClient } from '../client/client';
 let scraperInfraInFlight: Promise<void> | null = null;
 let scraperInfraReady = false;
 
+export function isScraperInfraReady(): boolean {
+  return scraperInfraReady;
+}
+
 /**
  * Inicjalizuje infrastrukturę scrapera (guard + klient/cookies) tylko raz na start.
  * Równoległe wywołania współdzielą ten sam Promise.

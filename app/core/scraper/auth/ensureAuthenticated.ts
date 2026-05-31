@@ -252,7 +252,8 @@ export type RememberMeResolveResult = {
 };
 
 /**
- * Przy starcie / foreground: probe lub silent login, aby sesja była aktywna.
+ * Przy starcie / foreground: probe (gdy sesja świeża), potem ewentualnie silent login.
+ * Przy pastTtl pomijamy probe — od razu silent login (−1 request).
  */
 export async function restoreRememberMeSession(): Promise<RememberMeResolveResult> {
   if (!restoreRememberMeInFlight) {
@@ -264,17 +265,16 @@ export async function restoreRememberMeSession(): Promise<RememberMeResolveResul
         };
       }
 
-      const hasCookies = await hasScraperSession();
       const pastTtl = await isSessionPastTtl();
 
-      if (hasCookies && !pastTtl) {
+      if (!pastTtl && (await hasScraperSession())) {
         try {
           const alive = await probeWdSessionAlive();
           if (alive) {
             return { authenticated: true, sessionDegraded: false };
           }
         } catch {
-          /* probe failed — spróbuj silent login */
+          /* probe failed — silent login poniżej */
         }
       }
 

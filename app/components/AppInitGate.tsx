@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import AppSplashView from './AppSplashView';
 import { devLog } from '../config/devLog';
 import { useAppTheme } from '../context/AppThemeContext';
-import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
+import {
+  ensureScraperInfraReady,
+  isScraperInfraReady,
+} from '../core/scraper/auth/bootstrapSession';
 import { startupMark, startupMeasure } from '../core/startup/startupMetrics';
 
 type Props = {
@@ -13,9 +15,8 @@ type Props = {
 
 export default function AppInitGate({ children }: Props) {
   const { colors } = useAppTheme();
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(isScraperInfraReady);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const styles = useMemo(
     () =>
@@ -59,7 +60,6 @@ export default function AppInitGate({ children }: Props) {
   );
 
   const bootstrap = useCallback(async () => {
-    setLoading(true);
     setError(null);
     startupMark('app-init-start');
 
@@ -77,18 +77,15 @@ export default function AppInitGate({ children }: Props) {
           ? err.message
           : 'Nie udało się zainicjować połączenia z WD.'
       );
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (ready) {
+      return;
+    }
     void bootstrap();
-  }, [bootstrap]);
-
-  if (loading) {
-    return <AppSplashView />;
-  }
+  }, [bootstrap, ready]);
 
   if (!ready && error) {
     return (
@@ -107,6 +104,10 @@ export default function AppInitGate({ children }: Props) {
         </Pressable>
       </View>
     );
+  }
+
+  if (!ready) {
+    return null;
   }
 
   return <>{children}</>;

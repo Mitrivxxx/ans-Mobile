@@ -7,7 +7,6 @@ import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import AppErrorBoundary from './app/components/AppErrorBoundary';
 import AppInitGate from './app/components/AppInitGate';
-import AppSplashView from './app/components/AppSplashView';
 import AppUpdatesBanner from './app/components/AppUpdatesBanner';
 import { AppUpdatesProvider } from './app/context/AppUpdatesContext';
 import AuthSyncBanner from './app/components/AuthSyncBanner';
@@ -112,16 +111,8 @@ function MainNavigator() {
 
 function AppShell() {
   const { isDarkMode, colors } = useAppTheme();
-  const {
-    authStatus,
-    isRememberMeStartupRestoreActive,
-    isRestoringSession,
-  } = useAuthSession();
+  const { authStatus } = useAuthSession();
   usePrefetchUserScraperData();
-
-  if (isRememberMeStartupRestoreActive || isRestoringSession) {
-    return <AppSplashView />;
-  }
 
   if (authStatus === 'unauthenticated') {
     return (

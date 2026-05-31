@@ -1,5 +1,6 @@
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
+import { devLog } from "../../../config/devLog";
 import { client, WD_BASE_URL } from "../client/client";
 
 import {
@@ -11,6 +12,7 @@ import {
   urlIndicatesContextSelection,
 } from "./contextSelection.parser";
 import { isLoginFormHtml } from "./login.parser";
+import { isSessionFresh } from "./sessionLifetime";
 import { ensureWdUserConsentCookie } from "./userConsent";
 
 export class SessionExpiredError extends Error {
@@ -133,14 +135,32 @@ const PROBE_HEADERS = {
   "Content-Type": undefined,
 } as const;
 
+/** Lżejszy niż GET / — wystarczy do wykrycia redirectu / formularza logowania. */
+const SESSION_PROBE_PATH = "/konto/accountdetails";
+
+const SESSION_PROBE_TIMEOUT_MS = 15_000;
+
+type ProbeWdSessionAliveOptions = {
+  /** Wymuś GET nawet przy świeżej sesji (np. tuż po logowaniu). */
+  force?: boolean;
+};
+
 /** Lekki GET — czy serwer nadal honoruje ciasteczka (bez pełnego guarda). */
-export async function probeWdSessionAlive(): Promise<boolean> {
+export async function probeWdSessionAlive(
+  options?: ProbeWdSessionAliveOptions
+): Promise<boolean> {
+  if (!options?.force && (await isSessionFresh())) {
+    devLog("Auth", "probe skipped — fresh session (sessionLifetime)");
+    return true;
+  }
+
   await ensureWdUserConsentCookie();
 
-  const response = await client.get<string>("/", {
+  const response = await client.get<string>(SESSION_PROBE_PATH, {
     responseType: "text",
     transformResponse: [(data) => data],
     maxRedirects: 5,
+    timeout: SESSION_PROBE_TIMEOUT_MS,
     skipSessionGuard: true,
     skipSessionExpiryCheck: true,
     headers: PROBE_HEADERS,
@@ -161,5 +181,5 @@ export function isSessionProbeConfig(
 
 /** Po udanym logowaniu — upewnij się, że WD honoruje ciasteczka zanim odpalisz prefetch. */
 export async function confirmWdSessionAfterLogin(): Promise<boolean> {
-  return probeWdSessionAlive();
+  return probeWdSessionAlive({ force: true });
 }
