@@ -12,13 +12,6 @@ export type AppEnv = 'development' | 'demo' | 'production';
 const BASE_PACKAGE = 'pl.matsma.WDMobile';
 const WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
 
-/** Kanał EAS Update — musi pasować do `channel` w profilu eas build / `eas update --channel`. */
-const OTA_CHANNEL_BY_ENV: Record<AppEnv, string> = {
-  development: 'development',
-  demo: 'demo',
-  production: 'production',
-};
-
 const ENV_LAYERS: Record<
   AppEnv,
   { name: string; packageSuffix: string }
@@ -96,15 +89,6 @@ export default (): ExpoConfig => {
         ...splashScreenColors,
       },
     } as ExpoConfig['android'],
-    updates: {
-      ...base.updates,
-      channel: OTA_CHANNEL_BY_ENV[appEnv],
-      requestHeaders: {
-        'expo-channel-name': OTA_CHANNEL_BY_ENV[appEnv],
-      },
-      /** Sprawdzanie tylko z JS (Ustawienia), nie przy starcie w natywnym expo-updates. */
-      checkAutomatically: 'NEVER',
-    },
     extra: {
       ...base.extra,
       appEnv,

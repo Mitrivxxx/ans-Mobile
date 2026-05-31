@@ -16,7 +16,6 @@ export default defineConfig({
   resolve: {
     alias: {
       'expo-constants': path.join(mocksDir, 'expo-constants.ts'),
-      'expo-updates': path.join(mocksDir, 'expo-updates.ts'),
       'react-native': path.join(mocksDir, 'react-native.ts'),
       '@react-native-async-storage/async-storage': path.join(
         mocksDir,

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RefreshableScrollView from '../components/RefreshableScrollView';
@@ -17,9 +16,7 @@ import { useStudentProfile } from '../context/StudentProfileContext';
 import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { useAppUpdates } from '../context/AppUpdatesContext';
 import { getAppEnvDisplayName, isProductionApp } from '../config/env';
-import { getUpdateErrorAlertMessage } from '../features/settings/updateUserMessages';
 import { APP_VERSION } from '../version';
 
 export default function SettingsScreen() {
@@ -27,19 +24,6 @@ export default function SettingsScreen() {
   const { refetch } = useStudentProfile();
   const { rememberMeEnabled, disableRememberMe } = useAuthSession();
   const { isOffline } = useNetworkStatus();
-  const {
-    supported,
-    autoCheckEnabled,
-    setAutoCheckEnabled,
-    checking,
-    pendingReload,
-    updateAvailable,
-    probeUpdateAvailability,
-    runningUpdateId,
-    otaChannel,
-    checkForUpdate,
-    applyPendingUpdate,
-  } = useAppUpdates();
   const [cacheClearing, setCacheClearing] = useState(false);
   const showBuildDiagnostics = !isProductionApp();
 
@@ -48,15 +32,6 @@ export default function SettingsScreen() {
   }, [refetch]);
 
   useRegisterScreenRefresh(refreshScreen);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!supported || isOffline) {
-        return;
-      }
-      void probeUpdateAvailability();
-    }, [supported, isOffline, probeUpdateAvailability])
-  );
 
   const handleRememberMeToggle = useCallback(
     async (next: boolean) => {
@@ -107,64 +82,6 @@ export default function SettingsScreen() {
       ]
     );
   }, [cacheClearing]);
-
-  const handleCheckAppUpdate = useCallback(async () => {
-    if (checking) {
-      return;
-    }
-
-    if (pendingReload) {
-      await applyPendingUpdate();
-      return;
-    }
-
-    const result = await checkForUpdate({ userInitiated: true });
-
-    switch (result.status) {
-      case 'dev':
-        Alert.alert(
-          'Aktualizacje',
-          'Ta funkcja działa w aplikacji pobranej z pliku APK, a nie w trybie do programowania (Expo Go).'
-        );
-        break;
-      case 'disabled':
-        Alert.alert(
-          'Aktualizacje',
-          'Twoja wersja aplikacji nie obsługuje aktualizacji w tle. Zainstaluj najnowszy plik APK z GitHub.'
-        );
-        break;
-      case 'upToDate':
-        Alert.alert(
-          'Aktualizacje',
-          'Jesteś na bieżąco — nie ma nowych aktualizacji.'
-        );
-        break;
-      case 'downloaded':
-        Alert.alert(
-          'Aktualizacje',
-          'Pobrano nową wersję. Aby ją włączyć, użyj przycisku „Zastosuj pobraną aktualizację” poniżej — aplikacja uruchomi się ponownie.'
-        );
-        break;
-      case 'error':
-        Alert.alert(
-          'Nie udało się zaktualizować',
-          getUpdateErrorAlertMessage(result.message)
-        );
-        break;
-      default:
-        break;
-    }
-  }, [applyPendingUpdate, checkForUpdate, checking, pendingReload]);
-
-  const handleAutoUpdatesToggle = useCallback(
-    async (next: boolean) => {
-      await setAutoCheckEnabled(next);
-      if (next && supported && !checking) {
-        void checkForUpdate();
-      }
-    },
-    [setAutoCheckEnabled, supported, checking, checkForUpdate]
-  );
 
   return (
     <SafeAreaView
@@ -272,94 +189,9 @@ export default function SettingsScreen() {
           </Text>
         </TouchableOpacity>
 
-        <View
-          style={[
-            styles.updatesSection,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.grayBorder,
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.charcoal }]}>
-            Aktualizacje aplikacji
-          </Text>
-          <Text style={[styles.cardDescription, { color: colors.gray }]}>
-            {supported
-              ? 'Możesz pobrać nowe poprawki bez ponownej instalacji z GitHub. Przy pierwszym uruchomieniu sprawdzanie w tle jest wyłączone — włącz je poniżej, jeśli chcesz.'
-              : 'Dostępne po zainstalowaniu aplikacji z pliku APK (nie w trybie programisty).'}
-          </Text>
-
-          {supported && updateAvailable ? (
-            <Text style={[styles.updateAvailableText, { color: colors.error }]}>
-              Dostępna jest nowa aktualizacja
-            </Text>
-          ) : null}
-
-          <View
-            style={[
-              styles.card,
-              styles.updatesRow,
-              { borderColor: colors.grayBorder, backgroundColor: colors.dashboardBg },
-            ]}
-          >
-            <View style={styles.textBlock}>
-              <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
-                Sprawdzaj automatycznie
-              </Text>
-              <Text style={[styles.cardDescription, { color: colors.gray }]}>
-                Aplikacja sama poszuka aktualizacji po włączeniu i po powrocie do programu.
-              </Text>
-            </View>
-            <Switch
-              value={autoCheckEnabled}
-              onValueChange={(value) => void handleAutoUpdatesToggle(value)}
-              disabled={!supported}
-              trackColor={{
-                false: colors.switchTrackOff,
-                true: colors.switchTrackOn,
-              }}
-              thumbColor={colors.switchThumb}
-              ios_backgroundColor={colors.switchTrackOff}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.updatesButton,
-              {
-                backgroundColor: colors.gold,
-                opacity: !supported || checking || isOffline ? 0.55 : 1,
-              },
-            ]}
-            onPress={() => void handleCheckAppUpdate()}
-            disabled={!supported || checking || isOffline}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.updatesButtonText, { color: colors.black }]}>
-              {checking
-                ? pendingReload
-                  ? 'Uruchamianie…'
-                  : 'Sprawdzanie…'
-                : updateAvailable
-                  ? 'Aktualizuj'
-                  : 'Sprawdź teraz'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
-          {showBuildDiagnostics ? (
-            <>
-              {'\n'}
-              Środowisko: {getAppEnvDisplayName()}
-              {otaChannel ? `\nKanał OTA: ${otaChannel}` : ''}
-              {runningUpdateId
-                ? `\nPakiet OTA: ${runningUpdateId.slice(0, 8)}…`
-                : ''}
-            </>
-          ) : null}
+          {showBuildDiagnostics ? `\nŚrodowisko: ${getAppEnvDisplayName()}` : null}
         </Text>
       </RefreshableScrollView>
     </SafeAreaView>
@@ -416,44 +248,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 16,
     gap: 4,
-  },
-  updatesSection: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    gap: 12,
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  updateAvailableText: {
-    fontSize: 14,
-    fontWeight: '700',
-    lineHeight: 20,
-  },
-  updatesRow: {
-    marginTop: 0,
-  },
-  updatesButton: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  updatesButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  updatesButtonOutline: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  updatesButtonOutlineText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
   textBlock: {
     flex: 1,

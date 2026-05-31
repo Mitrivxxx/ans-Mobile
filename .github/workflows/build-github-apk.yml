@@ -1,4 +1,4 @@
-# APK prod na GitHub Releases — kanał EAS Update: production
+# APK prod na GitHub Releases
 name: Build Android APK (production)
 
 on:
