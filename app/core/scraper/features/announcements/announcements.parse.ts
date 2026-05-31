@@ -164,7 +164,7 @@ export function normalizeAnnouncement(
 /** Portal WD: slot załącznika to pusty div lub div z ikoną (zagnieżdżony div). */
 export function listItemHasAttachment(item: Element): boolean {
   const roots = directChildDivs(item);
-  const container = roots.length === 1 ? roots[0]! : item;
+  const container = roots[0] ?? item;
   const outerParts = directChildDivs(container);
 
   if (outerParts.length >= 2) {
@@ -172,7 +172,9 @@ export function listItemHasAttachment(item: Element): boolean {
     const rowParts = directChildDivs(contentColumn);
 
     if (rowParts.length >= 2) {
-      return directChildDivs(rowParts[1]!).length > 0;
+      if (directChildDivs(rowParts[1]!).length > 0) {
+        return true;
+      }
     }
   }
 
