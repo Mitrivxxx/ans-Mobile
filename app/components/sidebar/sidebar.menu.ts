@@ -1,3 +1,4 @@
+// Definicja pozycji bocznego menu.
 import { DASHBOARD_FEATURES } from '../../features/dashboard/dashboard.features';
 import type { DashboardFeature } from '../../features/dashboard/dashboard.types';
 

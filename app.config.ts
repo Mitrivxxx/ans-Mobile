@@ -4,7 +4,7 @@ import {
   SPLASH_BACKGROUND_DARK,
   SPLASH_BACKGROUND_LIGHT,
   SPLASH_IMAGE_WIDTH,
-} from './splashTheme.constants.js';
+} from './app/theme/splashTheme.constants';
 import baseAppJson from './app.json';
 
 export type AppEnv = 'development' | 'demo' | 'production';
@@ -32,7 +32,7 @@ const ENV_LAYERS: Record<
 
 function resolveAppEnv(): AppEnv {
   const easProfile = process.env.EAS_BUILD_PROFILE;
-  if (easProfile === 'github' || easProfile === 'production') {
+  if (easProfile === 'production') {
     return 'production';
   }
   if (easProfile === 'demo' || easProfile === 'preview') {

@@ -1,3 +1,4 @@
+// Awatar profilu w nagłówku.
 import React, { useCallback } from 'react';
 import { useThemedStyles } from '../theme/useThemedStyles';
 import {

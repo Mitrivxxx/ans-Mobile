@@ -59,16 +59,16 @@ Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`)
 |---------|-------------------|------------------------|-------------------|------------|
 | **development** | WDMobile Dev | `pl.matsma.WDMobile.dev` | `development` | Dev na urządzeniu, APK wewnętrzny |
 | **demo** | WDMobile (Demo) | `pl.matsma.WDMobile.demo` | `demo`, `preview`* | Test wewnętrzny, osobna instalacja obok prod |
-| **production** | WDMobile | `pl.matsma.WDMobile` | `production`, `github`** | Użytkownicy: sklep (AAB) lub APK z GitHub |
+| **production** | WDMobile | `pl.matsma.WDMobile` | `production` | Użytkownicy: sklep (AAB) lub lokalny APK |
 
 \* `preview` w `eas.json` dziedziczy po `demo`.  
-\** `github` = `extends: production` — to samo `APP_ENV`, ale **APK** + `distribution: internal` (GitHub Releases / workflow `.github/workflows/build-github-apk.yml`).
+
 
 ### Jak ustawiane jest środowisko
 
 **Przy buildzie natywnym (EAS / prebuild):** `app.config.ts` → `resolveAppEnv()`:
 
-1. `EAS_BUILD_PROFILE` — mapowanie: `github` \| `production` → production; `demo` \| `preview` → demo; `development` → development.
+1. `EAS_BUILD_PROFILE` — mapowanie: `production` → production; `demo` \| `preview` → demo; `development` → development.
 2. W przeciwnym razie zmienna `APP_ENV` z profilu `eas.json` (`env.APP_ENV`).
 3. Domyślnie: `development` (np. lokalny prebuild bez `APP_ENV=production`).
 
@@ -81,14 +81,14 @@ Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`)
 
 ### Komendy per środowisko
 
-| Akcja | development | demo | production (GitHub / sklep) |
+| Akcja | development | demo | production |
 |-------|-------------|--------------|----------------------------|
-| EAS build Android | `npm run build:development` | `npm run build:demo` | `npm run build:github` (APK) lub `build:production` (AAB) |
-| Lokalny APK release | — | — | `npm run build:apk:local` (`APP_ENV=production` + `prebuild:prod`) |
+| EAS build Android | `npm run build:development` | `npm run build:demo` | `npm run build:production` (AAB) |
+| Lokalny APK release | — | — | `npm run build:apk:local` |
 
 ### Git i `main`
 
-Na **jednej** gałęzi `main` trzymaj: kod + pełne `eas.json` + `app.config.ts`. Nie trzymaj osobnych branchy „pod środowisko”. Sekrety (`EXPO_TOKEN`, keystore) — GitHub Secrets / expo.dev, nie w repo (`.env` w `.gitignore`).
+Na **jednej** gałęzi `main` trzymaj: kod + pełne `eas.json` + `app.config.ts`. Nie trzymaj osobnych branchy „pod środowisko”. Sekrety (`EXPO_TOKEN`, keystore) trzymaj poza repo (`.env` w `.gitignore`).
 
 ### Pułapki środowisk
 
@@ -280,7 +280,7 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 | Test równoległych requestów | `core/utils/mapWithConcurrency.ts` |
 | Ciemny motyw | `preferences/darkMode.storage.ts`, `SettingsScreen` |
 | Środowiska / package | `eas.json`, `app.config.ts`, `app/config/env.ts` — sekcja **Środowiska** powyżej |
-| Build APK GitHub (CI) | `.github/workflows/build-github-apk.yml`, profil `github` |
+| Build APK lokalnie | `npm run build:apk:local` |
 
 ---
 
@@ -292,13 +292,8 @@ Z `info.txt` / `package.json`:
 npx expo start                  # Metro — środowisko logiczne: development
 adb reverse tcp:8081 tcp:8081   # fizyczne urządzenie
 npx expo run:android
-npm run prebuild:prod           # prebuild Android, APP_ENV=production
-npm run build:development       # EAS APK, .dev, kanał development
 npm run build:demo              # EAS AAB, .demo
-npm run build:github            # EAS APK prod (GitHub / internal)
-npm run build:production        # EAS AAB sklep
 npm run build:apk:local         # lokalny release APK (production)
-npm run prebuild:android        # ikony + expo prebuild --clean (domyślnie dev)
 ```
 ---
 

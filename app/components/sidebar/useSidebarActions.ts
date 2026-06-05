@@ -1,3 +1,4 @@
+// Akcje nawigacji i wylogowania menu.
 import { useCallback, useState } from 'react';
 
 import { useAuthSession } from '../../context/AuthSessionContext';

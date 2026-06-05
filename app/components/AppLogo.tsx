@@ -1,3 +1,4 @@
+// Uniwersalny komponent logo aplikacji.
 import React from 'react';
 import {
   Image,

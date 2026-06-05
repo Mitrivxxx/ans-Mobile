@@ -1,3 +1,4 @@
+// Globalny mechanizm odświeżania ekranów.
 import React, {
   createContext,
   useCallback,

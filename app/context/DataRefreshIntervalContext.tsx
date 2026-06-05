@@ -1,3 +1,4 @@
+// Zarządza interwałem odświeżania danych.
 import React, {
   createContext,
   useCallback,

@@ -1,3 +1,4 @@
+// Przechowuje i udostępnia profil studenta.
 import React, {
   createContext,
   useCallback,

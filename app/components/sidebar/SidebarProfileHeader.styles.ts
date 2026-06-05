@@ -1,3 +1,4 @@
+// Style nagłówka profilu w menu.
 import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../theme/ansTheme';

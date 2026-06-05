@@ -1,3 +1,4 @@
+// Stan otwarcia bocznego menu.
 import React, {
   createContext,
   useCallback,

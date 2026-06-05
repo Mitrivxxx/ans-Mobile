@@ -1,3 +1,4 @@
+// Baner pokazujący postęp synchronizacji.
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

@@ -1,3 +1,4 @@
+// Zarządza sesją i autoryzacją użytkownika.
 import React, {
   createContext,
   useCallback,

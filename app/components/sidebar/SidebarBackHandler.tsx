@@ -1,3 +1,4 @@
+// Android: przycisk wstecz zamyka boczne menu.
 import { useEffect } from 'react';
 import { BackHandler } from 'react-native';
 

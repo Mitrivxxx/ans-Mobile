@@ -25,19 +25,6 @@
     "preview": {
       "extends": "demo"
     },
-    "github": {
-      "extends": "production",
-      "distribution": "internal",
-      "env": {
-        "APP_ENV": "production"
-      },
-      "android": {
-        "buildType": "apk"
-      },
-      "ios": {
-        "simulator": false
-      }
-    },
     "ios-simulator": {
       "ios": {
         "simulator": true

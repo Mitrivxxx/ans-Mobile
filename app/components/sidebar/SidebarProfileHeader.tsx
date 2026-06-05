@@ -1,3 +1,4 @@
+// Nagłówek profilu w bocznym menu.
 import React from 'react';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import {

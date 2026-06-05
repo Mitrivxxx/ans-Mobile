@@ -1,3 +1,4 @@
+// Zamyka klawiaturę po tapnięciu.
 import React, { type ReactNode } from 'react';
 import {
   Keyboard,

@@ -1,3 +1,4 @@
+// Krótkie podsumowanie profilu studenta.
 import React from 'react';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 

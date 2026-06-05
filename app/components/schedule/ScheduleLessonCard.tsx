@@ -1,3 +1,4 @@
+// Kafelek pojedynczej lekcji w planie.
 import React from 'react';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import { Text, View } from 'react-native';

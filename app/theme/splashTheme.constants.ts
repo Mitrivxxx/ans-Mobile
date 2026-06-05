@@ -1,0 +1,3 @@
+export const SPLASH_BACKGROUND_LIGHT = '#6E6E6E';
+export const SPLASH_BACKGROUND_DARK = '#6E6E6E';
+export const SPLASH_IMAGE_WIDTH = 100;

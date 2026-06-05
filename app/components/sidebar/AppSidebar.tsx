@@ -1,3 +1,4 @@
+// Główny widok bocznego menu.
 import React, { useEffect, useRef, useState } from 'react';
 import { useThemedStyles } from '../../theme/useThemedStyles';
 import {

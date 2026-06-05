@@ -1,3 +1,4 @@
+// Główny pasek nagłówka aplikacji.
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

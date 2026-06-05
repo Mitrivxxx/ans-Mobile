@@ -1,3 +1,4 @@
+// Łapie i pokazuje błędy interfejsu.
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import {
   Pressable,

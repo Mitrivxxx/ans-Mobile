@@ -1,3 +1,4 @@
+// Baner stanu synchronizacji logowania.
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';

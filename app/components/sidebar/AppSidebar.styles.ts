@@ -1,3 +1,4 @@
+// Style bocznego menu aplikacji.
 import { Dimensions, StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../theme/ansTheme';

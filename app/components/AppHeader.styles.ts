@@ -1,3 +1,4 @@
+// Style głównego nagłówka aplikacji.
 import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../theme/ansTheme';

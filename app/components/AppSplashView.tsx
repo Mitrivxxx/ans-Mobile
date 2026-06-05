@@ -1,3 +1,4 @@
+// Ekran splash widoczny przy starcie.
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

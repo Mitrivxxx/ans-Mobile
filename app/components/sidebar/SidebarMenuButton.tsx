@@ -1,3 +1,4 @@
+// Przycisk otwierający boczne menu.
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';

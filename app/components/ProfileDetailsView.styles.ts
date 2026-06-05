@@ -1,3 +1,4 @@
+// Style szczegółów profilu użytkownika.
 import type { AnsColors } from '../theme/ansTheme';
 
 const AVATAR_SIZE = 128;

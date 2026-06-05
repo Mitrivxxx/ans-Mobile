@@ -1,6 +1,5 @@
 import { getAppEnv, isDevLoggingEnabled } from './env';
 
-/** Proste logi tylko w warstwie dev (Metro / APP_ENV=development). */
 export function devLog(scope: string, message: string): void {
   if (!isDevLoggingEnabled()) {
     return;

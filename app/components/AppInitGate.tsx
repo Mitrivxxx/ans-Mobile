@@ -1,3 +1,4 @@
+// Bramka startowa inicjalizacji aplikacji.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 

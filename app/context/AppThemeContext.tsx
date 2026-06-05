@@ -1,3 +1,4 @@
+// Zarządza motywem aplikacji (ciemny/jasny).
 import React, {
   createContext,
   useCallback,
