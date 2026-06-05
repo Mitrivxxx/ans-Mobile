@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { getPlanPrefetchWindowAnchorKey } from '../../../core/queryClient/planWeekWindow';
 import { prefetchStudentPlanWeeks } from '../../../core/queryClient/prefetchStudentPlanWeeks';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
+import { isDemoPresentationMode } from '../../../config/env';
 
 /**
  * Jednorazowy prefetch 5 tygodni planu (2 wstecz, bieżący, 2 do przodu) na dashboardzie.
@@ -13,6 +14,10 @@ export function usePrefetchPlanWeekWindow(): void {
   const prefetchedWindowRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (isDemoPresentationMode()) {
+      return;
+    }
+
     if (!userKey) {
       prefetchedWindowRef.current = null;
       return;

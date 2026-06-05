@@ -5,6 +5,8 @@ import { mergeSyncStatuses } from '../../../core/queryClient/mergeSyncStatuses';
 import type { GradesSemesterMeta } from '../../../core/scraper/features/grades/grades.service';
 import type { SemesterGrades } from '../../../core/scraper/features/grades/grades.service';
 import type { SyncStatus } from '../../../core/queryClient/syncTypes';
+import { isDemoPresentationMode } from '../../../config/env';
+import { DEMO_SEMESTER_GRADES } from '../../../demo/demoMockData';
 import { useGradesIndexQuery } from './useGradesIndexQuery';
 import { useSemesterGradesQuery } from './useSemesterGradesQuery';
 
@@ -19,6 +21,8 @@ function indexOfSemester(
 }
 
 export function useGrades() {
+  const isDemo = isDemoPresentationMode();
+
   const {
     index,
     syncStatus: indexSyncStatus,
@@ -129,6 +133,24 @@ export function useGrades() {
       }),
     [forceRefreshIndex, forceRefreshSemester, currentMeta]
   );
+
+  if (isDemo) {
+    return {
+      semesters: [DEMO_SEMESTER_GRADES],
+      currentSemester: DEMO_SEMESTER_GRADES,
+      semesterIndex: 0,
+      loading: false,
+      error: '',
+      canGoPrevious: false,
+      canGoNext: false,
+      goToPreviousSemester: () => {},
+      goToNextSemester: () => {},
+      isSemesterLoading: false,
+      syncStatus: 'upToDate' as SyncStatus,
+      refetch: async () => {},
+      forceRefresh: async () => {},
+    };
+  }
 
   return {
     semesters,

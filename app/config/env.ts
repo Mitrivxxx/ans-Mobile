@@ -57,3 +57,8 @@ export function getAppEnvDisplayName(): string {
       return 'Produkcyjna';
   }
 }
+
+/** Build demo — sztywne dane do screenshotów prezentacji (bez logowania WD). */
+export function isDemoPresentationMode(): boolean {
+  return getAppEnv() === 'demo';
+}

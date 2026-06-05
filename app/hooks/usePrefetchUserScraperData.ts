@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { useAuthSession } from "../context/AuthSessionContext";
+import { isDemoPresentationMode } from "../config/env";
 import { prefetchUserScraperData } from "../core/queryClient/prefetchUserScraperData";
 import { queryClient } from "../core/queryClient/queryClient";
 import { useQueryUserKey } from "../core/queryClient/useQueryUserKey";
@@ -14,6 +15,10 @@ export function usePrefetchUserScraperData(): void {
   const prefetchRunIdRef = useRef(0);
 
   useEffect(() => {
+    if (isDemoPresentationMode()) {
+      return;
+    }
+
     if (authStatus !== "authenticated") {
       prefetchedForKeyRef.current = null;
       void queryClient.cancelQueries();

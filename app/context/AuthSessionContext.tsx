@@ -43,6 +43,7 @@ import { clearSession } from '../core/scraper/auth/session.store';
 import { probeWdSessionAlive } from '../core/scraper/auth/sessionValidation';
 import { onNetworkReconnect } from '../core/network/networkSubscription';
 import { devLog } from '../config/devLog';
+import { isDemoPresentationMode } from '../config/env';
 import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
 import { startupMark, startupMeasure } from '../core/startup/startupMetrics';
 
@@ -300,9 +301,12 @@ export function AuthSessionProvider({
   persistReady: boolean;
   initialRememberMeRestore?: boolean;
 }) {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>(() =>
-    initialRememberMeRestore ? 'restoring' : 'unknown'
-  );
+  const [authStatus, setAuthStatus] = useState<AuthStatus>(() => {
+    if (isDemoPresentationMode()) {
+      return 'authenticated';
+    }
+    return initialRememberMeRestore ? 'restoring' : 'unknown';
+  });
   const [rememberMeEnabled, setRememberMeEnabled] = useState(
     initialRememberMeRestore
   );
@@ -373,6 +377,18 @@ export function AuthSessionProvider({
     async (options?: { showSplash?: boolean }) => {
       const runId = ++sessionResolveRunIdRef.current;
       const isStartup = options?.showSplash !== false;
+
+      if (isDemoPresentationMode()) {
+        if (isSessionResolveCurrent(runId)) {
+          applyResolvedSession({
+            status: 'authenticated',
+            sessionDegraded: false,
+            sessionDegradedMessage: '',
+            rememberMeEnabled: false,
+          });
+        }
+        return;
+      }
 
       startupMark('auth-restore-start');
 
@@ -480,6 +496,10 @@ export function AuthSessionProvider({
   }, []);
 
   const handleSessionLost = useCallback(() => {
+    if (isDemoPresentationMode()) {
+      return;
+    }
+
     const runId = ++sessionResolveRunIdRef.current;
 
     void (async () => {

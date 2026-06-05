@@ -18,12 +18,15 @@ import {
 } from '../../../core/scraper/events/events.service';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
+import { isDemoPresentationMode } from '../../../config/env';
+import { DEMO_EVENTS } from '../../../demo/demoMockData';
 
 const eventsService = new PublicEventsService();
 const DEFAULT_DEPARTMENT = EVENTS_DEPARTMENTS[0];
 const DEPARTMENTS_BY_ID = new Map(EVENTS_DEPARTMENTS.map((department) => [department.id, department]));
 
 export function useEventsQuery() {
+  const isDemo = isDemoPresentationMode();
   const userKey = useQueryUserKey();
   const queryClient = useQueryClient();
   const [scrapeEnabled, setScrapeEnabled] = useState(false);
@@ -71,7 +74,7 @@ export function useEventsQuery() {
   const query = useQuery<PublicEvent[]>({
     queryKey,
     queryFn: () => eventsService.getEvents(selectedDepartment.path),
-    enabled: scrapeEnabled && isDepartmentReady && Boolean(userKey),
+    enabled: !isDemo && scrapeEnabled && isDepartmentReady && Boolean(userKey),
     staleTime: EVENTS_STALE_TIME_MS,
     gcTime: EVENTS_STALE_TIME_MS * 2,
     refetchInterval: EVENTS_STALE_TIME_MS,
@@ -79,6 +82,19 @@ export function useEventsQuery() {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
+
+  if (isDemo) {
+    return {
+      events: DEMO_EVENTS,
+      departments: EVENTS_DEPARTMENTS,
+      selectedDepartment,
+      isDepartmentReady: true,
+      setDepartment: async () => {},
+      isInitialLoading: false,
+      hasCachedEvents: true,
+      isRefreshing: false,
+    };
+  }
 
   return {
     events: query.data ?? [],

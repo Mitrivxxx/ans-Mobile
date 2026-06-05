@@ -18,10 +18,13 @@ import {
   ProfileService,
   type ProfileSummary,
 } from '../../../core/scraper/features/profile/profile.service';
+import { isDemoPresentationMode } from '../../../config/env';
+import { DEMO_PROFILE_SUMMARY } from '../../../demo/demoMockData';
 
 const profileService = new ProfileService();
 
 export function useStudentProfileQuery() {
+  const isDemo = isDemoPresentationMode();
   const userKey = useQueryUserKey();
   const [photoRevision, setPhotoRevision] = useState(0);
 
@@ -35,6 +38,7 @@ export function useStudentProfileQuery() {
       const fresh = await profileService.getProfileSummary();
       return profileSummaryForQueryCache(fresh, userKey);
     },
+    enabled: !isDemo,
     syncOnMount: false,
   });
 
@@ -76,6 +80,20 @@ export function useStudentProfileQuery() {
 
     return result;
   }, [refetch, userKey]);
+
+  if (isDemo) {
+    return {
+      summary: DEMO_PROFILE_SUMMARY,
+      photo: '',
+      syncStatus: 'upToDate' as const,
+      isInitialLoading: false,
+      hasCachedSummary: true,
+      refetch: async () => {},
+      forceRefresh: async () => {},
+      isFatalError: false,
+      photoRevision: 0,
+    };
+  }
 
   return {
     summary: summary ?? null,
