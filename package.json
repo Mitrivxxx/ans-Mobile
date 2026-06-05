@@ -8,6 +8,8 @@
     "build:apk:local": "cross-env APP_ENV=production EAS_BUILD_PROFILE=production expo prebuild --platform android && cd android && cross-env APP_ENV=production EAS_BUILD_PROFILE=production gradlew.bat assembleRelease",
     "install:apk:local": "adb install -r android\\app\\build\\outputs\\apk\\release\\app-release.apk",
     "build:demo": "eas build --profile demo",
+    "build:production:ios": "eas build --profile production --platform ios",
+    "build:production:android": "eas build --profile production --platform android",
     "test": "vitest run",
     "test:watch": "vitest"
   },

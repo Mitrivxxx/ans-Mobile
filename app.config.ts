@@ -1,11 +1,11 @@
 import type { ExpoConfig } from 'expo/config';
 
-import {
-  SPLASH_BACKGROUND_DARK,
-  SPLASH_BACKGROUND_LIGHT,
-  SPLASH_IMAGE_WIDTH,
-} from './app/theme/splashTheme.constants';
 import baseAppJson from './app.json';
+
+/** W app.config.ts nie importuj plików .ts — Node/Expo prebuild ich nie rozwiąże. */
+const SPLASH_BACKGROUND_LIGHT = '#6E6E6E';
+const SPLASH_BACKGROUND_DARK = '#6E6E6E';
+const SPLASH_IMAGE_WIDTH = 100;
 
 export type AppEnv = 'development' | 'demo' | 'production';
 

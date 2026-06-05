@@ -26,6 +26,7 @@
       "extends": "demo"
     },
     "ios-simulator": {
+      "extends": "development",
       "ios": {
         "simulator": true
       }
@@ -37,7 +38,8 @@
       },
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "ios": {}
     }
   },
   "submit": {
