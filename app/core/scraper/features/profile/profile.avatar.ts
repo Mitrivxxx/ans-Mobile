@@ -104,8 +104,8 @@ function delay(ms: number): Promise<void> {
  * Pobiera awatar ze stron z pełnym layoutem (sidebar w <aside>).
  * Próbuje kilka URL-i; przy samym „Loading…” ponawia GET /.
  */
-export async function fetchAvatarPhoto(): Promise<string> {
-  const cached = getCachedProfilePhoto();
+export async function fetchAvatarPhoto(userKey?: string): Promise<string> {
+  const cached = getCachedProfilePhoto(userKey);
   if (cached) {
     return cached;
   }
@@ -119,7 +119,7 @@ export async function fetchAvatarPhoto(): Promise<string> {
     const html = await fetchHtmlPage(path);
     const photo = tryHtml(html);
     if (photo) {
-      setCachedProfilePhoto(photo);
+      setCachedProfilePhoto(photo, userKey);
       return photo;
     }
   }
@@ -140,14 +140,14 @@ export async function fetchAvatarPhoto(): Promise<string> {
       const html = await fetchHtmlPage(path);
       photo = tryHtml(html);
       if (photo) {
-        setCachedProfilePhoto(photo);
+        setCachedProfilePhoto(photo, userKey);
         return photo;
       }
     }
   }
 
   if (photo) {
-    setCachedProfilePhoto(photo);
+    setCachedProfilePhoto(photo, userKey);
   }
 
 

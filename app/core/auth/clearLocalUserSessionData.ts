@@ -12,8 +12,6 @@ import { clearLastUsername, getLastUsername } from './sessionUser.storage';
  * Używane przy przycisku Wyloguj oraz przy cold starcie po sesji bez „Zapamiętaj mnie”.
  */
 export async function clearLocalUserSessionData(): Promise<void> {
-  clearProfilePhotoSessionCache();
-
   const creds = await getSavedCredentials();
   const userKey = creds?.username?.trim() ?? (await getLastUsername());
   if (userKey) {
@@ -27,4 +25,5 @@ export async function clearLocalUserSessionData(): Promise<void> {
   await clearRememberMe();
   await clearLastUsername();
   await clearUserAppCache();
+  clearProfilePhotoSessionCache();
 }

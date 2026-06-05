@@ -5,6 +5,7 @@ import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
 import { useUserPersistentQuery } from '../../../core/queryClient/useUserPersistentQuery';
 import {
+  clearProfilePhotoSessionCacheIfUserMismatch,
   getCachedProfilePhoto,
 } from '../../../core/scraper/features/profile/profilePhotoSessionCache';
 import {
@@ -37,29 +38,31 @@ export function useStudentProfileQuery() {
     syncOnMount: false,
   });
 
-  const [photo, setPhoto] = useState(() => getCachedProfilePhoto() ?? '');
+  const [photo, setPhoto] = useState('');
 
   useEffect(() => {
     const key = queryKeys.profile.summary(userKey);
     const data = queryClient.getQueryData<ProfileSummary>(key);
-    const sanitized = sanitizePersistedProfileSummary(data);
+    const sanitized = sanitizePersistedProfileSummary(data, userKey);
     if (sanitized && sanitized !== data) {
       queryClient.setQueryData(key, sanitized);
     }
   }, [userKey]);
 
   useEffect(() => {
+    clearProfilePhotoSessionCacheIfUserMismatch(userKey);
+    setPhoto(getCachedProfilePhoto(userKey) ?? '');
     void hydrateProfilePhotoSessionFromDisk(userKey).then(() => {
-      setPhoto(getCachedProfilePhoto() ?? '');
+      setPhoto(getCachedProfilePhoto(userKey) ?? '');
     });
   }, [userKey]);
 
   useEffect(() => {
-    setPhoto(getCachedProfilePhoto() ?? '');
-  }, [summary, photoRevision]);
+    setPhoto(getCachedProfilePhoto(userKey) ?? '');
+  }, [summary, photoRevision, userKey]);
 
   const refreshProfile = useCallback(async () => {
-    const previousPhoto = getCachedProfilePhoto();
+    const previousPhoto = getCachedProfilePhoto(userKey);
 
     await queryClient.invalidateQueries({
       queryKey: queryKeys.profile.summary(userKey),
@@ -67,7 +70,7 @@ export function useStudentProfileQuery() {
 
     const result = await refetch();
 
-    if (result.isSuccess && profilePhotoChangedSince(previousPhoto)) {
+    if (result.isSuccess && profilePhotoChangedSince(previousPhoto, userKey)) {
       setPhotoRevision((revision) => revision + 1);
     }
 

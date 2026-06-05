@@ -54,7 +54,9 @@ export function stripProfilePhotoFromDehydratedState(
     }
 
     const data = entry.state.data as ProfileSummary | undefined;
-    const sanitized = sanitizePersistedProfileSummary(data);
+    const userKey =
+      typeof entry.queryKey[1] === 'string' ? entry.queryKey[1] : undefined;
+    const sanitized = sanitizePersistedProfileSummary(data, userKey);
     if (!sanitized || sanitized === data) {
       return entry;
     }

@@ -5,6 +5,7 @@ import {
 } from "../../../auth/profilePhotoPersist.storage";
 import type { ProfileSummary } from "./profile.types";
 import {
+  clearProfilePhotoSessionCacheIfUserMismatch,
   getCachedProfilePhoto,
   setCachedProfilePhoto,
 } from "./profilePhotoSessionCache";
@@ -20,7 +21,7 @@ export function profileSummaryForQueryCache(
   userKey?: string
 ): ProfileSummary {
   if (summary.photo) {
-    setCachedProfilePhoto(summary.photo);
+    setCachedProfilePhoto(summary.photo, userKey);
     if (userKey) {
       void savePersistedProfilePhoto(userKey, summary.photo);
     }
@@ -30,18 +31,20 @@ export function profileSummaryForQueryCache(
 
 /** Migracja: stary cache persystowany z photo w summary → sesja + puste photo w RQ. */
 export function sanitizePersistedProfileSummary(
-  summary: ProfileSummary | undefined
+  summary: ProfileSummary | undefined,
+  userKey?: string
 ): ProfileSummary | undefined {
   if (!summary?.photo) {
     return summary;
   }
-  return profileSummaryForQueryCache(summary);
+  return profileSummaryForQueryCache(summary, userKey);
 }
 
 export function profilePhotoChangedSince(
-  previous: string | null
+  previous: string | null,
+  userKey?: string
 ): boolean {
-  const next = getCachedProfilePhoto();
+  const next = getCachedProfilePhoto(userKey);
   return next !== previous;
 }
 
@@ -49,12 +52,13 @@ export function profilePhotoChangedSince(
 export async function hydrateProfilePhotoSessionFromDisk(
   userKey: string
 ): Promise<void> {
-  if (getCachedProfilePhoto()) {
+  clearProfilePhotoSessionCacheIfUserMismatch(userKey);
+  if (getCachedProfilePhoto(userKey)) {
     return;
   }
   const photo = await loadPersistedProfilePhoto(userKey);
   if (photo) {
-    setCachedProfilePhoto(photo);
+    setCachedProfilePhoto(photo, userKey);
   }
 }
 

@@ -1,5 +1,6 @@
 import { parseHTML } from "linkedom";
 
+import { getLastUsername } from "../../../auth/sessionUser.storage";
 import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
 import { fetchAvatarPhoto } from "./profile.avatar";
 import {
@@ -124,15 +125,16 @@ export async function parseProfileSummary(): Promise<ProfileSummary> {
 }
 
 async function resolveProfilePhoto(): Promise<string> {
-  const cached = getCachedProfilePhoto();
+  const userKey = (await getLastUsername()) ?? undefined;
+  const cached = getCachedProfilePhoto(userKey);
   if (cached) {
     return cached;
   }
 
   try {
-    const photo = await fetchAvatarPhoto();
+    const photo = await fetchAvatarPhoto(userKey);
     if (photo) {
-      setCachedProfilePhoto(photo);
+      setCachedProfilePhoto(photo, userKey);
     }
     return photo;
   } catch (error) {
