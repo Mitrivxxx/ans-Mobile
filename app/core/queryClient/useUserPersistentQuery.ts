@@ -43,16 +43,26 @@ export function useUserPersistentQuery<TData>({
   const { refetch, data, dataUpdatedAt } = query;
   const hasCachedData = data !== undefined;
 
+  const hasCachedDataRef = useRef(hasCachedData);
+  hasCachedDataRef.current = hasCachedData;
+
   const runSync = useCallback(
-    async (options?: { minLoadingMs?: number }) => {
+    async (options?: { minLoadingMs?: number; manual?: boolean }) => {
       if (!enabled) {
         return;
       }
 
-      setSyncStatus('loading');
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => resolve());
-      });
+      const manual = options?.manual ?? Boolean(options?.minLoadingMs);
+      const showBlockingLoading = manual || !hasCachedDataRef.current;
+
+      if (showBlockingLoading) {
+        setSyncStatus('loading');
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+      } else {
+        setSyncStatus('loading');
+      }
 
       const startedAt = Date.now();
       try {
@@ -74,12 +84,17 @@ export function useUserPersistentQuery<TData>({
     [enabled, refetch]
   );
 
-  const syncInBackground = useCallback(() => runSync(), [runSync]);
+  const syncInBackground = useCallback(
+    () => runSync({ manual: false }),
+    [runSync]
+  );
 
   /** Ręczny pull-to-refresh — baner „Aktualizowanie…” i „Jesteś na bieżąco”. */
   const forceRefresh = useCallback(
     () =>
-      runWithManualRefreshCooldown(() => runSync({ minLoadingMs: 400 })),
+      runWithManualRefreshCooldown(() =>
+        runSync({ minLoadingMs: 400, manual: true })
+      ),
     [runSync]
   );
 
@@ -104,7 +119,8 @@ export function useUserPersistentQuery<TData>({
   return {
     data: query.data,
     syncStatus,
-    isInitialLoading: query.isPending && !hasCachedData,
+    isInitialLoading:
+      !hasCachedData && (query.isPending || query.isLoading),
     hasCachedData,
     refresh: syncInBackground,
     forceRefresh,

@@ -1,0 +1,68 @@
+<html>
+  <body>
+    <form action="/TokStudiow/StudentTokStudiow/Grupy" method="get">
+      <input id="s_VI" name="s_VI" type="hidden" value="83" />
+      <input
+        class="dxeEditArea_iOS dxeEditAreaSys"
+        id="s_I"
+        name="s"
+        value="2025/2026 letni"
+        type="text"
+      />
+    </form>
+    <script>
+      ASPx.createControl(MVCxClientListBox, 's_DDD_L', '', {
+        'itemsInfo': [{
+          'value': '82',
+          'text': '2025/2026 zimowy'
+        }, {
+          'value': '83',
+          'text': '2025/2026 letni'
+        }],
+      }, {
+        'SelectedIndexChanged': function(s, e) {}
+      });
+      ASPx.createControl(MVCxClientComboBox, 's', '', {
+        'lastSuccessValue': '83',
+      });
+    </script>
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th>Forma zajęć</th>
+            <th>Kod grupy</th>
+            <th>Nazwa grupy</th>
+            <th>Edycja</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tok</td>
+            <td>2023-2027 ISS</td>
+            <td>2023-2027 IS S</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Ćwiczenia</td>
+            <td>C1/IS/s/2023S</td>
+            <td>C1/IS/s/2023 S</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Laboratorium</td>
+            <td>L2/IS/s/2023S</td>
+            <td>L2/IS/s/2023 S</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Projekt</td>
+            <td>P2/IS/s/2023S</td>
+            <td>P2/IS/s/2023 S</td>
+            <td>1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

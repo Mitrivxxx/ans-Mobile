@@ -8,6 +8,7 @@ import type {
   CompleteProfileData,
   ProfileSummary,
 } from '../core/scraper/features/profile/profile.service';
+import type { StudentGroupEntry } from '../core/scraper/features/groups/groups.service';
 import { useAppTheme } from '../context/AppThemeContext';
 import { useThemedStyles } from '../theme/useThemedStyles';
 import {
@@ -18,6 +19,9 @@ import {
 type Props = {
   summary: ProfileSummary | null;
   profile: CompleteProfileData | null;
+  groups?: StudentGroupEntry[];
+  groupsSemesterLabel?: string | null;
+  groupsLoading?: boolean;
 };
 
 type FieldProps = {
@@ -71,7 +75,13 @@ function getInitials(firstName: string, lastName: string): string {
   return `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toUpperCase() || '?';
 }
 
-export default function ProfileDetailsView({ summary, profile }: Props) {
+export default function ProfileDetailsView({
+  summary,
+  profile,
+  groups = [],
+  groupsSemesterLabel = null,
+  groupsLoading = false,
+}: Props) {
   const { colors } = useAppTheme();
   const styles = useThemedStyles(createProfileDetailsStyles);
   const { displayUri, showPhoto, onImageError, imageKey } = useProfilePhoto();
@@ -153,6 +163,32 @@ export default function ProfileDetailsView({ summary, profile }: Props) {
         <SectionField label="Przewidywana data zakończenia studiów" value={profile.studiesEndDate} icon="calendar-end" {...fieldProps} />
         <SectionField label="Tok indywidualny" value={profile.individualTrack} icon="account-cog-outline" {...fieldProps} />
         <SectionField label="Numer i data umowy" value={profile.contractNumber} icon="file-document-outline" {...fieldProps} />
+      </ProfileCard>
+
+      <ProfileCard title="Grupy" styles={styles}>
+        {groupsSemesterLabel ? (
+          <SectionField
+            label="Semestr akademicki"
+            value={groupsSemesterLabel}
+            icon="calendar-range-outline"
+            {...fieldProps}
+          />
+        ) : null}
+        {groupsLoading ? (
+          <Text style={styles.groupsStateText}>Wczytywanie grup...</Text>
+        ) : groups.length === 0 ? (
+          <Text style={styles.groupsStateText}>Brak grup w tym semestrze</Text>
+        ) : (
+          groups.map((group) => (
+            <SectionField
+              key={`${group.activityForm}-${group.groupCode}`}
+              label={group.activityForm}
+              value={group.groupCode}
+              icon="account-group-outline"
+              {...fieldProps}
+            />
+          ))
+        )}
       </ProfileCard>
     </View>
   );

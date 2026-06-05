@@ -30,6 +30,7 @@ export default function DashboardAnnouncementsPanel() {
   const {
     announcements,
     isInitialLoading,
+    hasCachedAnnouncements,
     isFatalError,
     refetch,
     forceRefresh,
@@ -58,7 +59,7 @@ export default function DashboardAnnouncementsPanel() {
     [announcements]
   );
 
-  if (isInitialLoading) {
+  if (isInitialLoading && !hasCachedAnnouncements) {
     return (
       <View style={panelStyles.wrap}>
         <View style={uiStyles.centerState}>

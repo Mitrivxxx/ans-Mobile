@@ -2,40 +2,58 @@ import React, { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 
 import App from '../App';
+import { isRememberMeRestoreEligible } from './core/auth/rememberMeBootstrap';
 import { isDarkModeEnabled } from './core/preferences/darkMode.storage';
 import { ensureScraperInfraReady } from './core/scraper/auth/bootstrapSession';
 
-const initialDarkModePromise = isDarkModeEnabled();
+type BootState = {
+  isDarkMode: boolean;
+  rememberMeRestore: boolean;
+};
+
+const bootPromise: Promise<BootState> = Promise.all([
+  isDarkModeEnabled(),
+  isRememberMeRestoreEligible(),
+]).then(([isDarkMode, rememberMeRestore]) => ({
+  isDarkMode,
+  rememberMeRestore,
+}));
+
 void ensureScraperInfraReady();
 
 export default function AppRoot() {
-  const [isDarkMode, setIsDarkMode] = useState<boolean | null>(null);
+  const [boot, setBoot] = useState<BootState | null>(null);
 
   useEffect(() => {
-    if (isDarkMode !== null) {
+    if (boot !== null) {
       return;
     }
     let cancelled = false;
-    void initialDarkModePromise.then((enabled) => {
+    void bootPromise.then((state) => {
       if (!cancelled) {
-        setIsDarkMode(enabled);
+        setBoot(state);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [isDarkMode]);
+  }, [boot]);
 
   useEffect(() => {
-    if (isDarkMode === null) {
+    if (boot === null) {
       return;
     }
     void SplashScreen.hideAsync().catch(() => {});
-  }, [isDarkMode]);
+  }, [boot]);
 
-  if (isDarkMode === null) {
+  if (boot === null) {
     return null;
   }
 
-  return <App initialDarkMode={isDarkMode} />;
+  return (
+    <App
+      initialDarkMode={boot.isDarkMode}
+      initialRememberMeRestore={boot.rememberMeRestore}
+    />
+  );
 }

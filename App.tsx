@@ -21,6 +21,7 @@ import {
   useAuthSession,
 } from './app/context/AuthSessionContext';
 import { ScreenRefreshProvider } from './app/context/ScreenRefreshContext';
+import { DataRefreshIntervalProvider } from './app/context/DataRefreshIntervalContext';
 import { StudentProfileProvider } from './app/context/StudentProfileContext';
 import { navigationRef } from './app/navigation/navigationRef';
 import LoginScreen from './app/screen/LoginScreen';
@@ -107,8 +108,36 @@ function MainNavigator() {
   );
 }
 
-function AppShell() {
+function AuthenticatedShell() {
   const { isDarkMode, colors } = useAppTheme();
+
+  return (
+    <>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <NavigationContainer ref={navigationRef}>
+        <ScreenRefreshProvider>
+          <DataRefreshIntervalProvider>
+            <StudentProfileProvider>
+              <SidebarProvider>
+                <SidebarBackHandler />
+                <View style={{ flex: 1, backgroundColor: colors.background }}>
+                  <AppHeader />
+                  <AuthSyncBanner />
+                  <View style={{ flex: 1 }}>
+                    <MainNavigator />
+                  </View>
+                  <AppSidebar />
+                </View>
+              </SidebarProvider>
+            </StudentProfileProvider>
+          </DataRefreshIntervalProvider>
+        </ScreenRefreshProvider>
+      </NavigationContainer>
+    </>
+  );
+}
+
+function AppShell() {
   const { authStatus } = useAuthSession();
   usePrefetchUserScraperData();
 
@@ -123,29 +152,8 @@ function AppShell() {
     );
   }
 
-  if (authStatus === 'authenticated') {
-    return (
-    <>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      <NavigationContainer ref={navigationRef}>
-        <ScreenRefreshProvider>
-          <StudentProfileProvider>
-            <SidebarProvider>
-              <SidebarBackHandler />
-              <View style={{ flex: 1, backgroundColor: colors.background }}>
-                <AppHeader />
-                <AuthSyncBanner />
-                <View style={{ flex: 1 }}>
-                  <MainNavigator />
-                </View>
-                <AppSidebar />
-              </View>
-            </SidebarProvider>
-          </StudentProfileProvider>
-        </ScreenRefreshProvider>
-      </NavigationContainer>
-    </>
-    );
+  if (authStatus === 'authenticated' || authStatus === 'restoring') {
+    return <AuthenticatedShell />;
   }
 
   return null;
@@ -153,9 +161,13 @@ function AppShell() {
 
 type AppProps = {
   initialDarkMode?: boolean;
+  initialRememberMeRestore?: boolean;
 };
 
-export default function App({ initialDarkMode }: AppProps = {}) {
+export default function App({
+  initialDarkMode,
+  initialRememberMeRestore = false,
+}: AppProps = {}) {
   const [persistReady, setPersistReady] = useState(false);
   const onPersistSuccess = useCallback(() => {
     startupMark('persist-ready');
@@ -180,7 +192,10 @@ export default function App({ initialDarkMode }: AppProps = {}) {
             }}
           >
             <SafeAreaProvider>
-              <AuthSessionProvider persistReady={persistReady}>
+              <AuthSessionProvider
+                persistReady={persistReady}
+                initialRememberMeRestore={initialRememberMeRestore}
+              >
                 <AppShell />
               </AuthSessionProvider>
             </SafeAreaProvider>

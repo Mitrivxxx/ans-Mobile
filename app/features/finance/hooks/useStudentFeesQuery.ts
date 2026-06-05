@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { cacheUntilReplaceQueryOptions } from '../../../core/queryClient/cacheUntilReplace';
@@ -29,13 +29,22 @@ export function useStudentFeesQuery() {
     query;
   const fees = data ?? [];
   const hasCachedData = data !== undefined;
+  const hasCachedDataRef = useRef(hasCachedData);
+  hasCachedDataRef.current = hasCachedData;
 
   const runSync = useCallback(
-    async (options?: { minLoadingMs?: number }) => {
-      setSyncStatus('loading');
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => resolve());
-      });
+    async (options?: { minLoadingMs?: number; manual?: boolean }) => {
+      const manual = options?.manual ?? Boolean(options?.minLoadingMs);
+      const showBlockingLoading = manual || !hasCachedDataRef.current;
+
+      if (showBlockingLoading) {
+        setSyncStatus('loading');
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+      } else {
+        setSyncStatus('loading');
+      }
 
       const startedAt = Date.now();
       try {
@@ -61,7 +70,9 @@ export function useStudentFeesQuery() {
 
   const forceRefresh = useCallback(
     () =>
-      runWithManualRefreshCooldown(() => runSync({ minLoadingMs: 400 })),
+      runWithManualRefreshCooldown(() =>
+        runSync({ minLoadingMs: 400, manual: true })
+      ),
     [runSync]
   );
 

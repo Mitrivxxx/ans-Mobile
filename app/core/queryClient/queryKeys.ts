@@ -20,6 +20,8 @@ export const queryKeys = {
   profile: {
     summary: (userKey: string) => ['profile', userKey, 'summary'] as const,
     details: (userKey: string) => ['profile', userKey, 'details'] as const,
+    groups: (userKey: string, academicSemester: string) =>
+      ['profile', userKey, 'groups', academicSemester] as const,
   },
   finance: {
     fees: (userKey: string) => ['finance', userKey, 'fees'] as const,

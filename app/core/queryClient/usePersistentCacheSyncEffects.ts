@@ -1,11 +1,23 @@
 import { useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
+import { useDataRefreshInterval } from '../../context/DataRefreshIntervalContext';
 import {
   PERSISTENT_DATA_AUTO_SYNC_CHECK_MS,
   shouldSyncPersistentCache,
 } from './persistentAutoSync';
 import type { SyncStatus } from './syncTypes';
+
+function scheduleBackgroundSync(task: () => void, hasCachedData: boolean): void {
+  if (!hasCachedData) {
+    task();
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(task);
+  });
+}
 
 type Options = {
   enabled: boolean;
@@ -25,29 +37,42 @@ export function usePersistentCacheSyncEffects({
   syncInBackground,
   setSyncStatus,
 }: Options): void {
+  const { intervalMs } = useDataRefreshInterval();
+
   const syncIfNeeded = useCallback(async () => {
     if (!enabled) {
       return;
     }
-    if (!shouldSyncPersistentCache(hasCachedData, dataUpdatedAt)) {
+    if (!shouldSyncPersistentCache(hasCachedData, dataUpdatedAt, intervalMs)) {
       setSyncStatus('upToDate');
       return;
     }
     await syncInBackground();
-  }, [enabled, hasCachedData, dataUpdatedAt, syncInBackground, setSyncStatus]);
+  }, [
+    enabled,
+    hasCachedData,
+    dataUpdatedAt,
+    intervalMs,
+    syncInBackground,
+    setSyncStatus,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
-      void syncIfNeeded();
-    }, [syncIfNeeded])
+      scheduleBackgroundSync(() => {
+        void syncIfNeeded();
+      }, hasCachedData);
+    }, [hasCachedData, syncIfNeeded])
   );
 
   useEffect(() => {
     if (!syncOnMount || !enabled) {
       return;
     }
-    void syncIfNeeded();
-  }, [enabled, syncIfNeeded, syncOnMount]);
+    scheduleBackgroundSync(() => {
+      void syncIfNeeded();
+    }, hasCachedData);
+  }, [enabled, hasCachedData, syncIfNeeded, syncOnMount]);
 
   useEffect(() => {
     if (!enabled || !hasCachedData) {
@@ -55,12 +80,14 @@ export function usePersistentCacheSyncEffects({
     }
 
     const tick = () => {
-      if (shouldSyncPersistentCache(true, dataUpdatedAt)) {
-        void syncInBackground();
+      if (shouldSyncPersistentCache(true, dataUpdatedAt, intervalMs)) {
+        scheduleBackgroundSync(() => {
+          void syncInBackground();
+        }, true);
       }
     };
 
     const id = setInterval(tick, PERSISTENT_DATA_AUTO_SYNC_CHECK_MS);
     return () => clearInterval(id);
-  }, [enabled, hasCachedData, dataUpdatedAt, syncInBackground]);
+  }, [enabled, hasCachedData, dataUpdatedAt, intervalMs, syncInBackground]);
 }

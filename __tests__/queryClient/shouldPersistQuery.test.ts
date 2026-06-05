@@ -26,4 +26,14 @@ describe('shouldPersistQuery', () => {
     const key = ['studentPlan', 'user1', 'lessons'] as const;
     expect(shouldDehydratePersistedQuery(mockQuery(key, 'pending'))).toBe(false);
   });
+
+  it('persists student groups for profile semester', () => {
+    const key = ['profile', 'user1', 'groups', '2025/2026 Z'] as const;
+    expect(isOfflinePersistQuery(mockQuery(key))).toBe(true);
+    expect(
+      shouldDehydratePersistedQuery(
+        mockQuery(key, 'success', { academicSemester: '2025/2026 Z', groups: [] })
+      )
+    ).toBe(true);
+  });
 });

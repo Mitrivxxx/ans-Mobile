@@ -52,6 +52,7 @@ export default function AnnouncementsScreen(_props: Props) {
   const {
     announcements,
     isInitialLoading,
+    hasCachedAnnouncements,
     isFatalError,
     refetch: refetchAnnouncements,
     forceRefresh,
@@ -126,7 +127,7 @@ export default function AnnouncementsScreen(_props: Props) {
     );
   }
 
-  if (isInitialLoading && activeTab === 'announcements') {
+  if (isInitialLoading && !hasCachedAnnouncements && activeTab === 'announcements') {
     return (
       <RefreshableScrollView
         style={screenStyles.screen}

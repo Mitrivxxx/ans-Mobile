@@ -102,20 +102,22 @@ Na **jednej** gałęzi `main` trzymaj: kod + pełne `eas.json` + `app.config.ts`
 
 ```mermaid
 flowchart TD
-  A[App.tsx] --> B[AppThemeProvider]
+  A[AppRoot: dark mode + remember me?] --> B[App.tsx]
   B --> C[AppInitGate: initClient + setupScraperAuthGuard]
   C --> D[PersistQueryClientProvider]
   D --> E[AuthSessionProvider]
   E --> F{authStatus}
-  F -->|unknown| G[Spinner]
+  F -->|unknown| G[Pusty ekran — krótko, bez remember me]
+  F -->|restoring| I[Dashboard + AuthSyncBanner Logowanie...]
   F -->|unauthenticated| H[Login stack]
   F -->|authenticated| I[AppHeader + MainNavigator + Sidebar]
   I --> J[usePrefetchUserScraperData]
 ```
 
-1. **`AppInitGate`** — `initClient()` (cookies), `setupScraperAuthGuard()` (interceptory axios).
-2. **`AuthSessionProvider`** — po `persistReady` rozstrzyga sesję (cookies, remember me, degraded cache).
-3. **Authenticated shell** — `StudentProfileProvider`, `SidebarProvider`, `ScreenRefreshProvider`.
+1. **`AppRoot`** — równoległy odczyt dark mode + `rememberMeBootstrap`; chowa natywny splash, przekazuje `initialRememberMeRestore`.
+2. **`AppInitGate`** — `initClient()` (cookies), `setupScraperAuthGuard()` (interceptory axios).
+3. **`AuthSessionProvider`** — przy remember me: od razu `authStatus=restoring` (dashboard + cache), silent login w tle; po `persistReady` uzupełnia komunikat degraded z cache.
+4. **Authenticated shell** (`authenticated` lub `restoring`) — `StudentProfileProvider`, `SidebarProvider`, `ScreenRefreshProvider`, `AuthSyncBanner`.
 
 ---
 
@@ -140,7 +142,7 @@ flowchart TD
 | `core/auth/rememberMe.storage.ts`, `SecureStorageService.ts` | Zapamiętaj mnie (Keychain / Keystore) |
 | `core/auth/performSignOut.ts` | Logout + czyszczenie cache i zdjęcia profilu |
 
-**Remember me:** przy wygaśnięciu sesji próba silent login; offline / brak sieci → **tryb offline** (panel główny + `sessionDegraded`, bez wymogu cache). Polityka: `authSessionPolicy.ts`.
+**Remember me:** cold start → dashboard od razu (`authStatus=restoring`, baner „Logowanie…”), silent login w tle; przy wygaśnięciu sesji ponowna próba; offline / brak sieci → **tryb offline** (panel główny + `sessionDegraded`, bez wymogu cache). Polityka: `authSessionPolicy.ts`. Bootstrap: `rememberMeBootstrap.ts`.
 
 **Bez remember me:** ciasteczka WD przy **cold start** są czyszczone (`ephemeralSession.ts`); użytkownik trafia na ekran logowania — **bez** trybu offline z cache po restarcie aplikacji.
 

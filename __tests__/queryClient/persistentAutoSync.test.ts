@@ -8,21 +8,26 @@ import {
 
 describe('persistentAutoSync', () => {
   const now = 1_000_000_000_000;
+  const oneHourMs = 60 * 60 * 1000;
 
   it('requires sync when there is no cache', () => {
-    expect(shouldSyncPersistentCache(false, now, now)).toBe(true);
+    expect(shouldSyncPersistentCache(false, now, oneHourMs, now)).toBe(true);
   });
 
-  it('is not due before 12h since last update', () => {
-    const updatedAt = now - PERSISTENT_DATA_AUTO_SYNC_MS + 1;
-    expect(isPersistentDataAutoSyncDue(updatedAt, now)).toBe(false);
-    expect(shouldSyncPersistentCache(true, updatedAt, now)).toBe(false);
+  it('is not due before interval since last update', () => {
+    const updatedAt = now - oneHourMs + 1;
+    expect(isPersistentDataAutoSyncDue(updatedAt, oneHourMs, now)).toBe(false);
+    expect(shouldSyncPersistentCache(true, updatedAt, oneHourMs, now)).toBe(
+      false
+    );
   });
 
-  it('is due after 12h since last update', () => {
+  it('is due after default interval since last update', () => {
     const updatedAt = now - PERSISTENT_DATA_AUTO_SYNC_MS;
-    expect(isPersistentDataAutoSyncDue(updatedAt, now)).toBe(true);
-    expect(shouldSyncPersistentCache(true, updatedAt, now)).toBe(true);
+    expect(isPersistentDataAutoSyncDue(updatedAt, PERSISTENT_DATA_AUTO_SYNC_MS, now)).toBe(true);
+    expect(
+      shouldSyncPersistentCache(true, updatedAt, PERSISTENT_DATA_AUTO_SYNC_MS, now)
+    ).toBe(true);
   });
 
   it('treats missing dataUpdatedAt as due', () => {

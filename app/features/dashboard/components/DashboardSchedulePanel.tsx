@@ -76,6 +76,7 @@ export default function DashboardSchedulePanel() {
   const {
     lessons,
     isInitialLoading,
+    hasCachedLessons,
     isFatalError,
     syncStatus,
     refetch,
@@ -137,7 +138,7 @@ export default function DashboardSchedulePanel() {
         </TouchableOpacity>
       </View>
     );
-  } else if (isInitialLoading) {
+  } else if (isInitialLoading && !hasCachedLessons) {
     lessonsContent = (
       <View style={styles.centerState}>
         <Text style={styles.stateText}>Wczytywanie harmonogramu…</Text>

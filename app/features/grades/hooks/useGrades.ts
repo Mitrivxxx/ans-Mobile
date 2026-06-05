@@ -108,9 +108,7 @@ export function useGrades() {
     setSemesterIndex((i) => Math.min(semestersMeta.length - 1, i + 1));
   }, [semestersMeta.length]);
 
-  const loading =
-    (indexLoading && !index) ||
-    (semesterLoading && !hasCachedSemester && currentMeta != null);
+  const loading = indexLoading && !index;
 
   const isFatalError = indexError || semesterError;
 

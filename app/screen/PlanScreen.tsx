@@ -91,6 +91,7 @@ export default function PlanScreen({ navigation }: Props) {
   const {
     lessons,
     isInitialLoading,
+    hasCachedLessons,
     isFatalError,
     syncStatus,
     refetch,
@@ -164,7 +165,7 @@ export default function PlanScreen({ navigation }: Props) {
     setSelectedDate(dateKey(next));
   };
 
-  if (isInitialLoading) {
+  if (isInitialLoading && !hasCachedLessons) {
     return (
       <RefreshableScrollView
         contentContainerStyle={styles.centerStateScroll}

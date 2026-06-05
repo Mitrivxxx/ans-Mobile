@@ -29,6 +29,7 @@ export function useStudentPlanWeekLessons(weekMondayKey?: string) {
   return {
     lessons: query.data ?? [],
     isInitialLoading: query.isInitialLoading,
+    hasCachedLessons: query.hasCachedData,
     syncStatus: query.syncStatus,
     refresh: query.refresh,
     refetch: query.refetch,

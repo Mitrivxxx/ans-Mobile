@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -292,14 +293,20 @@ async function resolveAuthStatus(): Promise<{
 export function AuthSessionProvider({
   children,
   persistReady,
+  initialRememberMeRestore = false,
 }: {
   children: React.ReactNode;
   persistReady: boolean;
+  initialRememberMeRestore?: boolean;
 }) {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('unknown');
-  const [rememberMeEnabled, setRememberMeEnabled] = useState(false);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>(() =>
+    initialRememberMeRestore ? 'restoring' : 'unknown'
+  );
+  const [rememberMeEnabled, setRememberMeEnabled] = useState(
+    initialRememberMeRestore
+  );
   const [isBackgroundSessionRestore, setIsBackgroundSessionRestore] =
-    useState(false);
+    useState(initialRememberMeRestore);
   const [sessionDegraded, setSessionDegraded] = useState(false);
   const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
   const sessionResolveRunIdRef = useRef(0);
@@ -372,9 +379,13 @@ export function AuthSessionProvider({
         const optimistic = await resolveRememberMeOptimisticEntry();
         if (optimistic && isSessionResolveCurrent(runId)) {
           devLog('Auth', 'optimistic remember-me entry');
-          applyResolvedSession(optimistic);
+          setRememberMeEnabled(true);
+          setSessionDegraded(optimistic.sessionDegraded);
+          setSessionDegradedMessage(optimistic.sessionDegradedMessage);
 
           if (optimistic.sessionDegraded && (await isDeviceOffline())) {
+            setAuthStatus('authenticated');
+            setIsBackgroundSessionRestore(false);
             startupMark('auth-restore-resolved');
             startupMeasure(
               'restoreSession -> resolved',
@@ -384,6 +395,7 @@ export function AuthSessionProvider({
             return;
           }
 
+          setAuthStatus('restoring');
           setIsBackgroundSessionRestore(true);
           try {
             await deferAuthRestoreUntilUiShown();
@@ -404,7 +416,8 @@ export function AuthSessionProvider({
       const showBackgroundBanner =
         !isStartup &&
         rememberMe &&
-        authStatusRef.current === 'authenticated';
+        (authStatusRef.current === 'authenticated' ||
+          authStatusRef.current === 'restoring');
 
       if (showBackgroundBanner && isSessionResolveCurrent(runId)) {
         setIsBackgroundSessionRestore(true);
@@ -438,7 +451,10 @@ export function AuthSessionProvider({
     if (!(await isRememberMeEnabled())) {
       return;
     }
-    if (authStatusRef.current !== 'authenticated') {
+    if (
+      authStatusRef.current !== 'authenticated' &&
+      authStatusRef.current !== 'restoring'
+    ) {
       return;
     }
 
@@ -507,7 +523,7 @@ export function AuthSessionProvider({
     return registerSessionLostHandler(handleSessionLost);
   }, [handleSessionLost]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Szybki resolve sesji na cold starcie (bez czekania na restore cache).
     void restoreSession({ showSplash: true });
   }, [restoreSession]);
@@ -519,7 +535,8 @@ export function AuthSessionProvider({
     void (async () => {
       if (
         (await isRememberMeEnabled()) &&
-        authStatusRef.current === 'authenticated'
+        (authStatusRef.current === 'authenticated' ||
+          authStatusRef.current === 'restoring')
       ) {
         await refreshSessionAfterPersistReady();
         return;
@@ -534,7 +551,10 @@ export function AuthSessionProvider({
     }
 
     return onNetworkReconnect(() => {
-      if (authStatusRef.current !== 'authenticated') {
+      if (
+        authStatusRef.current !== 'authenticated' &&
+        authStatusRef.current !== 'restoring'
+      ) {
         return;
       }
       void restoreSession({ showSplash: false });

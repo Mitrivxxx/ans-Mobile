@@ -143,6 +143,13 @@ export function createProfileDetailsStyles(c: AnsColors) {
       color: c.charcoal,
       fontWeight: '600' as const,
     },
+    groupsStateText: {
+      fontSize: 14,
+      lineHeight: 19,
+      color: c.gray,
+      fontWeight: '600' as const,
+      paddingVertical: 4,
+    },
   };
 }
 

@@ -9,7 +9,10 @@ import {
 import ProfileDetailsView from '../components/ProfileDetailsView';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useStudentProfile } from '../context/StudentProfileContext';
+import { useGradesIndexQuery } from '../features/grades/hooks/useGradesIndexQuery';
+import { pickPrioritySemesterMeta } from '../features/profile/hooks/pickPrioritySemesterMeta';
 import { useProfileDetailsQuery } from '../features/profile/hooks/useProfileDetailsQuery';
+import { useStudentGroupsQuery } from '../features/profile/hooks/useStudentGroupsQuery';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useAppTheme } from '../context/AppThemeContext';
 
@@ -32,10 +35,27 @@ export default function ProfileScreen({ navigation }: Props) {
     forceRefresh: forceRefreshDetails,
     isFatalError: detailsFatalError,
   } = useProfileDetailsQuery();
+  const { index: gradesIndex } = useGradesIndexQuery();
+
+  const academicSemester = useMemo(() => {
+    const semesters = gradesIndex?.semesters ?? [];
+    return pickPrioritySemesterMeta(semesters)?.academicSemester ?? null;
+  }, [gradesIndex]);
+
+  const {
+    data: groupsData,
+    isInitialLoading: groupsLoading,
+    hasCachedGroups,
+    forceRefresh: forceRefreshGroups,
+  } = useStudentGroupsQuery(academicSemester);
 
   const refreshProfile = useCallback(async () => {
-    await Promise.all([refetchSummary(), forceRefreshDetails()]);
-  }, [forceRefreshDetails, refetchSummary]);
+    await Promise.all([
+      refetchSummary(),
+      forceRefreshDetails(),
+      forceRefreshGroups(),
+    ]);
+  }, [forceRefreshDetails, forceRefreshGroups, refetchSummary]);
 
   useRegisterScreenRefresh(refreshProfile);
 
@@ -128,7 +148,13 @@ export default function ProfileScreen({ navigation }: Props) {
 
   return (
     <RefreshableScrollView contentContainerStyle={dynamicStyles.scrollContent}>
-      <ProfileDetailsView summary={summaryReady} profile={profileReady} />
+      <ProfileDetailsView
+        summary={summaryReady}
+        profile={profileReady}
+        groups={groupsData?.groups ?? []}
+        groupsSemesterLabel={groupsData?.academicSemester ?? academicSemester}
+        groupsLoading={groupsLoading && !hasCachedGroups}
+      />
     </RefreshableScrollView>
   );
 }

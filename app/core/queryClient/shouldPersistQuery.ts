@@ -10,7 +10,7 @@ const OFFLINE_QUERY_SEGMENTS = {
   studentPlan: new Set(['lessons', 'weekLessons']),
   grades: new Set(['index']),
   announcements: new Set(['list']),
-  profile: new Set(['summary', 'details']),
+  profile: new Set(['summary', 'details', 'groups']),
   events: new Set(['list']),
 } as const;
 

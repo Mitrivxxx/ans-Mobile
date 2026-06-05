@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   Alert,
+  Pressable,
   StyleSheet,
   Switch,
   Text,
@@ -12,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import RefreshableScrollView from '../components/RefreshableScrollView';
 import { useAppTheme } from '../context/AppThemeContext';
 import { useAuthSession } from '../context/AuthSessionContext';
+import { useDataRefreshInterval } from '../context/DataRefreshIntervalContext';
 import { useStudentProfile } from '../context/StudentProfileContext';
 import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
@@ -24,7 +26,13 @@ export default function SettingsScreen() {
   const { refetch } = useStudentProfile();
   const { rememberMeEnabled, disableRememberMe } = useAuthSession();
   const { isOffline } = useNetworkStatus();
+  const {
+    selectedOption: selectedRefreshOption,
+    options: refreshIntervalOptions,
+    setIntervalMs,
+  } = useDataRefreshInterval();
   const [cacheClearing, setCacheClearing] = useState(false);
+  const [refreshDropdownOpen, setRefreshDropdownOpen] = useState(false);
   const showBuildDiagnostics = !isProductionApp();
 
   const refreshScreen = useCallback(async () => {
@@ -139,6 +147,81 @@ export default function SettingsScreen() {
 
         <View
           style={[
+            styles.settingsBlock,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.grayBorder,
+            },
+          ]}
+        >
+          <View style={styles.textBlock}>
+            <Text style={[styles.cardTitle, { color: colors.charcoal }]}>
+              Odświeżanie danych
+            </Text>
+            <Text style={[styles.cardDescription, { color: colors.gray }]}>
+              Jak często aplikacja pobiera nowe dane z portalu WD w tle.
+            </Text>
+          </View>
+          <View style={styles.dropdownWrap}>
+            <Pressable
+              onPress={() => setRefreshDropdownOpen((open) => !open)}
+              style={[
+                styles.dropdownButton,
+                { borderColor: colors.grayBorder, backgroundColor: colors.dashboardBg },
+              ]}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: refreshDropdownOpen }}
+              accessibilityLabel="Wybierz interwał odświeżania danych"
+            >
+              <Text style={[styles.dropdownButtonText, { color: colors.charcoal }]}>
+                {selectedRefreshOption.label}
+              </Text>
+              <Text style={[styles.dropdownChevron, { color: colors.gray }]}>
+                {refreshDropdownOpen ? '▲' : '▼'}
+              </Text>
+            </Pressable>
+            {refreshDropdownOpen ? (
+              <View
+                style={[
+                  styles.dropdownMenu,
+                  {
+                    borderColor: colors.grayBorder,
+                    backgroundColor: colors.surface,
+                  },
+                ]}
+              >
+                {refreshIntervalOptions.map((option) => (
+                  <Pressable
+                    key={option.id}
+                    onPress={() => {
+                      setRefreshDropdownOpen(false);
+                      void setIntervalMs(option.ms);
+                    }}
+                    style={({ pressed }) => [
+                      styles.dropdownItem,
+                      pressed && { backgroundColor: colors.dashboardBg },
+                    ]}
+                    accessibilityRole="button"
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        { color: colors.charcoal },
+                        option.id === selectedRefreshOption.id &&
+                          styles.dropdownItemTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        <View
+          style={[
             styles.card,
             {
               backgroundColor: colors.surface,
@@ -241,6 +324,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
+  },
+  settingsBlock: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  dropdownWrap: {
+    position: 'relative',
+    zIndex: 2,
+  },
+  dropdownButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  dropdownButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
+  },
+  dropdownChevron: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  dropdownMenu: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dropdownItemTextActive: {
+    fontWeight: '800',
   },
   actionCard: {
     borderRadius: 16,
