@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Lesson } from '../../core/scraper/features/plan/plan.service';
 import {
   formatLessonSubjectLabel,
+  isCancelledNotes,
   isELearningNotes,
 } from '../../features/plan/utils/lessonSubjectLabel';
 import { resolveLessonTypeStyle } from '../../theme/lessonTypeTheme';
@@ -24,7 +25,8 @@ export default function ScheduleLessonCard({ lesson }: Props) {
   const accentColor = typeStyle?.color ?? colors.grayLight;
   const groupLabel = lesson.groups;
   const subjectLabel = formatLessonSubjectLabel(lesson.subject, lesson.notes);
-  const isELearning = isELearningNotes(lesson.notes);
+  const isCancelled = isCancelledNotes(lesson.notes);
+  const isELearning = !isCancelled && isELearningNotes(lesson.notes);
 
   return (
     <View style={styles.lessonRow}>
@@ -36,7 +38,13 @@ export default function ScheduleLessonCard({ lesson }: Props) {
         </View>
       </View>
 
-      <View style={[styles.lessonCard, isELearning && styles.lessonCardELearning]}>
+      <View
+        style={[
+          styles.lessonCard,
+          isELearning && styles.lessonCardELearning,
+          isCancelled && styles.lessonCardCancelled,
+        ]}
+      >
         <View style={[styles.lessonAccent, { backgroundColor: accentColor }]} />
         <View style={styles.lessonBody}>
           <View style={styles.lessonTopRow}>

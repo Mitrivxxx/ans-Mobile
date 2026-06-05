@@ -51,6 +51,10 @@ export function createScheduleLessonCardStyles(c: AnsColors) {
     backgroundColor: c.dashboardBluePale,
     borderColor: c.dashboardBlueLight,
   },
+  lessonCardCancelled: {
+    backgroundColor: c.errorBg,
+    borderColor: `${c.error}33`,
+  },
   lessonAccent: {
     width: 6,
   },
