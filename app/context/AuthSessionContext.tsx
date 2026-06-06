@@ -308,10 +308,12 @@ export function AuthSessionProvider({
     return initialRememberMeRestore ? 'restoring' : 'unknown';
   });
   const [rememberMeEnabled, setRememberMeEnabled] = useState(
-    initialRememberMeRestore
+    isDemoPresentationMode() ? false : initialRememberMeRestore
   );
   const [isBackgroundSessionRestore, setIsBackgroundSessionRestore] =
-    useState(initialRememberMeRestore);
+    useState(
+      isDemoPresentationMode() ? false : initialRememberMeRestore
+    );
   const [sessionDegraded, setSessionDegraded] = useState(false);
   const [sessionDegradedMessage, setSessionDegradedMessage] = useState('');
   const sessionResolveRunIdRef = useRef(0);
@@ -380,6 +382,7 @@ export function AuthSessionProvider({
 
       if (isDemoPresentationMode()) {
         if (isSessionResolveCurrent(runId)) {
+          setIsBackgroundSessionRestore(false);
           applyResolvedSession({
             status: 'authenticated',
             sessionDegraded: false,

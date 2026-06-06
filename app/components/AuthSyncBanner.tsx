@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAuthSession } from '../context/AuthSessionContext';
 import { useAppTheme } from '../context/AppThemeContext';
+import { isDemoPresentationMode } from '../config/env';
 
 export default function AuthSyncBanner() {
   const { colors } = useAppTheme();
@@ -92,6 +93,10 @@ export default function AuthSyncBanner() {
       }),
     [colors]
   );
+
+  if (isDemoPresentationMode()) {
+    return null;
+  }
 
   if (isRestoringSession) {
     return (

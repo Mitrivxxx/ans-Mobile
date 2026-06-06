@@ -22,9 +22,13 @@ Najprostsza sciezka do produkcyjnej instalacji na telefonie:
 ----------
 Inne środowiska (Android)
 dev:        npx expo start
-demo:       npm run build:demo          (EAS, AAB, pakiet .demo)
+demo:       npm run build:apk:demo:local   (EAS, AAB, pakiet .demo)
+                install: npm run install:apk:demo:local
 prod:       npm run build:apk:local     (lokalny APK, pakiet bez sufiksu)
             npm run build:production:android   (EAS, AAB w chmurze)
+
+            
+
 ----------
 testy
 npm test
