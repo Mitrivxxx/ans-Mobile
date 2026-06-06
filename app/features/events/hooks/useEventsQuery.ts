@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useQueryClient } from '@tanstack/react-query';
 
 import {
   getStoredEventsDepartmentId,
@@ -28,7 +27,6 @@ const DEPARTMENTS_BY_ID = new Map(EVENTS_DEPARTMENTS.map((department) => [depart
 export function useEventsQuery() {
   const isDemo = isDemoPresentationMode();
   const userKey = useQueryUserKey();
-  const queryClient = useQueryClient();
   const [scrapeEnabled, setScrapeEnabled] = useState(false);
   const [departmentId, setDepartmentId] = useState<EventsDepartmentId>(
     DEFAULT_DEPARTMENT.id
@@ -67,8 +65,8 @@ export function useEventsQuery() {
   );
 
   const queryKey = useMemo(
-    () => queryKeys.events.list(userKey),
-    [userKey]
+    () => queryKeys.events.list(userKey, departmentId),
+    [userKey, departmentId]
   );
 
   const query = useQuery<PublicEvent[]>({
@@ -110,10 +108,6 @@ export function useEventsQuery() {
         return;
       }
 
-      queryClient.removeQueries({
-        queryKey,
-        exact: true,
-      });
       setDepartmentId(nextDepartmentId);
       await setStoredEventsDepartmentId(nextDepartmentId);
     },

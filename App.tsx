@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import AppErrorBoundary from './app/components/AppErrorBoundary';
+import ScreenErrorBoundary from './app/components/ScreenErrorBoundary';
 import AppInitGate from './app/components/AppInitGate';
 import AuthSyncBanner from './app/components/AuthSyncBanner';
 import AppHeader from './app/components/AppHeader';
@@ -44,6 +45,41 @@ import {
 import { shouldDehydratePersistedQuery } from './app/core/queryClient/shouldPersistQuery';
 import type { RootParamList } from './app/navigation/navigationRef';
 import { startupMark, startupMeasure } from './app/core/startup/startupMetrics';
+
+type AppScreenName = Exclude<keyof RootParamList, 'Login'>;
+
+function withScreenErrorBoundary<P extends object>(
+  ScreenComponent: React.ComponentType<P>,
+  screen: AppScreenName
+) {
+  const WrappedScreen = (props: P) => (
+    <ScreenErrorBoundary screen={screen}>
+      <ScreenComponent {...props} />
+    </ScreenErrorBoundary>
+  );
+
+  WrappedScreen.displayName = `ScreenErrorBoundary(${ScreenComponent.displayName ?? ScreenComponent.name ?? screen})`;
+  return WrappedScreen;
+}
+
+const DashboardScreenWithBoundary = withScreenErrorBoundary(DashboardScreen, 'Dashboard');
+const PlanScreenWithBoundary = withScreenErrorBoundary(PlanScreen, 'Plan');
+const GradesScreenWithBoundary = withScreenErrorBoundary(GradesScreen, 'Grades');
+const AnnouncementsScreenWithBoundary = withScreenErrorBoundary(
+  AnnouncementsScreen,
+  'Announcements'
+);
+const ProfileScreenWithBoundary = withScreenErrorBoundary(ProfileScreen, 'Profile');
+const FindLecturerScreenWithBoundary = withScreenErrorBoundary(
+  FindLecturerScreen,
+  'FindLecturer'
+);
+const LecturerPlanScreenWithBoundary = withScreenErrorBoundary(
+  LecturerPlanScreen,
+  'LecturerPlan'
+);
+const FinanseScreenWithBoundary = withScreenErrorBoundary(FinanseScreen, 'Finanse');
+const SettingsScreenWithBoundary = withScreenErrorBoundary(SettingsScreen, 'Settings');
 
 const AuthStack = createStackNavigator<Pick<RootParamList, 'Login'>>();
 const AppStack = createStackNavigator<
@@ -95,15 +131,15 @@ function MainNavigator() {
       initialRouteName="Dashboard"
       screenOptions={{ headerShown: false }}
     >
-      <AppStack.Screen name="Dashboard" component={DashboardScreen} />
-      <AppStack.Screen name="Plan" component={PlanScreen} />
-      <AppStack.Screen name="Grades" component={GradesScreen} />
-      <AppStack.Screen name="Announcements" component={AnnouncementsScreen}/>
-      <AppStack.Screen name="Profile" component={ProfileScreen} />
-      <AppStack.Screen name="FindLecturer" component={FindLecturerScreen} />
-      <AppStack.Screen name="LecturerPlan" component={LecturerPlanScreen} />
-      <AppStack.Screen name="Finanse" component={FinanseScreen} />
-      <AppStack.Screen name="Settings" component={SettingsScreen} />
+      <AppStack.Screen name="Dashboard" component={DashboardScreenWithBoundary} />
+      <AppStack.Screen name="Plan" component={PlanScreenWithBoundary} />
+      <AppStack.Screen name="Grades" component={GradesScreenWithBoundary} />
+      <AppStack.Screen name="Announcements" component={AnnouncementsScreenWithBoundary} />
+      <AppStack.Screen name="Profile" component={ProfileScreenWithBoundary} />
+      <AppStack.Screen name="FindLecturer" component={FindLecturerScreenWithBoundary} />
+      <AppStack.Screen name="LecturerPlan" component={LecturerPlanScreenWithBoundary} />
+      <AppStack.Screen name="Finanse" component={FinanseScreenWithBoundary} />
+      <AppStack.Screen name="Settings" component={SettingsScreenWithBoundary} />
     </AppStack.Navigator>
   );
 }
