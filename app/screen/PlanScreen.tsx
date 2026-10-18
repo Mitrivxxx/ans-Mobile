@@ -24,9 +24,6 @@ import {
 import { useStudentPlanLessons } from '../features/plan/hooks/useStudentPlanLessons';
 import { useSyncBanner } from '../hooks/useSyncBanner';
 
-const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
-const CALENDAR_SELECTED_DAY_BG = '#F5D547';
-
 type Props = {
   navigation: {
     goBack: () => void;

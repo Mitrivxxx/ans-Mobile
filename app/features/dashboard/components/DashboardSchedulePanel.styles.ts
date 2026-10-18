@@ -1,10 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../../theme/ansTheme';
-import {
-  HARMONOGRAM_ACCENT_COLOR,
-  HARMONOGRAM_TODAY_DAY_COLOR,
-} from '../dashboard.quickActions';
+import { HARMONOGRAM_ACCENT_COLOR } from '../dashboard.quickActions';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
 
 export function createDashboardSchedulePanelStyles(c: AnsColors) {
@@ -55,8 +52,8 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     borderColor: c.grayBorder,
   },
   dayButtonToday: {
-    backgroundColor: HARMONOGRAM_TODAY_DAY_COLOR,
-    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    backgroundColor: c.todayBg,
+    borderColor: c.todayBorder,
   },
   dayButtonSelected: {
     backgroundColor: HARMONOGRAM_ACCENT_COLOR,
@@ -64,7 +61,7 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
   },
   dayButtonSelectedToday: {
     borderWidth: 3,
-    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    borderColor: c.todayBorder,
   },
   dayDot: {
     marginTop: 5,
@@ -74,7 +71,7 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     backgroundColor: HARMONOGRAM_ACCENT_COLOR,
   },
   dayDotSelected: {
-    backgroundColor: c.surface,
+    backgroundColor: c.onAccent,
   },
   dayLabel: {
     fontSize: 12,
@@ -83,10 +80,10 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     marginBottom: 4,
   },
   dayLabelToday: {
-    color: c.charcoal,
+    color: c.todayText,
   },
   dayLabelSelected: {
-    color: c.surface,
+    color: c.onAccent,
   },
   dayNumber: {
     fontSize: 15,
@@ -94,10 +91,10 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     color: c.charcoal,
   },
   dayNumberToday: {
-    color: c.charcoal,
+    color: c.todayText,
   },
   dayNumberSelected: {
-    color: c.surface,
+    color: c.onAccent,
   },
   dayDotToday: {
     backgroundColor: HARMONOGRAM_ACCENT_COLOR,
@@ -122,10 +119,10 @@ export function createDashboardSchedulePanelStyles(c: AnsColors) {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: c.black,
+    backgroundColor: c.retryButtonBg,
   },
   retryButtonText: {
-    color: c.gold,
+    color: c.retryButtonText,
     fontWeight: '700',
   },
   emptyCard: {

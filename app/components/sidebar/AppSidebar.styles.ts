@@ -17,7 +17,7 @@ export function createAppSidebarStyles(c: AnsColors) {
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: c.backdrop,
   },
   panel: {
     position: 'absolute',
@@ -25,7 +25,7 @@ export function createAppSidebarStyles(c: AnsColors) {
     bottom: 0,
     left: 0,
     width: SIDEBAR_WIDTH,
-    backgroundColor: c.surface,
+    backgroundColor: c.surfaceRaised,
     borderRightWidth: 1,
     borderRightColor: c.dashboardFeatureBorder,
     shadowColor: c.black,
@@ -57,8 +57,13 @@ export function createAppSidebarStyles(c: AnsColors) {
   menuItemPressed: {
     opacity: 0.85,
   },
-  menuItemActive: {
-    backgroundColor: c.dashboardFeatureBg,
+  activeIndicator: {
+    position: 'absolute',
+    left: 0,
+    top: 10,
+    bottom: 10,
+    width: 3,
+    borderRadius: 2,
   },
   iconSlot: {
     width: 28,

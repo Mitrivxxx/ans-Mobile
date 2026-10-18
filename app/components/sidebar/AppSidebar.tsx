@@ -17,6 +17,7 @@ import {
   type SidebarRouteName,
 } from '../../navigation/navigationRef';
 import { useAppTheme } from '../../context/AppThemeContext';
+import { withAlpha } from '../../theme/colorUtils';
 import {
   createAppSidebarStyles,
   SIDEBAR_WIDTH,
@@ -95,19 +96,30 @@ export default function AppSidebar() {
           >
             {SIDEBAR_MENU_ITEMS.map((feature) => {
               const isActive = currentRoute === feature.route;
-              const iconColor = feature.accentColor;
+              const iconColor =
+                feature.route === 'Dashboard'
+                  ? colors.menuDashboardAccent
+                  : feature.route === 'Settings'
+                    ? colors.menuSettingsAccent
+                    : feature.accentColor;
               return (
                 <Pressable
                   key={feature.route}
                   onPress={() => onNavigate(feature.route as SidebarRouteName)}
                   style={({ pressed }) => [
                     styles.menuItem,
-                    isActive && styles.menuItemActive,
+                    isActive && { backgroundColor: withAlpha(iconColor, 0.12) },
                     pressed && styles.menuItemPressed,
                   ]}
                   accessibilityRole="button"
                   accessibilityLabel={feature.title}
+                  accessibilityState={{ selected: isActive }}
                 >
+                  {isActive ? (
+                    <View
+                      style={[styles.activeIndicator, { backgroundColor: iconColor }]}
+                    />
+                  ) : null}
                   <View style={styles.iconSlot}>
                     <SidebarMenuIcon
                       name={feature.icon}

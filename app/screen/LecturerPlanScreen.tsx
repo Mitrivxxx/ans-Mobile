@@ -28,9 +28,6 @@ import {
 } from '../features/plan/hooks/useCalendarToday';
 import type { RootParamList } from '../navigation/navigationRef';
 
-const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
-const CALENDAR_SELECTED_DAY_BG = '#F5D547';
-
 type LecturerPlanRoute = RouteProp<RootParamList, 'LecturerPlan'>;
 type LecturerPlanNav = StackNavigationProp<RootParamList, 'LecturerPlan'>;
 

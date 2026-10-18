@@ -17,6 +17,7 @@ import {
 } from '../../../core/scraper/events/events.service';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
+import { useScrapeEnabled } from '../../../core/queryClient/useScrapeEnabled';
 import { isDemoPresentationMode } from '../../../config/env';
 import { DEMO_EVENTS } from '../../../demo/demoMockData';
 
@@ -27,14 +28,18 @@ const DEPARTMENTS_BY_ID = new Map(EVENTS_DEPARTMENTS.map((department) => [depart
 export function useEventsQuery() {
   const isDemo = isDemoPresentationMode();
   const userKey = useQueryUserKey();
-  const [scrapeEnabled, setScrapeEnabled] = useState(false);
+  const sessionScrapeEnabled = useScrapeEnabled();
+  const [scrapeDelayElapsed, setScrapeDelayElapsed] = useState(false);
   const [departmentId, setDepartmentId] = useState<EventsDepartmentId>(
     DEFAULT_DEPARTMENT.id
   );
   const [isDepartmentReady, setIsDepartmentReady] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setScrapeEnabled(true), EVENTS_SCRAPE_DELAY_MS);
+    const timer = setTimeout(
+      () => setScrapeDelayElapsed(true),
+      EVENTS_SCRAPE_DELAY_MS
+    );
     return () => clearTimeout(timer);
   }, []);
 
@@ -72,7 +77,12 @@ export function useEventsQuery() {
   const query = useQuery<PublicEvent[]>({
     queryKey,
     queryFn: () => eventsService.getEvents(selectedDepartment.path),
-    enabled: !isDemo && scrapeEnabled && isDepartmentReady && Boolean(userKey),
+    enabled:
+      !isDemo &&
+      sessionScrapeEnabled &&
+      scrapeDelayElapsed &&
+      isDepartmentReady &&
+      Boolean(userKey),
     staleTime: EVENTS_STALE_TIME_MS,
     gcTime: EVENTS_STALE_TIME_MS * 2,
     refetchInterval: EVENTS_STALE_TIME_MS,

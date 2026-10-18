@@ -181,7 +181,7 @@ export default function FindLecturerScreen() {
               accessibilityRole="button"
             >
               {loading ? (
-                <ActivityIndicator color={colors.surface} />
+                <ActivityIndicator color={colors.primaryButtonText} />
               ) : (
                 <Text style={styles.primaryButtonText}>Szukaj</Text>
               )}

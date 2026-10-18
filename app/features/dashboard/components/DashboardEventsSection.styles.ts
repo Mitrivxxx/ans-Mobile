@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../../theme/ansTheme';
 import { DASHBOARD_HORIZONTAL_PADDING } from '../DashboardScreen.styles';
+import { resolveDepartmentPanelColor } from '../eventsPanelColor';
 
 function eventsPalette(
   c: AnsColors,
@@ -10,7 +11,7 @@ function eventsPalette(
 ) {
   if (departmentColor) {
     return {
-      background: departmentColor,
+      background: resolveDepartmentPanelColor(departmentColor, isDarkMode),
       text: '#FFFFFF',
       titleUnderline: '#FFFFFF',
       divider: 'rgba(255, 255, 255, 0.24)',

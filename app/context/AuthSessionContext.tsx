@@ -45,6 +45,7 @@ import { onNetworkReconnect } from '../core/network/networkSubscription';
 import { devLog } from '../config/devLog';
 import { isDemoPresentationMode } from '../config/env';
 import { ensureScraperInfraReady } from '../core/scraper/auth/bootstrapSession';
+import { setSessionRestoreInProgress } from '../core/scraper/auth/sessionRestoreGate';
 import { startupMark, startupMeasure } from '../core/startup/startupMetrics';
 
 export type AuthStatus =
@@ -337,9 +338,22 @@ export function AuthSessionProvider({
       setRememberMeEnabled(resolved.rememberMeEnabled);
       setSessionDegraded(resolved.sessionDegraded);
       setSessionDegradedMessage(resolved.sessionDegradedMessage);
+      if (resolved.status === 'authenticated') {
+        setIsBackgroundSessionRestore(false);
+        setSessionRestoreInProgress(false);
+      } else if (resolved.status === 'unauthenticated') {
+        setSessionRestoreInProgress(false);
+      }
     },
     []
   );
+
+  const clearStaleRestoreBanner = useCallback(() => {
+    if (authStatusRef.current === 'authenticated') {
+      setIsBackgroundSessionRestore(false);
+      setSessionRestoreInProgress(false);
+    }
+  }, []);
 
   const finalizeRememberMeNetworkRestore = useCallback(
     async (runId: number) => {
@@ -417,6 +431,7 @@ export function AuthSessionProvider({
 
           setAuthStatus('restoring');
           setIsBackgroundSessionRestore(true);
+          setSessionRestoreInProgress(true);
           try {
             await deferAuthRestoreUntilUiShown();
             if (!isSessionResolveCurrent(runId)) {
@@ -426,6 +441,8 @@ export function AuthSessionProvider({
           } finally {
             if (isSessionResolveCurrent(runId)) {
               setIsBackgroundSessionRestore(false);
+            } else {
+              clearStaleRestoreBanner();
             }
           }
           return;
@@ -441,6 +458,7 @@ export function AuthSessionProvider({
 
       if (showBackgroundBanner && isSessionResolveCurrent(runId)) {
         setIsBackgroundSessionRestore(true);
+        setSessionRestoreInProgress(true);
       }
 
       try {
@@ -461,10 +479,17 @@ export function AuthSessionProvider({
       } finally {
         if (isSessionResolveCurrent(runId)) {
           setIsBackgroundSessionRestore(false);
+        } else {
+          clearStaleRestoreBanner();
         }
       }
     },
-    [applyResolvedSession, finalizeRememberMeNetworkRestore, isSessionResolveCurrent]
+    [
+      applyResolvedSession,
+      clearStaleRestoreBanner,
+      finalizeRememberMeNetworkRestore,
+      isSessionResolveCurrent,
+    ]
   );
 
   const refreshSessionAfterPersistReady = useCallback(async () => {
@@ -512,6 +537,7 @@ export function AuthSessionProvider({
       }
       if (offlineEntry) {
         setAuthStatus(offlineEntry.status);
+        setIsBackgroundSessionRestore(false);
         setSessionDegraded(true);
         setSessionDegradedMessage(offlineEntry.sessionDegradedMessage);
         setRememberMeEnabled(true);
@@ -526,6 +552,7 @@ export function AuthSessionProvider({
         }
         if (degraded) {
           setAuthStatus(degraded.status);
+          setIsBackgroundSessionRestore(false);
           setSessionDegraded(true);
           setSessionDegradedMessage(degraded.sessionDegradedMessage);
           setRememberMeEnabled(true);
@@ -538,6 +565,7 @@ export function AuthSessionProvider({
       }
 
       setAuthStatus('unauthenticated');
+      setIsBackgroundSessionRestore(false);
       setSessionDegraded(false);
       setSessionDegradedMessage('');
     })();
@@ -546,6 +574,16 @@ export function AuthSessionProvider({
   useEffect(() => {
     return registerSessionLostHandler(handleSessionLost);
   }, [handleSessionLost]);
+
+  useLayoutEffect(() => {
+    if (isDemoPresentationMode()) {
+      setSessionRestoreInProgress(false);
+      return;
+    }
+    setSessionRestoreInProgress(
+      authStatus === 'restoring' || isBackgroundSessionRestore
+    );
+  }, [authStatus, isBackgroundSessionRestore]);
 
   useLayoutEffect(() => {
     // Szybki resolve sesji na cold starcie (bez czekania na restore cache).
@@ -600,6 +638,7 @@ export function AuthSessionProvider({
       }
 
       const runId = ++sessionResolveRunIdRef.current;
+      clearStaleRestoreBanner();
 
       void (async () => {
         const rememberMe = await isRememberMeEnabled();
@@ -611,6 +650,7 @@ export function AuthSessionProvider({
           }
           if (offlineEntry) {
             setAuthStatus(offlineEntry.status);
+            setIsBackgroundSessionRestore(false);
             setSessionDegraded(true);
             setSessionDegradedMessage(offlineEntry.sessionDegradedMessage);
             setRememberMeEnabled(true);
@@ -624,6 +664,7 @@ export function AuthSessionProvider({
           }
           if (refreshed.authenticated) {
             setAuthStatus('authenticated');
+            setIsBackgroundSessionRestore(false);
             setSessionDegraded(false);
             setSessionDegradedMessage('');
             setRememberMeEnabled(true);
@@ -636,6 +677,7 @@ export function AuthSessionProvider({
           }
           if (degraded) {
             setAuthStatus(degraded.status);
+            setIsBackgroundSessionRestore(false);
             setSessionDegraded(true);
             setSessionDegradedMessage(degraded.sessionDegradedMessage);
             setRememberMeEnabled(true);
@@ -647,6 +689,7 @@ export function AuthSessionProvider({
           }
 
           setAuthStatus('unauthenticated');
+          setIsBackgroundSessionRestore(false);
           setSessionDegraded(false);
           setSessionDegradedMessage('');
           return;
@@ -658,6 +701,7 @@ export function AuthSessionProvider({
 
         if (isEphemeralSessionActive() && (await hasScraperSession())) {
           setAuthStatus('authenticated');
+          setIsBackgroundSessionRestore(false);
           setSessionDegraded(false);
           setSessionDegradedMessage('');
           return;
@@ -668,6 +712,7 @@ export function AuthSessionProvider({
         }
 
         setAuthStatus('unauthenticated');
+        setIsBackgroundSessionRestore(false);
         setSessionDegraded(false);
         setSessionDegradedMessage('');
       })();
@@ -675,7 +720,12 @@ export function AuthSessionProvider({
 
     const subscription = AppState.addEventListener('change', onAppStateChange);
     return () => subscription.remove();
-  }, [bumpSessionResolve, isSessionResolveCurrent, persistReady]);
+  }, [
+    bumpSessionResolve,
+    clearStaleRestoreBanner,
+    isSessionResolveCurrent,
+    persistReady,
+  ]);
 
   const markAuthenticated = useCallback((options?: { ephemeral?: boolean }) => {
     bumpSessionResolve();
@@ -689,6 +739,8 @@ export function AuthSessionProvider({
       setEphemeralSessionActive(false);
     }
     setAuthStatus('authenticated');
+    setIsBackgroundSessionRestore(false);
+    setSessionRestoreInProgress(false);
     setSessionDegraded(false);
     setSessionDegradedMessage('');
   }, [bumpSessionResolve]);
@@ -713,6 +765,7 @@ export function AuthSessionProvider({
     clearEphemeralSession();
     await performSignOut();
     setAuthStatus('unauthenticated');
+    setIsBackgroundSessionRestore(false);
     setSessionDegraded(false);
     setSessionDegradedMessage('');
     setRememberMeEnabled(false);
@@ -731,6 +784,7 @@ export function AuthSessionProvider({
       }
       if (offlineEntry) {
         setAuthStatus(offlineEntry.status);
+        setIsBackgroundSessionRestore(false);
         setSessionDegraded(true);
         setSessionDegradedMessage(offlineEntry.sessionDegradedMessage);
         setRememberMeEnabled(true);
@@ -752,6 +806,7 @@ export function AuthSessionProvider({
       }
       if (restored.authenticated) {
         setAuthStatus('authenticated');
+        setIsBackgroundSessionRestore(false);
         setSessionDegraded(false);
         setSessionDegradedMessage('');
         setRememberMeEnabled(true);
@@ -766,6 +821,7 @@ export function AuthSessionProvider({
       if (degraded) {
         const extra = restored.errorMessage?.trim();
         setAuthStatus(degraded.status);
+        setIsBackgroundSessionRestore(false);
         setSessionDegraded(true);
         setSessionDegradedMessage(
           extra
@@ -777,6 +833,7 @@ export function AuthSessionProvider({
       }
 
       setAuthStatus('unauthenticated');
+      setIsBackgroundSessionRestore(false);
       setSessionDegraded(false);
       setSessionDegradedMessage('');
       setRememberMeEnabled(true);
@@ -792,6 +849,7 @@ export function AuthSessionProvider({
         setEphemeralSessionActive(true);
       }
       setAuthStatus('authenticated');
+      setIsBackgroundSessionRestore(false);
       setSessionDegraded(false);
       setSessionDegradedMessage('');
       setRememberMeEnabled(false);
@@ -804,6 +862,7 @@ export function AuthSessionProvider({
     }
 
     setAuthStatus('unauthenticated');
+    setIsBackgroundSessionRestore(false);
     setSessionDegraded(false);
     setSessionDegradedMessage('');
     setRememberMeEnabled(false);

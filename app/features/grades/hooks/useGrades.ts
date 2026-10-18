@@ -33,7 +33,9 @@ export function useGrades() {
   } = useGradesIndexQuery();
 
   const semestersMeta = index?.semesters ?? [];
-  const [semesterIndex, setSemesterIndex] = useState(0);
+  const [semesterIndex, setSemesterIndex] = useState(() =>
+    index ? indexOfSemester(index.semesters, index.initialSemesterNumber) : 0
+  );
   const appliedInitialSemesterRef = useRef(false);
 
   useEffect(() => {

@@ -13,7 +13,7 @@ export function createSidebarProfileHeaderStyles(c: AnsColors) {
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: c.dashboardFeatureBorder,
-    backgroundColor: c.surface,
+    backgroundColor: c.surfaceRaised,
     alignItems: 'center',
   },
   closeButton: {

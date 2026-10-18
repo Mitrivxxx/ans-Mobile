@@ -48,10 +48,11 @@ export default function AuthSyncBanner() {
           borderRadius: 12,
           backgroundColor: colors.errorBg,
           borderWidth: 1,
-          borderColor: colors.grayBorder,
+          borderColor: colors.errorBorder,
         },
         restoringBanner: {
           backgroundColor: colors.dashboardBluePale,
+          borderColor: colors.dashboardBlueLight,
         },
         restoringText: {
           flex: 1,

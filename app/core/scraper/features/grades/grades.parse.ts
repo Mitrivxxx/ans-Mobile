@@ -1,8 +1,12 @@
 import { parseHTML } from "linkedom";
 
-import { assertAuthenticatedHtml } from "../../auth/sessionValidation";
+import {
+  assertAuthenticatedHtml,
+  SessionExpiredError,
+} from "../../auth/sessionValidation";
 import {
   fetchGradesPage,
+  fetchSemesterDetails,
   fetchSemesterSubjects,
 } from "./grades.fetch";
 import { mergeSemesterGrades } from "./mergeSemesterGrades";
@@ -15,6 +19,9 @@ import type {
   SubjectActivityDetails,
   SubjectGrade,
 } from "./grades.types";
+
+const SEMESTER_DETAILS_PATH_PREFIX =
+  "/TokStudiow/StudentPrzedmiotyIOceny/OcenySzczegolySemestru";
 
 export type {
   PartialGradeEntry,
@@ -154,6 +161,82 @@ export function extractSemesterRequestPath(
   }
 
   return null;
+}
+
+function buildSemesterDetailsPath(semesterEntityId: string): string {
+  return `${SEMESTER_DETAILS_PATH_PREFIX}/${semesterEntityId}`;
+}
+
+export function extractSemesterDetailPath(
+  cardElement: Element
+): string | null {
+  const link = cardElement.querySelector(
+    'a[href*="OcenySzczegolySemestru"]'
+  );
+  const href = link?.getAttribute("href") ?? "";
+  const hrefMatch = href.match(/OcenySzczegolySemestru\/(\d+)/);
+  if (hrefMatch?.[1]) {
+    return buildSemesterDetailsPath(hrefMatch[1]);
+  }
+
+  const buttons = cardElement.querySelectorAll(
+    'button[onclick*="rozwinZwin"]'
+  );
+  for (const button of Array.from(buttons)) {
+    const onclick = button.getAttribute("onclick") ?? "";
+    const idMatch = onclick.match(/rozwinZwin\('(\d+)'/);
+    if (idMatch?.[1]) {
+      return buildSemesterDetailsPath(idMatch[1]);
+    }
+  }
+
+  return null;
+}
+
+/** Normalizuje średnią WD do formatu z kropką (jak lokalny fallback). */
+function normalizeAverageValue(raw: string): string {
+  const trimmed = normalizeText(raw);
+  if (!trimmed) return "";
+  return trimmed.replace(",", ".");
+}
+
+export function parseSemesterAverageFromDetailsHtml(
+  html: string
+): string | null {
+  assertAuthenticatedHtml(
+    html,
+    "Sesja wygasła — nie można pobrać szczegółów semestru."
+  );
+
+  const doc = parseDocument(html);
+  for (const row of Array.from(doc.querySelectorAll("tr"))) {
+    const th = row.querySelector("th");
+    if (!th) continue;
+
+    const label = normalizeText(th.textContent ?? "").replace(/:$/, "");
+    if (!/^Średnia$/i.test(label)) continue;
+
+    const value = normalizeAverageValue(row.querySelector("td")?.textContent ?? "");
+    return value || null;
+  }
+
+  return null;
+}
+
+async function fetchOfficialSemesterAverage(
+  detailPath: string | null
+): Promise<string | null> {
+  if (!detailPath) return null;
+
+  try {
+    const html = await fetchSemesterDetails(detailPath);
+    return parseSemesterAverageFromDetailsHtml(html);
+  } catch (error) {
+    if (error instanceof SessionExpiredError) {
+      throw error;
+    }
+    return null;
+  }
 }
 
 function extractPplsIdFromRow(row: Element): number | null {
@@ -299,7 +382,8 @@ function buildSubjectGrades(rawSubjects: RawSubjectData[]): SubjectGrade[] {
 function createSemesterMeta(
   semesterInfo: NonNullable<ReturnType<typeof extractSemesterInfo>>,
   semesterNumber: number,
-  requestPath: string
+  requestPath: string,
+  detailPath: string | null
 ): GradesSemesterMeta {
   return {
     semester: semesterNumber,
@@ -308,6 +392,7 @@ function createSemesterMeta(
     semesterType: semesterInfo.type,
     semesterStatus: semesterInfo.status,
     requestPath,
+    detailPath,
   };
 }
 
@@ -343,6 +428,7 @@ export function discoverGradesIndex(gradesHtml: string): GradesIndex {
     if (!semesterRequestPath) {
       continue;
     }
+    const semesterDetailPath = extractSemesterDetailPath(card);
 
     if (initialSemesterNumber === null) {
       initialSemesterNumber = semesterNumber;
@@ -352,11 +438,19 @@ export function discoverGradesIndex(gradesHtml: string): GradesIndex {
 
     if (existing) {
       mergeSemesterMetaFields(existing, semesterInfo);
+      if (!existing.detailPath && semesterDetailPath) {
+        existing.detailPath = semesterDetailPath;
+      }
       continue;
     }
 
     semesters.push(
-      createSemesterMeta(semesterInfo, semesterNumber, semesterRequestPath)
+      createSemesterMeta(
+        semesterInfo,
+        semesterNumber,
+        semesterRequestPath,
+        semesterDetailPath
+      )
     );
   }
 
@@ -378,11 +472,14 @@ export async function parseGradesIndex(): Promise<GradesIndex> {
 export async function parseSemesterGrades(
   meta: GradesSemesterMeta
 ): Promise<SemesterGrades> {
-  const subjectsHtml = await fetchSemesterSubjects(meta.requestPath);
+  const [subjectsHtml, officialAverage] = await Promise.all([
+    fetchSemesterSubjects(meta.requestPath),
+    fetchOfficialSemesterAverage(meta.detailPath),
+  ]);
   assertAuthenticatedHtml(
     subjectsHtml,
     `Sesja wygasła — nie można pobrać przedmiotów semestru ${meta.semester}.`
   );
   const subjects = buildSubjectGrades(extractSubjectsFromTable(subjectsHtml));
-  return mergeSemesterGrades(meta, subjects);
+  return mergeSemesterGrades(meta, subjects, officialAverage);
 }

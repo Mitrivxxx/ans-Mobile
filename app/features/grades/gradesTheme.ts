@@ -1,9 +1,8 @@
 /** Paleta ekranu ocen. */
 export type GradesColors = {
   background: string;
+  /** Akcent ekranu ocen — odcień `featureAccents.grades` dobrany pod kontrast. */
   primary: string;
-  primaryDark: string;
-  primaryLight: string;
   text: string;
   textMuted: string;
   border: string;
@@ -12,8 +11,8 @@ export type GradesColors = {
   gradeGreenBg: string;
   gradeBlue: string;
   gradeBlueBg: string;
-  gradeOrange: string;
-  gradeOrangeBg: string;
+  gradeYellow: string;
+  gradeYellowBg: string;
   gradeRed: string;
   gradeRedBg: string;
   gradeGray: string;
@@ -22,9 +21,7 @@ export type GradesColors = {
 
 export const lightGradesColors: GradesColors = {
   background: '#EEF0F3',
-  primary: '#6B4EAA',
-  primaryDark: '#4A3578',
-  primaryLight: '#EDE8F5',
+  primary: '#1A7F77',
   text: '#1E1B2E',
   textMuted: '#8A8699',
   border: '#E5E7EB',
@@ -33,8 +30,8 @@ export const lightGradesColors: GradesColors = {
   gradeGreenBg: '#86EFAC',
   gradeBlue: '#1D4ED8',
   gradeBlueBg: '#93C5FD',
-  gradeOrange: '#C2410C',
-  gradeOrangeBg: '#FDBA74',
+  gradeYellow: '#A16207',
+  gradeYellowBg: '#FDE047',
   gradeRed: '#B91C1C',
   gradeRedBg: '#FCA5A5',
   gradeGray: '#525252',
@@ -42,24 +39,22 @@ export const lightGradesColors: GradesColors = {
 };
 
 export const darkGradesColors: GradesColors = {
-  background: '#131922',
-  primary: '#9B87D4',
-  primaryDark: '#7A6AAF',
-  primaryLight: '#2A2438',
-  text: '#F3F5F7',
-  textMuted: '#A8B3C2',
-  border: '#2C3748',
-  surface: '#1B2330',
-  gradeGreen: '#4ADE80',
-  gradeGreenBg: '#14532D',
-  gradeBlue: '#60A5FA',
-  gradeBlueBg: '#1E3A5F',
-  gradeOrange: '#FB923C',
-  gradeOrangeBg: '#431407',
-  gradeRed: '#F87171',
-  gradeRedBg: '#450A0A',
-  gradeGray: '#A3A3A3',
-  gradeGrayBg: '#404040',
+  background: '#12171E',
+  primary: '#4CC7BC',
+  text: '#E8ECF1',
+  textMuted: '#A3AEBD',
+  border: '#2A3443',
+  surface: '#1B222D',
+  gradeGreen: '#5EE08F',
+  gradeGreenBg: '#143D27',
+  gradeBlue: '#7AB4FA',
+  gradeBlueBg: '#1B3354',
+  gradeYellow: '#F7D154',
+  gradeYellowBg: '#3D3108',
+  gradeRed: '#FB8A8A',
+  gradeRedBg: '#45161A',
+  gradeGray: '#B4BAC4',
+  gradeGrayBg: '#333B47',
 };
 
 export const gradesColors = lightGradesColors;

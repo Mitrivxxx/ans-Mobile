@@ -7,6 +7,7 @@ import {
 import { cacheUntilReplaceQueryOptions } from '../../../core/queryClient/cacheUntilReplace';
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
+import { useScrapeEnabled } from '../../../core/queryClient/useScrapeEnabled';
 
 const announcementsService = new AnnouncementsService();
 
@@ -15,12 +16,13 @@ export function useAnnouncementDetailsQuery(
   requestPath: string | null
 ) {
   const userKey = useQueryUserKey();
+  const scrapeEnabled = useScrapeEnabled();
 
   return useQuery<AnnouncementDetails>({
     queryKey: queryKeys.announcements.detail(userKey, announcementId ?? ''),
     queryFn: () =>
       announcementsService.getAnnouncementDetails(requestPath ?? ''),
-    enabled: Boolean(announcementId && requestPath),
+    enabled: scrapeEnabled && Boolean(announcementId && requestPath),
     ...cacheUntilReplaceQueryOptions<AnnouncementDetails>(),
   });
 }

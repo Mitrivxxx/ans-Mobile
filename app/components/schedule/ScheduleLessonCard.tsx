@@ -19,9 +19,9 @@ type Props = {
 };
 
 export default function ScheduleLessonCard({ lesson }: Props) {
-  const { colors } = useAppTheme();
+  const { colors, isDarkMode } = useAppTheme();
   const styles = useThemedStyles(createScheduleLessonCardStyles);
-  const typeStyle = resolveLessonTypeStyle(lesson.type, lesson.groups);
+  const typeStyle = resolveLessonTypeStyle(lesson.type, lesson.groups, isDarkMode);
   const accentColor = typeStyle?.color ?? colors.grayLight;
   const groupLabel = lesson.groups;
   const subjectLabel = formatLessonSubjectLabel(lesson.subject, lesson.notes);

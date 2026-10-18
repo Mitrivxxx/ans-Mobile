@@ -57,7 +57,7 @@ export function createFindLecturerScreenStyles(c: AnsColors) {
   },
   primaryButton: {
     flex: 1,
-    backgroundColor: c.charcoal,
+    backgroundColor: c.primaryButtonBg,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
@@ -66,7 +66,7 @@ export function createFindLecturerScreenStyles(c: AnsColors) {
     gap: 8,
   },
   primaryButtonText: {
-    color: c.surface,
+    color: c.primaryButtonText,
     fontWeight: '700',
     fontSize: 15,
     letterSpacing: 0.3,
@@ -94,7 +94,7 @@ export function createFindLecturerScreenStyles(c: AnsColors) {
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#F4C7C7',
+    borderColor: c.errorBorder,
   },
   errorText: {
     color: c.error,
@@ -157,7 +157,7 @@ export function createFindLecturerScreenStyles(c: AnsColors) {
     color: c.charcoal,
   },
   classesButton: {
-    backgroundColor: c.charcoal,
+    backgroundColor: c.primaryButtonBg,
     borderRadius: 999,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -166,7 +166,7 @@ export function createFindLecturerScreenStyles(c: AnsColors) {
     flexShrink: 0,
   },
   classesButtonText: {
-    color: c.surface,
+    color: c.primaryButtonText,
     fontWeight: '700',
     fontSize: 12,
     letterSpacing: 0.2,

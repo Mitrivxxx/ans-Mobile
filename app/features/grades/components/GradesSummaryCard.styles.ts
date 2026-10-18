@@ -6,7 +6,7 @@ export function createGradesSummaryCardStyles(c: AnsColors) {
   return StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: '#31ABA0',
+    backgroundColor: c.gradesSummaryBg,
     borderRadius: 20,
     paddingVertical: 28,
     paddingHorizontal: 26,
@@ -22,13 +22,13 @@ export function createGradesSummaryCardStyles(c: AnsColors) {
   },
   label: {
     fontSize: 14,
-    color: c.surface,
+    color: c.gradesSummaryText,
     marginBottom: 10,
   },
   averageValue: {
     fontSize: 32,
     fontWeight: '700',
-    color: c.surface,
+    color: c.gradesSummaryText,
     lineHeight: 36,
   },
   detailsBlock: {
@@ -43,11 +43,11 @@ export function createGradesSummaryCardStyles(c: AnsColors) {
     textAlign: 'right',
   },
   detailLabel: {
-    color: c.surface,
+    color: c.gradesSummaryText,
   },
   detailValue: {
     fontWeight: '700',
-    color: c.surface,
+    color: c.gradesSummaryText,
   },
 });
 }

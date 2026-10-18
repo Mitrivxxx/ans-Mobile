@@ -7,6 +7,7 @@ import { usePersistentCacheSyncEffects } from '../../../core/queryClient/usePers
 import { queryKeys } from '../../../core/queryClient/queryKeys';
 import type { SyncStatus } from '../../../core/queryClient/syncTypes';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
+import { useScrapeEnabled } from '../../../core/queryClient/useScrapeEnabled';
 import {
   FinanceService,
   type StudentFee,
@@ -17,11 +18,13 @@ const financeService = new FinanceService();
 /** Opłaty — bez persystencji na dysku; cache w RAM do kolejnego scrape. */
 export function useStudentFeesQuery() {
   const userKey = useQueryUserKey();
+  const scrapeEnabled = useScrapeEnabled();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
 
   const query = useQuery<StudentFee[]>({
     queryKey: queryKeys.finance.fees(userKey),
     queryFn: () => financeService.getStudentFees(),
+    enabled: scrapeEnabled,
     ...cacheUntilReplaceQueryOptions<StudentFee[]>(),
   });
 
@@ -77,7 +80,7 @@ export function useStudentFeesQuery() {
   );
 
   usePersistentCacheSyncEffects({
-    enabled: true,
+    enabled: scrapeEnabled,
     hasCachedData,
     dataUpdatedAt,
     syncInBackground: runSync,

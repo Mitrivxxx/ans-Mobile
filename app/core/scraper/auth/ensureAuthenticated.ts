@@ -42,6 +42,7 @@ import {
   responseIndicatesSessionExpired,
   SessionExpiredError,
 } from "./sessionValidation";
+import { waitForSessionRestoreComplete } from "./sessionRestoreGate";
 
 export { SessionExpiredError } from "./sessionValidation";
 
@@ -319,6 +320,7 @@ export function setupScraperAuthGuard(): void {
         return config;
       }
 
+      await waitForSessionRestoreComplete();
       await ensureAuthenticatedBeforeScrape();
       return config;
     },

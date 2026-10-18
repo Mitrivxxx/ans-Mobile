@@ -47,54 +47,22 @@ app/version.ts         # APP_VERSION — sync z package.json i app.json
 
 ---
 
-## Środowiska (development / demo / production)
+## Jedna aplikacja produkcyjna
 
-Aplikacja ma **trzy warstwy** (`AppEnv` w `app.config.ts` i `app/config/env.ts`). To **nie są osobne gałęzie git** — ten sam kod na `main`, a środowisko wybiera się przy **buildzie EAS** (profil w `eas.json`) lub lokalnie przez `APP_ENV` / Metro.
+Jest jeden pakiet: **WDMobile**, `pl.matsma.WDMobile` (Android i iOS). Nazwa nie zależy od `APP_ENV` ani `EAS_BUILD_PROFILE`.
 
-Źródła konfiguracji: `eas.json` (profil build), `app.config.ts` (nazwa, `package`, `extra.appEnv`), `app/config/env.ts` (odczyt w runtime, badge DEV).
+`react-native.config.js` ma na sztywno `packageName`. Gradle trzyma wynik autolinkingu w cache i odświeża go dopiero, gdy zmieni się ten plik (albo `package.json` / lockfile). Poprzednie warstwy `.dev` i `.demo` zostawiały w tym cache obcy pakiet i release się nie kompilował.
 
-### Tabela warstw
+| Akcja | Komenda |
+|-------|---------|
+| Metro (dev na telefonie/emulatorze) | `npx expo start` |
+| Lokalny APK release | `npm run build:apk:local` |
+| EAS Android (AAB, Sklep Play) | `npm run build:production:android` |
+| EAS iOS | `npm run build:production:ios` |
 
-| Warstwa | Nazwa w launcherze | Package Android / iOS | Profil `eas build` | Typowy cel |
-|---------|-------------------|------------------------|-------------------|------------|
-| **development** | WDMobile Dev | `pl.matsma.WDMobile.dev` | `development` | Dev na urządzeniu, APK wewnętrzny |
-| **demo** | WDMobile (Demo) | `pl.matsma.WDMobile.demo` | `demo`, `preview`* | Test wewnętrzny, osobna instalacja obok prod |
-| **production** | WDMobile | `pl.matsma.WDMobile` | `production` | Użytkownicy: sklep (AAB) lub lokalny APK |
+`npx expo start` to ten sam pakiet, tylko z bundlerem Metro (`__DEV__`). Logi deweloperskie są włączone wyłącznie przy `__DEV__`.
 
-\* `preview` w `eas.json` dziedziczy po `demo`.  
-
-
-### Jak ustawiane jest środowisko
-
-**Przy buildzie natywnym (EAS / prebuild):** `app.config.ts` → `resolveAppEnv()`:
-
-1. `EAS_BUILD_PROFILE` — mapowanie: `production` → production; `demo` \| `preview` → demo; `development` → development.
-2. W przeciwnym razie zmienna `APP_ENV` z profilu `eas.json` (`env.APP_ENV`).
-3. Domyślnie: `development` (np. lokalny prebuild bez `APP_ENV=production`).
-
-**W działającej aplikacji (JS):** `app/config/env.ts` → `getAppEnv()`:
-
-1. `Constants.expoConfig.extra.appEnv` (wbudowane przy buildzie).
-2. W `__DEV__` (Metro / Expo Go): domyślnie `development`.
-
-**Metro (`npx expo start`):** nie buduje warstwy demo/prod — to development z bundlerem (`__DEV__`).
-
-### Komendy per środowisko
-
-| Akcja | development | demo | production |
-|-------|-------------|--------------|----------------------------|
-| EAS build Android | `npm run build:development` | `npm run build:demo` | `npm run build:production` (AAB) |
-| Lokalny APK release | — | — | `npm run build:apk:local` |
-
-### Git i `main`
-
-Na **jednej** gałęzi `main` trzymaj: kod + pełne `eas.json` + `app.config.ts`. Nie trzymaj osobnych branchy „pod środowisko”. Sekrety (`EXPO_TOKEN`, keystore) trzymaj poza repo (`.env` w `.gitignore`).
-
-### Pułapki środowisk
-
-- **Prezentacja** instaluje się **równolegle** z prod (inny `package`) — cache i dane na dysku są oddzielne per aplikacja.
-- Profil **`ios-simulator`** w `eas.json` jest minimalny (brak `APP_ENV`) — główna ścieżka projektu to Android; przed poważnym iOS uzupełnij profil jak `development`.
-- Każda zmiana wymaga **nowego buildu i instalacji** APK/AAB — projekt nie używa EAS Update / OTA.
+Profil `ios-simulator` w `eas.json` dziedziczy po `production` i nie zmienia pakietu. Sekrety (`EXPO_TOKEN`, keystore) trzymaj poza repo (`.env` w `.gitignore`). Każda zmiana natywna wymaga nowego buildu — projekt nie używa EAS Update / OTA.
 
 ---
 
@@ -191,7 +159,7 @@ Opcjonalnie: `*.grid.ts`, `*.page.ts`, `merge*.ts` (np. oceny).
 
 ### Co jest persystowane na dysk (offline bundle)
 
-`shouldPersistQuery.ts` — **whitelist** (nie cały root): `studentPlan.lessons` (plan semestru — sidebar Plan), `weekLessons` — 5 tygodni wokół bieżącego (2 wstecz, bieżący, 2 do przodu — `planWeekWindow.ts`), `grades.index`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, `semester`, tygodnie planu poza oknem prefetch.
+`shouldPersistQuery.ts` — **whitelist** (nie cały root): `studentPlan.lessons` (plan semestru — sidebar Plan), `weekLessons` — 5 tygodni wokół bieżącego (2 wstecz, bieżący, 2 do przodu — `planWeekWindow.ts`), `grades.index`, `grades.semester`, `announcements.list`, `profile.summary` (bez base64) + `profile.details`. **Bez:** `partial`, `detail`, tygodnie planu poza oknem prefetch.
 
 - `maxAge`: `PERSIST_MAX_AGE_MS` (~90 dni) — stary blob AsyncStorage wygasa przy restore.
 - `buster`: `PERSIST_QUERY_BUSTER` (`v2-offline-bundle`) — migracja starego przepełnionego cache.
@@ -227,6 +195,12 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 - `AppThemeContext` + `ansTheme.ts` (`lightAnsColors` / `darkAnsColors`)
 - Style: `useThemedStyles(createXStyles)` — factory `(colors: AnsColors) => StyleSheet`
 - Pliki `*.styles.ts` obok komponentów
+- **Tokeny według roli, nie wyglądu.** `charcoal` = tekst główny (w ciemnym motywie jasny), `surface` = tło karty, `black` się nie odwraca. Nie używaj ich jako „tekst na kolorze” ani tła przycisku — do tego są: `onAccent` (tekst na nasyconym akcencie), `today*` (dzień „dziś” / wybrany w kalendarzu), `retryButton*`, `primaryButton*`, `gradesSummary*`, `errorBorder`, `successText`, `attachmentAccent`, `surfaceRaised` (menu boczne, rozwijane listy — w ciemnym motywie hierarchia przez jasność, nie cień), `backdrop`, `menuDashboardAccent` / `menuSettingsAccent`.
+- **Kolory funkcji:** jedno źródło `app/theme/featureAccents.ts` (sidebar, kafelki, szybkie akcje, banery sync). Nie wpisuj hexów akcentów w komponentach.
+- **Paleta ocen:** `features/grades/gradesTheme.ts` (`useGradesColors`) — akcent morski jak `featureAccents.grades`.
+- **Typy zajęć:** `lessonTypeTheme.ts` — `resolveLessonTypeStyle(type, groups, isDarkMode)` (ciemne warianty w `darkLessonTypeColors`).
+- **Wydarzenia:** kolory wydziałów w ciemnym motywie przyciemniane przez `resolveDepartmentPanelColor` (`features/dashboard/eventsPanelColor.ts`).
+- Helpery: `app/theme/colorUtils.ts` (`darkenHex`, `withAlpha`, `contrastRatio`). Test `__tests__/theme/darkThemeContrast.test.ts` pilnuje WCAG AA dla kluczowych par ciemnego motywu — przy zmianie palety uruchom `npm test`.
 
 ### Odświeżanie ekranów
 
@@ -279,7 +253,7 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 | Dashboard kafelki | `features/dashboard/dashboard.features.ts`, panele `Dashboard*Panel` |
 | Test równoległych requestów | `core/utils/mapWithConcurrency.ts` |
 | Ciemny motyw | `preferences/darkMode.storage.ts`, `SettingsScreen` |
-| Środowiska / package | `eas.json`, `app.config.ts`, `app/config/env.ts` — sekcja **Środowiska** powyżej |
+| Package / build | `eas.json`, `app.config.ts`, `react-native.config.js` — sekcja **Jedna aplikacja produkcyjna** |
 | Build APK lokalnie | `npm run build:apk:local` |
 
 ---
@@ -289,11 +263,11 @@ Sidebar: `AppSidebar` + `SidebarContext` — trasy bez `LecturerPlan` i `Login`.
 Z `info.txt` / `package.json`:
 
 ```bash
-npx expo start                  # Metro — środowisko logiczne: development
+npx expo start                  # Metro, ten sam pakiet produkcyjny
 adb reverse tcp:8081 tcp:8081   # fizyczne urządzenie
 npx expo run:android
-npm run build:demo              # EAS AAB, .demo
-npm run build:apk:local         # lokalny release APK (production)
+npm run build:apk:local         # lokalny release APK
+npm run build:production:android # EAS, AAB
 ```
 ---
 
@@ -330,11 +304,9 @@ parseHTML
 ensureAuthenticated
 WD_BASE_URL
 navigateTo(
-APP_ENV
-EAS_BUILD_PROFILE
 getAppEnv
 ```
 
 ---
 
-*Ostatnia aktualizacja przewodnika: 2026-05-31. Przy większych zmianach architektury zaktualizuj ten plik w tym samym PR.*
+*Ostatnia aktualizacja przewodnika: 2026-10-18. Przy większych zmianach architektury zaktualizuj ten plik w tym samym PR.*

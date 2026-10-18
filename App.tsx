@@ -156,7 +156,7 @@ function AuthenticatedShell() {
             <StudentProfileProvider>
               <SidebarProvider>
                 <SidebarBackHandler />
-                <View style={{ flex: 1, backgroundColor: colors.background }}>
+                <View style={{ flex: 1, backgroundColor: colors.dashboardBg }}>
                   <AppHeader />
                   <AuthSyncBanner />
                   <View style={{ flex: 1 }}>

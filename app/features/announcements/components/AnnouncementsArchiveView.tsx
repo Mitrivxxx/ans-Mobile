@@ -37,7 +37,7 @@ export default function AnnouncementsArchiveView({
         <Text style={styles.noteText}>
           Ogłoszenia zapisane w archiwum są przechowywane przez 6 miesięcy od daty
           archiwizacji. Po tym czasie zostaną automatycznie usunięte. Uwaga:
-          załączniki nie są zapisywane w archiwum i wygasają wraz z wiadomością.
+          załączniki nie są zapisywane w archiwum.
         </Text>
       </View>
 

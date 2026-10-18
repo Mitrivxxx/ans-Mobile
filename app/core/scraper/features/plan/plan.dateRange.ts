@@ -55,11 +55,18 @@ export function getSemesterPlanParams(referenceDate = new Date()): PlanFetchPara
   const year = referenceDate.getFullYear();
   const month = referenceDate.getMonth();
 
-  if (month >= 9 || month === 0) {
-    const endYear = month === 0 ? year : year + 1;
+  if (month >= 9) {
     return {
       dateFrom: `${year}-10-1`,
-      dateTo: `${endYear}-2-28`,
+      dateTo: `${year + 1}-2-28`,
+      planType: '3',
+    };
+  }
+
+  if (month === 0) {
+    return {
+      dateFrom: `${year - 1}-10-1`,
+      dateTo: `${year}-2-28`,
       planType: '3',
     };
   }

@@ -20,11 +20,11 @@ export function createFinanceUiStyles(c: AnsColors) {
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 12,
-      backgroundColor: c.black,
+      backgroundColor: c.retryButtonBg,
       marginTop: 8,
     },
     retryButtonText: {
-      color: c.gold,
+      color: c.retryButtonText,
       fontWeight: '700',
     },
     card: {
@@ -66,7 +66,7 @@ export function createFinanceUiStyles(c: AnsColors) {
       fontWeight: '500',
     },
     statusPaid: {
-      color: '#2D8C6E',
+      color: c.successText,
       fontWeight: '700',
     },
     statusUnpaid: {

@@ -11,6 +11,13 @@ export const lessonTypeColors = {
 
 export type LessonTypeColorKey = keyof typeof lessonTypeColors;
 
+/** Ciemny motyw — rozjaśnione odcienie tam, gdzie bazowy kolor ma za niski kontrast na karcie. */
+export const darkLessonTypeColors: Record<LessonTypeColorKey, string> = {
+  ...lessonTypeColors,
+  lek: '#C49B6C',
+  zwf: '#AE8FDD',
+};
+
 export type LessonTypeStyle = {
   key: LessonTypeColorKey;
   abbreviation: string;
@@ -39,7 +46,10 @@ function normalizeType(value: string): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-function matchLessonTypeStyle(value: string): LessonTypeStyle | null {
+function matchLessonTypeStyle(
+  value: string,
+  palette: Record<LessonTypeColorKey, string>
+): LessonTypeStyle | null {
   const normalized = normalizeType(value);
   if (!normalized) {
     return null;
@@ -50,7 +60,7 @@ function matchLessonTypeStyle(value: string): LessonTypeStyle | null {
       return {
         key: rule.key,
         abbreviation: rule.abbreviation,
-        color: lessonTypeColors[rule.key],
+        color: palette[rule.key],
       };
     }
   }
@@ -64,7 +74,11 @@ function matchLessonTypeStyle(value: string): LessonTypeStyle | null {
  */
 export function resolveLessonTypeStyle(
   type: string,
-  groups = ''
+  groups = '',
+  isDarkMode = false
 ): LessonTypeStyle | null {
-  return matchLessonTypeStyle(groups) ?? matchLessonTypeStyle(type);
+  const palette = isDarkMode ? darkLessonTypeColors : lessonTypeColors;
+  return (
+    matchLessonTypeStyle(groups, palette) ?? matchLessonTypeStyle(type, palette)
+  );
 }

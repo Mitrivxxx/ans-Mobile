@@ -21,7 +21,8 @@ function computeSemesterAverage(subjects: SubjectGrade[]): string {
 
 export function mergeSemesterGrades(
   meta: GradesSemesterMeta,
-  subjects: SubjectGrade[]
+  subjects: SubjectGrade[],
+  officialAverage?: string | null
 ): SemesterGrades {
   return {
     semester: meta.semester,
@@ -30,6 +31,9 @@ export function mergeSemesterGrades(
     semesterType: meta.semesterType,
     semesterStatus: meta.semesterStatus,
     subjects,
-    semesterAverage: computeSemesterAverage(subjects),
+    semesterAverage:
+      officialAverage != null && officialAverage !== ""
+        ? officialAverage
+        : computeSemesterAverage(subjects),
   };
 }

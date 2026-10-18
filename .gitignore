@@ -48,3 +48,5 @@ AGENTS.mb
 /info.txt
 *.mb
 !README.mb
+
+react-native.config.js

@@ -98,13 +98,13 @@ export default function ProfileScreen({ navigation }: Props) {
       },
       retryButton: {
         marginTop: 4,
-        backgroundColor: colors.black,
+        backgroundColor: colors.retryButtonBg,
         paddingHorizontal: 18,
         paddingVertical: 12,
         borderRadius: 14,
       },
       retryButtonText: {
-        color: colors.gold,
+        color: colors.retryButtonText,
         fontWeight: '800' as const,
         fontSize: 15,
       },

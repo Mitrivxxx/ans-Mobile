@@ -4,7 +4,6 @@ import type { AnsColors } from '../../theme/ansTheme';
 import { HARMONOGRAM_ACCENT_COLOR } from '../dashboard/dashboard.quickActions';
 
 const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
-const CALENDAR_SELECTED_DAY_BG = '#F5D547';
 
 export function createLecturerPlanScreenStyles(c: AnsColors) {
   return StyleSheet.create({
@@ -121,7 +120,9 @@ export function createLecturerPlanScreenStyles(c: AnsColors) {
     justifyContent: 'center',
   },
   dayCircleSelected: {
-    backgroundColor: CALENDAR_SELECTED_DAY_BG,
+    backgroundColor: c.todayBg,
+    borderWidth: 1,
+    borderColor: c.todayBorder,
   },
   dayCircleToday: {
     borderWidth: 2.5,
@@ -133,7 +134,7 @@ export function createLecturerPlanScreenStyles(c: AnsColors) {
     fontWeight: '600',
   },
   dayTextSelected: {
-    color: c.charcoal,
+    color: c.todayText,
     fontWeight: '800',
   },
   dayTextToday: {
@@ -169,10 +170,10 @@ export function createLecturerPlanScreenStyles(c: AnsColors) {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: c.black,
+    backgroundColor: c.retryButtonBg,
   },
   retryButtonText: {
-    color: c.gold,
+    color: c.retryButtonText,
     fontWeight: '700',
   },
 });

@@ -26,6 +26,8 @@ export interface GradesSemesterMeta {
   semesterType: string;
   semesterStatus: string;
   requestPath: string;
+  /** Ścieżka do OcenySzczegolySemestru/{id} — oficjalna średnia WD. */
+  detailPath: string | null;
 }
 
 export interface GradesIndex {

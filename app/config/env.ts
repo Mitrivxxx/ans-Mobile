@@ -1,23 +1,11 @@
 import Constants from 'expo-constants';
 
-export type AppEnv = 'development' | 'demo' | 'production';
+export type AppEnv = 'production';
 
 const DEFAULT_WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
 
-function readExtraAppEnv(): AppEnv | null {
-  const raw = Constants.expoConfig?.extra?.appEnv;
-  if (raw === 'development' || raw === 'demo' || raw === 'production') {
-    return raw;
-  }
-  return null;
-}
-
 export function getAppEnv(): AppEnv {
-  const fromExtra = readExtraAppEnv();
-  if (fromExtra) {
-    return fromExtra;
-  }
-  return __DEV__ ? 'development' : 'production';
+  return 'production';
 }
 
 export function getWdBaseUrl(): string {
@@ -31,34 +19,10 @@ export function getWdBaseUrl(): string {
 export const WD_BASE_URL = getWdBaseUrl();
 
 export function isDevLoggingEnabled(): boolean {
-  return __DEV__ || getAppEnv() === 'development';
+  return __DEV__;
 }
 
-/** Tylko build / tryb deweloperski — nie na produkcji. */
-export function isProductionApp(): boolean {
-  return getAppEnv() === 'production';
-}
-
-export function shouldShowEnvBadge(): boolean {
-  return getAppEnv() === 'development';
-}
-
-export function getAppEnvLabel(): string {
-  return getAppEnv() === 'development' ? 'DEV' : '';
-}
-
-export function getAppEnvDisplayName(): string {
-  switch (getAppEnv()) {
-    case 'development':
-      return 'Deweloperska';
-    case 'demo':
-      return 'Demo';
-    default:
-      return 'Produkcyjna';
-  }
-}
-
-/** Build demo — sztywne dane do screenshotów prezentacji (bez logowania WD). */
+/** Zostawione, żeby stare gałęzie prezentacji nie włączały danych mock. */
 export function isDemoPresentationMode(): boolean {
-  return getAppEnv() === 'demo';
+  return false;
 }

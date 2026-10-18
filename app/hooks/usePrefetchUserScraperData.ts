@@ -9,7 +9,7 @@ import { confirmWdSessionAfterLogin } from "../core/scraper/auth/sessionValidati
 
 /** Jednorazowy prefetch po potwierdzonej sesji WD (nie przed zakończeniem logowania). */
 export function usePrefetchUserScraperData(): void {
-  const { authStatus, sessionDegraded } = useAuthSession();
+  const { authStatus, sessionDegraded, isRestoringSession } = useAuthSession();
   const userKey = useQueryUserKey();
   const prefetchedForKeyRef = useRef<string | null>(null);
   const prefetchRunIdRef = useRef(0);
@@ -19,7 +19,7 @@ export function usePrefetchUserScraperData(): void {
       return;
     }
 
-    if (authStatus !== "authenticated") {
+    if (authStatus !== "authenticated" || isRestoringSession) {
       prefetchedForKeyRef.current = null;
       void queryClient.cancelQueries();
       return;
@@ -53,5 +53,5 @@ export function usePrefetchUserScraperData(): void {
       prefetchedForKeyRef.current = userKey;
       prefetchUserScraperData(userKey);
     })();
-  }, [authStatus, sessionDegraded, userKey]);
+  }, [authStatus, isRestoringSession, sessionDegraded, userKey]);
 }

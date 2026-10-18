@@ -81,7 +81,7 @@ export function createDashboardQuickActionsStyles(c: AnsColors) {
     lineHeight: 14,
   },
   titleFilled: {
-    color: c.surface,
+    color: c.onAccent,
   },
 });
 }

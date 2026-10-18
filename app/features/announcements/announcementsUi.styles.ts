@@ -36,11 +36,11 @@ export function createAnnouncementsUiStyles(c: AnsColors) {
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 12,
-      backgroundColor: c.black,
+      backgroundColor: c.retryButtonBg,
       marginTop: 8,
     },
     retryButtonText: {
-      color: c.gold,
+      color: c.retryButtonText,
       fontWeight: '700',
     },
     card: {
@@ -318,7 +318,7 @@ export function createAnnouncementsUiStyles(c: AnsColors) {
     },
     attachmentLabel: {
       fontSize: 11,
-      color: '#3D8B4A',
+      color: c.attachmentAccent,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
       fontWeight: '700',

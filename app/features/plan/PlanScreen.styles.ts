@@ -1,10 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import type { AnsColors } from '../../theme/ansTheme';
-import {
-  HARMONOGRAM_ACCENT_COLOR,
-  HARMONOGRAM_TODAY_DAY_COLOR,
-} from '../dashboard/dashboard.quickActions';
+import { HARMONOGRAM_ACCENT_COLOR } from '../dashboard/dashboard.quickActions';
 
 const CALENDAR_LESSON_DOT_COLOR = '#4CAF50';
 
@@ -88,9 +85,9 @@ export function createPlanScreenStyles(c: AnsColors) {
     justifyContent: 'center',
   },
   dayCircleToday: {
-    backgroundColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    backgroundColor: c.todayBg,
     borderWidth: 1,
-    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    borderColor: c.todayBorder,
   },
   dayCircleSelected: {
     backgroundColor: HARMONOGRAM_ACCENT_COLOR,
@@ -99,7 +96,7 @@ export function createPlanScreenStyles(c: AnsColors) {
   },
   dayCircleSelectedToday: {
     borderWidth: 3,
-    borderColor: HARMONOGRAM_TODAY_DAY_COLOR,
+    borderColor: c.todayBorder,
   },
   dayText: {
     fontSize: 13,
@@ -107,11 +104,11 @@ export function createPlanScreenStyles(c: AnsColors) {
     fontWeight: '600',
   },
   dayTextSelected: {
-    color: c.surface,
+    color: c.onAccent,
     fontWeight: '800',
   },
   dayTextToday: {
-    color: c.charcoal,
+    color: c.todayText,
     fontWeight: '700',
   },
   lessonDot: {
@@ -169,10 +166,10 @@ export function createPlanScreenStyles(c: AnsColors) {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: c.black,
+    backgroundColor: c.retryButtonBg,
   },
   retryButtonText: {
-    color: c.gold,
+    color: c.retryButtonText,
     fontWeight: '700',
   },
 });

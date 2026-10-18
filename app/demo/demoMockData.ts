@@ -133,6 +133,7 @@ export const DEMO_GRADES_INDEX: GradesIndex = {
       semesterType: 'Zimowy',
       semesterStatus: 'W trakcie',
       requestPath: '/demo',
+      detailPath: null,
     },
   ],
   initialSemesterNumber: 4,

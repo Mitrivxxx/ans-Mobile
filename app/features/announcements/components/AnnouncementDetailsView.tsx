@@ -14,8 +14,6 @@ import type { AnnouncementDetails } from '../../../core/scraper/features/announc
 import type { createAnnouncementsUiStyles } from '../announcementsUi.styles';
 import AnnouncementContentText from './AnnouncementContentText';
 
-const ATTACHMENT_ICON_COLOR = '#3D8B4A';
-
 type AnnouncementsUiStyles = ReturnType<typeof createAnnouncementsUiStyles>;
 
 type ArchiveAction = {
@@ -141,7 +139,7 @@ export default function AnnouncementDetailsView({
               <MaterialCommunityIcons
                 name="paperclip"
                 size={18}
-                color={ATTACHMENT_ICON_COLOR}
+                color={colors.attachmentAccent}
               />
             </View>
             <Text style={styles.attachmentLabel}>Załącznik</Text>

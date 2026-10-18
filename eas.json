@@ -4,42 +4,19 @@
     "appVersionSource": "local"
   },
   "build": {
-    "development": {
-      "distribution": "internal",
-      "env": {
-        "APP_ENV": "development"
-      },
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "demo": {
-      "distribution": "internal",
-      "env": {
-        "APP_ENV": "demo"
-      },
-      "android": {
-        "buildType": "app-bundle"
-      }
-    },
-    "preview": {
-      "extends": "demo"
-    },
-    "ios-simulator": {
-      "extends": "development",
-      "ios": {
-        "simulator": true
-      }
-    },
     "production": {
       "autoIncrement": true,
-      "env": {
-        "APP_ENV": "production"
-      },
       "android": {
         "buildType": "app-bundle"
       },
       "ios": {}
+    },
+    "ios-simulator": {
+      "extends": "production",
+      "autoIncrement": false,
+      "ios": {
+        "simulator": true
+      }
     }
   },
   "submit": {

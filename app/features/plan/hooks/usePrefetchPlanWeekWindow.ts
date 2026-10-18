@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { getPlanPrefetchWindowAnchorKey } from '../../../core/queryClient/planWeekWindow';
 import { prefetchStudentPlanWeeks } from '../../../core/queryClient/prefetchStudentPlanWeeks';
 import { useQueryUserKey } from '../../../core/queryClient/useQueryUserKey';
+import { useScrapeEnabled } from '../../../core/queryClient/useScrapeEnabled';
 import { isDemoPresentationMode } from '../../../config/env';
 
 /**
@@ -11,10 +12,15 @@ import { isDemoPresentationMode } from '../../../config/env';
  */
 export function usePrefetchPlanWeekWindow(): void {
   const userKey = useQueryUserKey();
+  const scrapeEnabled = useScrapeEnabled();
   const prefetchedWindowRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isDemoPresentationMode()) {
+      return;
+    }
+
+    if (!scrapeEnabled) {
       return;
     }
 
@@ -30,5 +36,5 @@ export function usePrefetchPlanWeekWindow(): void {
     prefetchedWindowRef.current = windowKey;
 
     void prefetchStudentPlanWeeks(userKey);
-  }, [userKey]);
+  }, [scrapeEnabled, userKey]);
 }

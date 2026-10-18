@@ -18,6 +18,13 @@ export async function fetchSemesterSubjects(
   return responseBody(response.data);
 }
 
+export async function fetchSemesterDetails(
+  semesterDetailPath: string
+): Promise<string> {
+  const response = await client.get(semesterDetailPath);
+  return responseBody(response.data);
+}
+
 export async function fetchPartialGrades(pplsId: number): Promise<string> {
   const response = await client.get(
     "/TokStudiow/StudentPrzedmiotyIOceny/OcenySrodsemestralne",

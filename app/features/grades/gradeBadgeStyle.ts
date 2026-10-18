@@ -44,8 +44,8 @@ export function getGradeBadgeStyle(
 
   if (value >= 3) {
     return {
-      backgroundColor: palette.gradeOrangeBg,
-      color: palette.gradeOrange,
+      backgroundColor: palette.gradeYellowBg,
+      color: palette.gradeYellow,
     };
   }
 

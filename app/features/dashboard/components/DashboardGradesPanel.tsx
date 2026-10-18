@@ -19,10 +19,19 @@ import { createDashboardGradesPanelStyles } from './DashboardGradesPanel.styles'
 export default function DashboardGradesPanel() {
   const gradesColors = useGradesColors();
   const styles = useThemedStyles(createDashboardGradesPanelStyles);
-  const { currentSemester, loading, error, refetch, forceRefresh, syncStatus } =
-    useGrades();
+  const {
+    currentSemester,
+    loading,
+    isSemesterLoading,
+    error,
+    refetch,
+    forceRefresh,
+    syncStatus,
+  } = useGrades();
 
   const { bannerStatus, dismissUpToDate } = useSyncBanner(syncStatus);
+  const visibleBannerStatus =
+    isSemesterLoading && bannerStatus === 'idle' ? 'loading' : bannerStatus;
 
   useRegisterScreenRefresh(forceRefresh);
 
@@ -53,25 +62,21 @@ export default function DashboardGradesPanel() {
     );
   }
 
-  if (!currentSemester || currentSemester.subjects.length === 0) {
-    return (
-      <View style={styles.wrap}>
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>Brak przedmiotów w tym semestrze</Text>
-        </View>
+  let subjectsContent: React.ReactNode;
+  if (isSemesterLoading) {
+    subjectsContent = (
+      <View style={styles.centerState}>
+        <Text style={styles.stateText}>Wczytywanie przedmiotów…</Text>
       </View>
     );
-  }
-
-  return (
-    <View style={styles.wrap}>
-      <SyncBanner
-        status={bannerStatus}
-        loadingText="Aktualizowanie ocen…"
-        errorText="Nie udało się zaktualizować ocen"
-        accentColor={GRADES_ACCENT_COLOR}
-        onDismissUpToDate={dismissUpToDate}
-      />
+  } else if (!currentSemester || currentSemester.subjects.length === 0) {
+    subjectsContent = (
+      <View style={styles.emptyCard}>
+        <Text style={styles.emptyText}>Brak przedmiotów w tym semestrze</Text>
+      </View>
+    );
+  } else {
+    subjectsContent = (
       <View style={styles.subjectList}>
         {currentSemester.subjects.map((subject) => (
           <GradesSubjectCard
@@ -81,6 +86,19 @@ export default function DashboardGradesPanel() {
           />
         ))}
       </View>
+    );
+  }
+
+  return (
+    <View style={styles.wrap}>
+      <SyncBanner
+        status={visibleBannerStatus}
+        loadingText="Aktualizowanie ocen…"
+        errorText="Nie udało się zaktualizować ocen"
+        accentColor={GRADES_ACCENT_COLOR}
+        onDismissUpToDate={dismissUpToDate}
+      />
+      {subjectsContent}
     </View>
   );
 }

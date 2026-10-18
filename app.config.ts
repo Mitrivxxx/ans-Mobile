@@ -7,47 +7,8 @@ const SPLASH_BACKGROUND_LIGHT = '#6E6E6E';
 const SPLASH_BACKGROUND_DARK = '#6E6E6E';
 const SPLASH_IMAGE_WIDTH = 100;
 
-export type AppEnv = 'development' | 'demo' | 'production';
-
-const BASE_PACKAGE = 'pl.matsma.WDMobile';
+const PACKAGE_ID = 'pl.matsma.WDMobile';
 const WD_BASE_URL = 'https://wd.ans-ns.edu.pl';
-
-const ENV_LAYERS: Record<
-  AppEnv,
-  { name: string; packageSuffix: string }
-> = {
-  development: {
-    name: 'WDMobile Dev',
-    packageSuffix: '.dev',
-  },
-  demo: {
-    name: 'WDMobile (Demo)',
-    packageSuffix: '.demo',
-  },
-  production: {
-    name: 'WDMobile',
-    packageSuffix: '',
-  },
-};
-
-function resolveAppEnv(): AppEnv {
-  const easProfile = process.env.EAS_BUILD_PROFILE;
-  if (easProfile === 'production') {
-    return 'production';
-  }
-  if (easProfile === 'demo' || easProfile === 'preview') {
-    return 'demo';
-  }
-  if (easProfile === 'development') {
-    return 'development';
-  }
-
-  const raw = process.env.APP_ENV ?? 'development';
-  if (raw === 'demo' || raw === 'production' || raw === 'development') {
-    return raw;
-  }
-  return 'development';
-}
 
 const SPLASH_IMAGE = './assets/splash-icon.png';
 
@@ -65,25 +26,22 @@ const splashScreenColors = {
 };
 
 export default (): ExpoConfig => {
-  const appEnv = resolveAppEnv();
-  const layer = ENV_LAYERS[appEnv];
   const base = baseAppJson.expo;
-  const packageId = BASE_PACKAGE + layer.packageSuffix;
 
   const config = {
     ...base,
-    name: layer.name,
+    name: 'WDMobile',
     splash: {
       ...base.splash,
       ...splashScreenColors,
     },
     ios: {
       ...base.ios,
-      bundleIdentifier: packageId,
+      bundleIdentifier: PACKAGE_ID,
     },
     android: {
       ...base.android,
-      package: packageId,
+      package: PACKAGE_ID,
       splash: {
         ...base.android?.splash,
         ...splashScreenColors,
@@ -91,9 +49,9 @@ export default (): ExpoConfig => {
     } as ExpoConfig['android'],
     extra: {
       ...base.extra,
-      appEnv,
+      appEnv: 'production',
       wdBaseUrl: WD_BASE_URL,
-      showEnvBadge: appEnv !== 'production',
+      showEnvBadge: false,
     },
     plugins: [
       ...(base.plugins ?? []),

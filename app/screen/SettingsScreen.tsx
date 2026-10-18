@@ -16,14 +16,26 @@ import { useAuthSession } from '../context/AuthSessionContext';
 import { useDataRefreshInterval } from '../context/DataRefreshIntervalContext';
 import { useStudentProfile } from '../context/StudentProfileContext';
 import { clearQueryCacheOnly } from '../core/queryClient/clearQueryCacheOnly';
+import { useQueryUserKey } from '../core/queryClient/useQueryUserKey';
+import { clearProfilePhotoSessionCache } from '../core/scraper/features/profile/profilePhotoSessionCache';
+import { clearProfilePhotoForUser } from '../core/scraper/features/profile/profileSummaryPhoto';
 import { useRegisterScreenRefresh } from '../hooks/useRegisterScreenRefresh';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { getAppEnvDisplayName, isProductionApp } from '../config/env';
 import { APP_VERSION } from '../version';
+
+function profileRefetchFailed(result: unknown): boolean {
+  return (
+    typeof result === 'object' &&
+    result !== null &&
+    'isSuccess' in result &&
+    (result as { isSuccess: boolean }).isSuccess === false
+  );
+}
 
 export default function SettingsScreen() {
   const { isDarkMode, colors, toggleDarkMode } = useAppTheme();
   const { refetch } = useStudentProfile();
+  const userKey = useQueryUserKey();
   const { rememberMeEnabled, disableRememberMe } = useAuthSession();
   const { isOffline } = useNetworkStatus();
   const {
@@ -33,7 +45,6 @@ export default function SettingsScreen() {
   } = useDataRefreshInterval();
   const [cacheClearing, setCacheClearing] = useState(false);
   const [refreshDropdownOpen, setRefreshDropdownOpen] = useState(false);
-  const showBuildDiagnostics = !isProductionApp();
 
   const refreshScreen = useCallback(async () => {
     await refetch();
@@ -64,7 +75,7 @@ export default function SettingsScreen() {
 
     Alert.alert(
       'Wyczyść cache',
-      'Usunie zapisane plany i dane w aplikacji (bez wylogowania). Dane zostaną pobrane ponownie przy odświeżeniu ekranów.',
+      'Usunie zapisane plany i dane w aplikacji (bez wylogowania). Dane ekranów zostaną pobrane ponownie przy odświeżeniu. Zdjęcie profilowe zostanie pobrane od razu.',
       [
         { text: 'Anuluj', style: 'cancel' },
         {
@@ -72,14 +83,43 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: () => {
             void (async () => {
+              let cacheCleared = false;
               try {
                 setCacheClearing(true);
                 await clearQueryCacheOnly();
-                Alert.alert('Gotowe', 'Cache aplikacji został wyczyszczony.');
-              } catch (err) {
+                clearProfilePhotoSessionCache();
+                await clearProfilePhotoForUser(userKey);
+                cacheCleared = true;
+
+                const result = await refetch();
+                if (profileRefetchFailed(result)) {
+                  Alert.alert(
+                    'Cache wyczyszczony',
+                    'Zapisane dane zostały usunięte, ale nie udało się pobrać zdjęcia profilowego. Odśwież ekran, gdy będzie połączenie z internetem.'
+                  );
+                  return;
+                }
+
+                const photoScraped =
+                  typeof result === 'object' &&
+                  result !== null &&
+                  'isSuccess' in result &&
+                  (result as { isSuccess: boolean }).isSuccess === true;
+
                 Alert.alert(
-                  'Błąd',
-                  err instanceof Error ? err.message : 'Nie udało się wyczyścić cache.'
+                  'Gotowe',
+                  photoScraped
+                    ? 'Cache aplikacji został wyczyszczony. Zdjęcie profilowe zostało pobrane ponownie.'
+                    : 'Cache aplikacji został wyczyszczony.'
+                );
+              } catch (err) {
+                const detail =
+                  err instanceof Error ? err.message : 'Nie udało się wyczyścić cache.';
+                Alert.alert(
+                  cacheCleared ? 'Cache wyczyszczony' : 'Błąd',
+                  cacheCleared
+                    ? `Zapisane dane zostały usunięte, ale nie udało się pobrać zdjęcia profilowego. ${detail}`
+                    : detail
                 );
               } finally {
                 setCacheClearing(false);
@@ -89,7 +129,7 @@ export default function SettingsScreen() {
         },
       ]
     );
-  }, [cacheClearing]);
+  }, [cacheClearing, refetch, userKey]);
 
   return (
     <SafeAreaView
@@ -186,7 +226,7 @@ export default function SettingsScreen() {
                   styles.dropdownMenu,
                   {
                     borderColor: colors.grayBorder,
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.surfaceRaised,
                   },
                 ]}
               >
@@ -274,7 +314,6 @@ export default function SettingsScreen() {
 
         <Text style={[styles.version, { color: colors.gray }]}>
           Wersja {APP_VERSION}
-          {showBuildDiagnostics ? `\nŚrodowisko: ${getAppEnvDisplayName()}` : null}
         </Text>
       </RefreshableScrollView>
     </SafeAreaView>

@@ -9,7 +9,6 @@ import {
   APP_HEADER_LOGO_SIZE,
   createAppHeaderStyles,
 } from './AppHeader.styles';
-import AppEnvBadge from './AppEnvBadge';
 import AppHeaderAvatar from './AppHeaderAvatar';
 import { logoHeaderForTheme } from '../assets/brandLogos';
 import { useAppTheme } from '../context/AppThemeContext';
@@ -51,7 +50,6 @@ export default function AppHeader() {
             variant="wide"
             resizeMode="contain"
           />
-          <AppEnvBadge />
         </View>
 
         <View style={styles.sideRight}>

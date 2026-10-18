@@ -6,6 +6,7 @@ import { cacheUntilReplaceQueryOptions } from './cacheUntilReplace';
 import { runWithManualRefreshCooldown } from './manualRefreshCooldown';
 import { usePersistentCacheSyncEffects } from './usePersistentCacheSyncEffects';
 import { useQueryUserKey } from './useQueryUserKey';
+import { useScrapeEnabled } from './useScrapeEnabled';
 import type { SyncStatus } from './syncTypes';
 
 type UserPersistentQueryConfig<TData> = {
@@ -24,6 +25,8 @@ export function useUserPersistentQuery<TData>({
   refetchInterval = false,
 }: UserPersistentQueryConfig<TData>) {
   const userKey = useQueryUserKey();
+  const scrapeEnabled = useScrapeEnabled();
+  const queryEnabled = enabled && scrapeEnabled;
   const resolvedQueryKey = useMemo(
     () => queryKey(userKey),
     [queryKey, userKey]
@@ -35,7 +38,7 @@ export function useUserPersistentQuery<TData>({
   const query = useQuery<TData>({
     queryKey: resolvedQueryKey,
     queryFn,
-    enabled,
+    enabled: queryEnabled,
     refetchInterval: refetchInterval === false ? false : refetchInterval,
     ...cacheUntilReplaceQueryOptions<TData>(),
   });
@@ -48,7 +51,7 @@ export function useUserPersistentQuery<TData>({
 
   const runSync = useCallback(
     async (options?: { minLoadingMs?: number; manual?: boolean }) => {
-      if (!enabled) {
+      if (!queryEnabled) {
         return;
       }
 
@@ -81,7 +84,7 @@ export function useUserPersistentQuery<TData>({
         setSyncStatus('error');
       }
     },
-    [enabled, refetch]
+    [queryEnabled, refetch]
   );
 
   const syncInBackground = useCallback(
@@ -99,7 +102,7 @@ export function useUserPersistentQuery<TData>({
   );
 
   usePersistentCacheSyncEffects({
-    enabled,
+    enabled: queryEnabled,
     hasCachedData,
     dataUpdatedAt,
     syncOnMount,
@@ -108,7 +111,7 @@ export function useUserPersistentQuery<TData>({
   });
 
   useNetworkReconnectEffect(() => {
-    if (!enabled || !hasCachedData) {
+    if (!queryEnabled || !hasCachedData) {
       return;
     }
     if (syncStatusRef.current === 'error') {

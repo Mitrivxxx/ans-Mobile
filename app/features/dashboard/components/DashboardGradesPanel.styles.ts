@@ -33,10 +33,10 @@ export function createDashboardGradesPanelStyles(c: AnsColors) {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: c.black,
+    backgroundColor: c.retryButtonBg,
   },
   retryButtonText: {
-    color: c.gold,
+    color: c.retryButtonText,
     fontWeight: '700',
   },
   emptyCard: {
