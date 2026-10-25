@@ -131,15 +131,11 @@ async function resolveProfilePhoto(): Promise<string> {
     return cached;
   }
 
-  try {
-    const photo = await fetchAvatarPhoto(userKey);
-    if (photo) {
-      setCachedProfilePhoto(photo, userKey);
-    }
-    return photo;
-  } catch (error) {
-    return "";
+  const photo = await fetchAvatarPhoto(userKey);
+  if (photo) {
+    setCachedProfilePhoto(photo, userKey);
   }
+  return photo;
 }
 
 export async function parseProfileBundle(): Promise<{

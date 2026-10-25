@@ -3,10 +3,7 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { devLog } from "../../../config/devLog";
 import { client, WD_BASE_URL } from "../client/client";
 
-import {
-  getResponseFinalUrl,
-  responseNeedsContextSelection,
-} from "./contextSelection";
+import { getResponseFinalUrl } from "./contextSelection";
 import {
   isContextSelectionPageHtml,
   urlIndicatesContextSelection,
@@ -145,6 +142,67 @@ type ProbeWdSessionAliveOptions = {
   force?: boolean;
 };
 
+/**
+ * Czy HTML lub końcowy URL sondy oznacza, że portal nadal czeka na wybór kontekstu.
+ * Sama sonda nie woła notifySessionLost — prefetch ma poczekać.
+ */
+export function sessionProbeNeedsContextSelection(
+  html: string,
+  finalUrl = ""
+): boolean {
+  return (
+    isContextSelectionPageHtml(html) || urlIndicatesContextSelection(finalUrl)
+  );
+}
+
+function probeResponseBody(data: unknown): string {
+  return typeof data === "string" ? data : String(data ?? "");
+}
+
+/**
+ * skipSessionExpiryCheck na requeście sondy wyłącza responseIndicatesSessionExpired
+ * (flaga jest dla interceptora). Tu ta sama ocena, bez tej flagi i bez notifySessionLost.
+ */
+function probeSessionIsUsable(
+  response: AxiosResponse<string>
+): boolean {
+  const html = probeResponseBody(response.data);
+  if (
+    sessionProbeNeedsContextSelection(html, getResponseFinalUrl(response))
+  ) {
+    return false;
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    return false;
+  }
+
+  if (
+    isLoginRedirectResponse(response) ||
+    responseFinalUrlIndicatesLogin(response)
+  ) {
+    return false;
+  }
+
+  if (html.length >= 80 && isLoginFormHtml(html)) {
+    return false;
+  }
+
+  return true;
+}
+
+async function fetchSessionProbe(path: string) {
+  return client.get<string>(path, {
+    responseType: "text",
+    transformResponse: [(data) => data],
+    maxRedirects: 5,
+    timeout: SESSION_PROBE_TIMEOUT_MS,
+    skipSessionGuard: true,
+    skipSessionExpiryCheck: true,
+    headers: PROBE_HEADERS,
+  });
+}
+
 /** Lekki GET — czy serwer nadal honoruje ciasteczka (bez pełnego guarda). */
 export async function probeWdSessionAlive(
   options?: ProbeWdSessionAliveOptions
@@ -156,21 +214,14 @@ export async function probeWdSessionAlive(
 
   await ensureWdUserConsentCookie();
 
-  const response = await client.get<string>(SESSION_PROBE_PATH, {
-    responseType: "text",
-    transformResponse: [(data) => data],
-    maxRedirects: 5,
-    timeout: SESSION_PROBE_TIMEOUT_MS,
-    skipSessionGuard: true,
-    skipSessionExpiryCheck: true,
-    headers: PROBE_HEADERS,
-  });
-
-  if (responseNeedsContextSelection(response)) {
+  const account = await fetchSessionProbe(SESSION_PROBE_PATH);
+  if (!probeSessionIsUsable(account)) {
     return false;
   }
 
-  return !responseIndicatesSessionExpired(response);
+  // Konto bywa dostępne zanim / (ze zdjęciem) przestanie być ekranem wyboru kontekstu.
+  const home = await fetchSessionProbe("/");
+  return probeSessionIsUsable(home);
 }
 
 export function isSessionProbeConfig(

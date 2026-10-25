@@ -55,8 +55,12 @@ export class NotAuthenticatedError extends Error {
 
 let authGuardRegistered = false;
 let ensureInFlight: Promise<void> | null = null;
-let loginInFlight: Promise<{ success: boolean; errorMessage?: string }> | null =
-  null;
+let loginInFlight: Promise<{
+  success: boolean;
+  errorMessage?: string;
+  requiresContextSelection?: boolean;
+  contextOptions?: LoginContextOption[];
+}> | null = null;
 let restoreRememberMeInFlight: Promise<RememberMeResolveResult> | null = null;
 
 let onSessionLostHandler: (() => void) | null = null;
@@ -168,6 +172,8 @@ export async function loginWithSavedCredentials(): Promise<{
 export async function silentLoginOnce(): Promise<{
   success: boolean;
   errorMessage?: string;
+  requiresContextSelection?: boolean;
+  contextOptions?: LoginContextOption[];
 }> {
   if (!canAttemptSilentLogin()) {
     return {
@@ -205,6 +211,13 @@ async function ensureRememberMeSessionAlive(): Promise<void> {
   }
 
   const outcome = await silentLoginOnce();
+
+  if (outcome.requiresContextSelection) {
+    throw new NotAuthenticatedError(
+      outcome.errorMessage ??
+        "Wybierz kontekst logowania na ekranie logowania."
+    );
+  }
 
   if (outcome.success || (await hasScraperSession())) {
     return;
@@ -373,10 +386,16 @@ export function setupScraperAuthGuard(): void {
 
       const outcome = await silentLoginOnce();
 
-      if (!outcome.success && !(await hasScraperSession())) {
+      if (
+        outcome.requiresContextSelection ||
+        (!outcome.success && !(await hasScraperSession()))
+      ) {
         notifySessionLost();
         throw new SessionExpiredError(
-          outcome.errorMessage ?? "Sesja wygasła i nie udało się jej odnowić."
+          outcome.errorMessage ??
+            (outcome.requiresContextSelection
+              ? "Wymagany wybór kontekstu logowania — zaloguj się ponownie i wybierz kierunek."
+              : "Sesja wygasła i nie udało się jej odnowić.")
         );
       }
 

@@ -1,3 +1,5 @@
+import type { AxiosResponse } from "axios";
+
 import { client, WD_BASE_URL } from "../../client/client";
 
 const HTML_USER_AGENT =
@@ -7,12 +9,42 @@ function responseBody(data: unknown): string {
   return typeof data === "string" ? data : String(data ?? "");
 }
 
+function responseFinalUrl(response: AxiosResponse): string {
+  return String(
+    (response.request as { responseURL?: string } | undefined)?.responseURL ??
+      response.config.url ??
+      ""
+  );
+}
+
+export type HtmlPageFetchResult = {
+  html: string;
+  finalUrl: string;
+};
+
+export type FetchHtmlPageOptions = {
+  /** Nie traktuj strony wyboru kontekstu jako utraty sesji w interceptorze. */
+  skipSessionExpiryCheck?: boolean;
+};
+
 /** GET HTML jak przeglądarka (bez Content-Type formularza z domyślnego klienta). */
-export async function fetchHtmlPage(path: string): Promise<string> {
+export async function fetchHtmlPage(
+  path: string,
+  options?: FetchHtmlPageOptions
+): Promise<string> {
+  const page = await fetchHtmlPageResult(path, options);
+  return page.html;
+}
+
+export async function fetchHtmlPageResult(
+  path: string,
+  options?: FetchHtmlPageOptions
+): Promise<HtmlPageFetchResult> {
   const response = await client.get<string>(path, {
     responseType: "text",
     transformResponse: [(data) => data],
     maxRedirects: 5,
+    skipSessionExpiryCheck: options?.skipSessionExpiryCheck,
     headers: {
       Accept:
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -23,7 +55,10 @@ export async function fetchHtmlPage(path: string): Promise<string> {
     },
   });
 
-  return responseBody(response.data);
+  return {
+    html: responseBody(response.data),
+    finalUrl: responseFinalUrl(response),
+  };
 }
 
 export async function fetchHomePage(): Promise<string> {

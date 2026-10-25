@@ -3,6 +3,7 @@ import qs from "qs";
 import { client, WD_BASE_URL } from "../../client/client";
 import { mergeAuthCookiesFromNativeIfNeeded } from "../../client/cookies";
 import { parseDxResponse } from "../../parsers/dx.parser";
+import { getSemesterPlanParams } from "../plan/plan.dateRange";
 
 const GRID_NAME = "gridViewPlanyProwadzacych";
 
@@ -21,32 +22,17 @@ function gridCustomPath(scheduleId: string): string {
   return `/Plany/PlanyProwadzacychGridCustom/${scheduleId}`;
 }
 
-/** parametry jak w przeglądarce: 2026-2-19;2026-9-30;3;769 */
+/**
+ * Ten sam zakres semestru co plan studenta (`getSemesterPlanParams`),
+ * plus `scheduleId` wymagany przez PlanyProwadzacychGridCustom.
+ * Przy zmianie semestru daty liczą się automatycznie z bieżącej daty.
+ */
 export function buildLecturerParametry(
   scheduleId: string,
-  pageHtml: string
+  referenceDate: Date = new Date()
 ): string {
-  const hidden = pageHtml.match(
-    /name=["']parametry["'][^>]*value=["']([^"']*)["']/i
-  );
-  const raw = hidden?.[1]?.trim() ?? "";
-  const parts = raw.split(";").map((p) => p.trim()).filter(Boolean);
-
-  if (parts.length >= 3) {
-    const a = parts[0] ?? "";
-    const b = parts[1] ?? "";
-    const c = parts[2] ?? "3";
-    if (parts.length === 3) {
-      return `${a};${b};${c};${scheduleId}`;
-    }
-    if (parts[parts.length - 1] === scheduleId) {
-      return raw;
-    }
-    return `${a};${b};${c};${scheduleId}`;
-  }
-
-  const year = new Date().getFullYear();
-  return `${year}-2-19;${year}-9-30;3;${scheduleId}`;
+  const { dateFrom, dateTo, planType } = getSemesterPlanParams(referenceDate);
+  return `${dateFrom};${dateTo};${planType};${scheduleId}`;
 }
 
 export function extractLecturerGridState(html: string): {
@@ -138,7 +124,7 @@ export async function postLecturerPlanGrid(
   scheduleId: string,
   pageHtml: string
 ): Promise<string> {
-  const parametry = buildLecturerParametry(scheduleId, pageHtml);
+  const parametry = buildLecturerParametry(scheduleId);
   const { customOperationState, callbackState } =
     extractLecturerGridState(pageHtml);
 
